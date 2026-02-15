@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <script src="https://telegram.org">
+        tg.setHeaderColor('#050505');
+        window.Telegram.WebApp.expand();
+        function vibrate(type = 'light') {
+    if (tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred(type);
+    }
+}    
     <meta charset="UTF-8">
     <title>Вова 2: Король Биг Хитов</title>
     <style>
@@ -113,6 +121,7 @@
     function save() { localStorage.setItem('vova_prestige_v1', JSON.stringify(state)); }
 
     function clickMain(e) {
+        vibrate('light');
         let bMult = state.skins.current === '🍖' ? 5 : 1;
         let misha = state.skins.current === '😎' ? (state.auto * state.mult * 0.01) : 0;
         let val = (state.click + misha) * state.mult * locations[state.locIdx].m * bMult;
@@ -262,3 +271,4 @@
 </script>
 </body>
 </html>
+
