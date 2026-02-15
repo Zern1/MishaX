@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <script src="https://telegram.org">
-        window.Telegram.WebApp.expand();
-        function vibrate(type = 'light') {
-    if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred(type);
-    }
-}    
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Вова 2: Король Биг Хитов</title>
     <style>
         :root {
@@ -77,6 +71,13 @@
 </div>
 
 <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.setHeaderColor('#050505');
+
+    function vibrate(type = 'light') {
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type);
+    }
     let state = JSON.parse(localStorage.getItem('vova_prestige_v1')) || {
         money: 0, nagets: 0, prestigeGold: 0, click: 1, auto: 0, mult: 1, locIdx: 0, 
         upgLvl: {}, totalClicks: 0, skins: { current: '🍔' }, unlockedSkins: ['🍔']
@@ -270,5 +271,3 @@
 </script>
 </body>
 </html>
-
-
