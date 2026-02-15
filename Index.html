@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вова 2: Король Биг Хитов</title>
+    <style>
+        :root {
+            --gold: #ffd700; --nagets: #ff6600; --bg: #050505; --prestige: #e5e4e2;
+            --common: #bdc3c7; --rare: #00d2ff; --mythic: #a100ff; --legendary: #ffae00;
+        }
+        body { font-family: 'Arial Black', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; }
+        
+        #game-view { flex: 1.5; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle, #222, #000); border-right: 2px solid #333; }
+        .stats-panel { position: absolute; top: 20px; text-align: center; z-index: 10; background: rgba(0,0,0,0.85); padding: 15px 30px; border-radius: 20px; border: 2px solid var(--gold); }
+        .money { font-size: 2.5rem; color: var(--gold); text-shadow: 0 0 15px rgba(255,215,0,0.3); }
+        
+        #burger-btn { font-size: 160px; cursor: pointer; transition: 0.1s; z-index: 5; }
+        #burger-btn:active { transform: scale(0.85); }
+
+        #shop { flex: 1.2; background: #111; overflow-y: auto; padding: 20px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; position: sticky; top: 0; background: #111; z-index: 20; padding-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 10px 5px; border: none; background: #222; color: #888; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 0.7rem; }
+        .tab-btn.active { background: var(--gold); color: black; }
+
+        .item { background: #1a1a1a !important; padding: 15px; margin-bottom: 12px; border-radius: 12px; border-left: 6px solid #444; border: 1px solid #222; }
+        .item.legendary { border-left-color: var(--legendary) !important; border-color: var(--legendary) !important; background: linear-gradient(90deg, #1a1a1a, #332b00) !important; }
+        .item b { display: block; font-size: 1.1rem; color: var(--gold); margin-bottom: 4px; }
+        .item .profit { font-size: 0.8rem; color: #4caf50; display: block; margin-bottom: 8px; }
+
+        .buy-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: #27ae60; color: white; transition: 0.2s; }
+        .buy-btn:disabled { background: #333 !important; color: #666 !important; cursor: not-allowed; border: none !important; }
+
+        #dima-game { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        .falling-nagets { position: absolute; font-size: 50px; cursor: pointer; filter: drop-shadow(0 0 10px var(--nagets)); }
+        .collected { transform: scale(2); opacity: 0; pointer-events: none; transition: 0.3s; }
+
+        .f-text { position: absolute; pointer-events: none; animation: fly 0.7s forwards; font-weight: bold; font-size: 1.8rem; z-index: 100; color: var(--gold); }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
+    </style>
+</head>
+<body>
+
+<div id="game-view">
+    <div class="stats-panel">
+        <div id="loc-display" style="font-size: 0.7rem; color: #aaa; letter-spacing: 2px;">Казахстан</div>
+        <div class="money" id="money-display">0 БХ</div>
+        <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px;">
+            <span style="color: var(--nagets)">🍟</span> <span id="nagets-display">0</span></span>
+            <span style="color: var(--prestige)">👑 <span id="prestige-display">0</span></span>
+        </div>
+    </div>
+    
+    <div id="burger-btn" onclick="clickMain(event)">🍔</div>
+    <div id="income-stats" style="margin-top: 20px; color: #555; font-size: 0.8rem;">Авто: 0/сек</div>
+</div>
+
+<div id="shop">
+    <div class="tabs">
+        <button class="tab-btn active" id="t-upg" onclick="showTab('upg')">УЛУЧШЕНИЯ</button>
+        <button class="tab-btn" id="t-loc" onclick="showTab('loc')">МИР</button>
+        <button class="tab-btn" id="t-skin" onclick="showTab('skin')">СКИНЫ</button>
+        <button class="tab-btn" id="t-bunker" onclick="showTab('bunker')">БУНКЕР</button>
+    </div>
+    <div id="shop-content"></div>
+</div>
+
+<div id="dima-game">
+    <h1 style="color: var(--nagets);">ШТОРМ!</h1>
+    <div id="game-timer" style="font-size: 3rem;">10</div>
+</div>
+
+<script>
+    let state = JSON.parse(localStorage.getItem('vova_prestige_v1')) || {
+        money: 0, nagets: 0, prestigeGold: 0, click: 1, auto: 0, mult: 1, locIdx: 0, 
+        upgLvl: {}, totalClicks: 0, skins: { current: '🍔' }, unlockedSkins: ['🍔']
+    };
+
+    let activeTab = 'upg';
+    let isMouseDown = false;
+    document.addEventListener('mousedown', () => isMouseDown = true);
+    document.addEventListener('mouseup', () => isMouseDown = false);
+
+    const upgrades = [
+        { id: 'u1', name: "Вова в качалке", base: 15, pow: 2, type: 'click', rarity: 'common', desc: "+2 к клику" },
+        { id: 'u2', name: "Курьер", base: 100, pow: 5, type: 'auto', rarity: 'common', desc: "+5 БХ/сек" },
+        { id: 'u3', name: "Большое Комбо", base: 500, pow: 15, type: 'click', rarity: 'rare', desc: "+15 к клику" },
+        { id: 'u4', name: "Гриль", base: 2000, pow: 50, type: 'auto', rarity: 'rare', desc: "+50 БХ/сек" },
+        { id: 'u5', name: "Легенда фастфуда", base: 10000, pow: 2, type: 'mult', rarity: 'rare', desc: "Доход x2" },
+        { id: 'u6', name: "МИША Менеджер", base: 25000, pow: 200, type: 'auto', rarity: 'rare', desc: "+200 БХ/сек" },
+        { id: 'u7', name: "Личный Вертолет", base: 80000, pow: 700, type: 'auto', rarity: 'mythic', desc: "+700 БХ/сек" },
+        { id: 'u8', name: "Секретный ингредиент", base: 250000, pow: 2000, type: 'click', rarity: 'mythic', desc: "+2к к клику" },
+        { id: 'u9', name: "Маркетинг", base: 600000, pow: 3, type: 'mult', rarity: 'mythic', desc: "Доход x3" },
+        { id: 'l1', name: "КОРОЛЬ БИГ ХИТОВ", base: 20, pow: 10, type: 'mult', rarity: 'legendary', curr: 'n', desc: "Доход x10" },
+        { id: 'l2', name: "ЧИТЫ ОТ ДИМЫ", base: 100, pow: 100000, type: 'auto', rarity: 'legendary', curr: 'n', desc: "+100к БХ/сек" },
+        { id: 'l3', name: "РАЗГОН ПРОИЗВОДСТВА", base: 250, pow: 200000, type: 'click', rarity: 'legendary', curr: 'n', desc: "+200к к клику" }
+    ];
+
+    const locations = [
+        { name: "Казахстан", req: 0, m: 1 },
+        { name: "Россия", req: 15000, m: 5 },
+        { name: "Восточная Азия", req: 300000, m: 25 },
+        { name: "США", req: 2000000, m: 100 },
+        { name: "ЛУНА", req: 100000000, m: 1000 }
+    ];
+
+    const skinData = {
+        '🍔': { name: "Обычный", bonus: "Нет", req: 0, task: "Старт" },
+        '🪙': { name: "Золотой", bonus: "Шторм в 3 раза чаще", req: 1000000, type: 'money', task: "Накопи 1М БХ" },
+        '🍖': { name: "Двойной биг хит", bonus: "Весь доход x5", req: 10000, type: 'clicks', task: "10000 кликов" },
+        '😎': { name: "Мишон", bonus: "Клик = +1% от авто-дохода", req: 300, type: 'nagets', task: "Собери 300 картохи" }
+    };
+
+    function save() { localStorage.setItem('vova_prestige_v1', JSON.stringify(state)); }
+
+    function clickMain(e) {
+        let bMult = state.skins.current === '🍖' ? 5 : 1;
+        let misha = state.skins.current === '😎' ? (state.auto * state.mult * 0.01) : 0;
+        let val = (state.click + misha) * state.mult * locations[state.locIdx].m * bMult;
+        state.money += val; state.totalClicks++;
+        showFloat(e.clientX, e.clientY, `+${Math.floor(val)}`);
+        updateUI();
+    }
+
+    function renderShop() {
+        const cont = document.getElementById('shop-content');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 't-'+activeTab));
+        if (activeTab === 'upg') {
+            cont.innerHTML = upgrades.map(u => {
+                const lvl = state.upgLvl[u.id] || 0;
+                const cost = u.curr === 'n' ? u.base : Math.floor(u.base * Math.pow(1.7, lvl));
+                return `<div class="item ${u.rarity}">
+                    <b>${u.name} (Ур.${lvl})</b><span class="profit">${u.desc}</span>
+                    <button class="buy-btn" id="btn-${u.id}" onclick="buy('${u.id}')" style="background:${u.curr==='n'?'#ff6600':''}">
+                        ${u.curr==='n'?'🍟 ':''}${cost.toLocaleString()}
+                    </button>
+                </div>`;
+            }).join('');
+        } else if (activeTab === 'loc') {
+            cont.innerHTML = locations.map((l, i) => `<div class="item">
+                <b>${l.name} (x${l.m})</b>
+                <button class="buy-btn" id="locbtn-${i}" onclick="setLoc(${i})">
+                    ${state.locIdx === i ? 'ДОМА' : 'ПЕРЕЕЗД: ' + l.req.toLocaleString()}
+                </button>
+            </div>`).join('');
+        } else if (activeTab === 'skin') {
+            cont.innerHTML = Object.entries(skinData).map(([icon, d]) => {
+                const isUn = state.unlockedSkins.includes(icon);
+                const progress = d.type === 'money' ? state.money : (d.type === 'clicks' ? state.totalClicks : state.nagets);
+                const canUn = progress >= d.req || isUn;
+                return `<div class="item ${isUn?'legendary':''}">
+                    <b style="font-size:1.5rem">${icon} ${d.name}</b><small>${d.bonus}</small><br>
+                    <small style="color:var(--gold)">Цель: ${d.task} (${Math.floor(progress)}/${d.req})</small>
+                    <button class="buy-btn" onclick="unlockSkin('${icon}', ${canUn})" style="margin-top:10px; background:${isUn?'#444':''}" ${!canUn && !isUn ? 'disabled' : ''}>
+                        ${isUn ? (state.skins.current === icon ? 'АКТИВЕН' : 'ВЫБРАТЬ') : 'ЗАКРЫТО'}
+                    </button>
+                </div>`;
+            }).join('');
+        } else if (activeTab === 'bunker') {
+            let potential = Math.floor((state.money * state.nagets) / 10000);
+            cont.innerHTML = `<div class="item legendary" style="text-align:center">
+                <b style="font-size:1.5rem">БУНКЕР ВОВАНА</b>
+                <p>текущее золото: ${state.prestigeGold}</p>
+                <p style="color:#aaa; font-size:0.8rem">Престиж сбрасывает БХ, Картоху и Улучшения, но дает Золото.</p>
+                <hr style="border:0; border-top:1px solid #333; margin:15px 0">
+                <p>При сбросе ты получишь:<br><span style="color:var(--gold); font-size:1.5rem">+${potential} 👑</span></p>
+                <button class="buy-btn" style="background:#c0392b" onclick="prestige()" ${potential <= 0 ? 'disabled' : ''}>СДЕЛАТЬ ПРЕСТИЖ</button>
+            </div>`;
+        }
+    }
+
+    function buy(id) {
+        const u = upgrades.find(x => x.id === id);
+        const lvl = state.upgLvl[id] || 0;
+        const cost = u.curr === 'n' ? u.base : Math.floor(u.base * Math.pow(1.7, lvl));
+        if (u.curr === 'n' ? state.nagets >= cost : state.money >= cost) {
+            if (u.curr === 'n') state.nagets -= cost; else state.money -= cost;
+            if (u.type === 'click') state.click += u.pow;
+            if (u.type === 'auto') state.auto += u.pow;
+            if (u.type === 'mult') state.mult *= u.pow;
+            state.upgLvl[id] = lvl + 1; save(); renderShop();
+        }
+    }
+
+    function setLoc(i) {
+        if (state.money >= locations[i].req || state.locIdx >= i) {
+            state.locIdx = i; document.getElementById('loc-display').innerText = locations[i].name; save(); renderShop();
+        }
+    }
+
+    function prestige() {
+        if (!confirm("Ты уверен? Все БХ и Картоха исчезнут, но ты станешь золотым королем!")) return;
+        state.prestigeGold += Math.floor((state.money * state.nagets) / 10000);
+        state.money = 0; state.nagets = 0; state.click = 1; state.auto = 0; state.mult = 1; 
+        state.locIdx = 0; state.upgLvl = {}; state.totalClicks = 0;
+        save(); location.reload();
+    }
+
+    function unlockSkin(icon, can) {
+        if (!state.unlockedSkins.includes(icon) && can) state.unlockedSkins.push(icon);
+        if (state.unlockedSkins.includes(icon)) state.skins.current = icon;
+        save(); renderShop(); updateUI();
+    }
+
+    function startDimaGame() {
+        const overlay = document.getElementById('dima-game');
+        overlay.style.display = 'flex';
+        let timeLeft = 10;
+        let timer = setInterval(() => {
+            timeLeft--; document.getElementById('game-timer').innerText = timeLeft;
+            if (timeLeft <= 0) { clearInterval(timer); overlay.style.display = 'none'; }
+        }, 1000);
+        let spawner = setInterval(() => {
+            if (timeLeft <= 0) { clearInterval(spawner); return; }
+            const n = document.createElement('div'); n.className = 'falling-nagets'; n.innerText = '🍟';
+            n.style.left = Math.random() * 90 + '%'; n.style.top = '-50px';
+            overlay.appendChild(n);
+            n.animate([{ top: '-50px' }, { top: '100vh' }], { duration: 2000 });
+            const collect = () => { if (!n.classList.contains('collected')) { n.classList.add('collected'); state.nagets++; updateUI(); setTimeout(() => n.remove(), 200); } };
+            n.onmouseover = () => { if (isMouseDown) collect(); };
+            n.onmousedown = collect;
+            setTimeout(() => n.remove(), 2000);
+        }, 250);
+    }
+
+    function updateUI() {
+        document.getElementById('money-display').innerText = Math.floor(state.money).toLocaleString() + " БХ";
+        document.getElementById('nagets-display').innerText = state.nagets;
+        document.getElementById('prestige-display').innerText = state.prestigeGold;
+        document.getElementById('burger-btn').innerText = state.skins.current;
+        let b = state.skins.current === '🍖' ? 5 : 1;
+        document.getElementById('income-stats').innerText = `Авто: ${Math.floor(state.auto * state.mult * locations[state.locIdx].m * b)}/сек`;
+        
+        // ПРОВЕРКА КНОПОК (СЕРЫЙ ЦВЕТ)
+        if (activeTab === 'upg') {
+            upgrades.forEach(u => {
+                const btn = document.getElementById(`btn-${u.id}`);
+                if (btn) {
+                    const lvl = state.upgLvl[u.id] || 0;
+                    const cost = u.curr === 'n' ? u.base : Math.floor(u.base * Math.pow(1.7, lvl));
+                    btn.disabled = u.curr === 'n' ? state.nagets < cost : state.money < cost;
+                }
+            });
+        } else if (activeTab === 'loc') {
+            locations.forEach((l, i) => {
+                const btn = document.getElementById(`locbtn-${i}`);
+                if (btn && state.locIdx !== i) btn.disabled = state.money < l.req;
+            });
+        }
+    }
+
+    function showFloat(x, y, text) {
+        const f = document.createElement('div'); f.className = 'f-text'; f.style.left = x + 'px'; f.style.top = y + 'px'; f.innerText = text;
+        document.body.appendChild(f); setTimeout(() => f.remove(), 700);
+    }
+
+    function showTab(t) { activeTab = t; renderShop(); }
+
+    setInterval(() => { state.money += (state.auto * state.mult * locations[state.locIdx].m * (state.skins.current === '🍖' ? 5 : 1)) / 10; updateUI(); }, 100);
+    setInterval(() => { if(Math.random() < (state.skins.current === '🪙' ? 0.6 : 0.2)) startDimaGame(); }, 35000);
+    document.getElementById('loc-display').innerText = locations[state.locIdx].name;
+    renderShop(); updateUI();
+</script>
+</body>
+</html>
