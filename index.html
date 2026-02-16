@@ -1,305 +1,297 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Вова 2: FULL LEGACY</title>
-    <script src="https://telegram.org"></script>
+    <title>Neon Wave</title>
     <style>
-        :root {
-            --gold: #ffd700; --nagets: #ff6600; --bg: #050505;
-            --common: #bdc3c7; --rare: #00d2ff; --mythic: #a100ff; --legendary: #ffae00;
+        :root { --neon: #d9ff00; --bg: #000000; }
+        body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; display: flex; }
+        
+        /* Side Menu (Semi-transparent) */
+        #side-menu {
+            width: 350px; height: 100vh; 
+            background: rgb(0, 0, 0);
+            backdrop-filter: blur(25px); 
+            border-right: 1px solid rgb(0, 242, 255);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 20; position: relative;
         }
-        body { font-family: 'Arial Black', sans-serif; background: var(--bg); color: white; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        
-        #game-view { flex: 1.3; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle, #222, #000); border-right: 2px solid #333; }
-        .stats-panel { position: absolute; top: 15px; text-align: center; z-index: 10; background: rgba(0,0,0,0.85); padding: 10px 15px; border-radius: 15px; border: 2px solid var(--gold); min-width: 140px; }
-        .money { font-size: 1.8rem; color: var(--gold); line-height: 1.2; }
-        
-        #burger-btn { font-size: 110px; cursor: pointer; transition: transform 0.05s; z-index: 5; margin-top: 50px; }
-        
-        #shop { flex: 1.1; background: #111; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; }
-        .tabs { display: flex; gap: 4px; margin-bottom: 15px; position: sticky; top: 0; background: #111; z-index: 20; padding-bottom: 5px; }
-        .tab-btn { flex: 1; padding: 12px 2px; border: none; background: #222; color: #777; cursor: pointer; border-radius: 6px; font-size: 0.6rem; font-weight: bold; }
-        .tab-btn.active { background: var(--gold); color: black; }
+        #side-menu.hidden { transform: translateX(-100%); position: absolute; }
 
-        .item { background: #1a1a1a; padding: 12px; margin-bottom: 10px; border-radius: 10px; border-left: 5px solid #444; border: 1px solid #222; flex-shrink: 0; }
-        .item.legendary { border-left-color: var(--legendary); border-color: var(--legendary); background: linear-gradient(90deg, #1a1a1a, #2a1a00); }
-        .item b { display: block; font-size: 0.9rem; color: var(--gold); }
-        .item .profit { font-size: 0.7rem; color: #4caf50; margin: 3px 0; display: block; }
+        #game-container { flex-grow: 1; position: relative; overflow: hidden; background: #000; }
+        canvas { display: block; width: 100%; height: 100%; }
 
-        .action-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: #27ae60; color: white; margin-top: 5px; font-size: 0.8rem; }
-        .action-btn:disabled { background: #333 !important; color: #666 !important; cursor: not-allowed; }
+        .menu-btn { 
+            background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon); color: white; 
+            padding: 15px; margin: 10px; width: 220px; cursor: pointer; border-radius: 4px;
+            font-size: 14px; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+        }
+        .menu-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
 
-        #dima-game { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-        .falling-nagets { position: absolute; font-size: 45px; pointer-events: none; filter: drop-shadow(0 0 10px var(--nagets)); }
-        .f-text { position: absolute; pointer-events: none; animation: fly 0.6s forwards; font-weight: bold; font-size: 1.4rem; z-index: 100; color: var(--gold); }
-        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        .overlay-screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.9); z-index: 30; 
+        }
+        .hidden { display: none !important; }
+
+        #score { position: absolute; top: 20px; right: 30px; font-size: 32px; color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
+        
+        /* Preparation Timer in Center */
+        #prep-display {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 120px; font-weight: bold; color: white; pointer-events: none;
+            text-shadow: 0 0 30px var(--neon); z-index: 15; opacity: 0; transition: 0.2s;
+        }
+        #prep-display.show { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+
+        .skin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 20px; }
+        .skin-item { width: 45px; height: 45px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; }
+        .skin-item:hover { transform: scale(1.1); }
+        .skin-item.active { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
     </style>
 </head>
 <body>
 
-<div id="game-view">
-    <div class="stats-panel">
-        <div id="loc-display" style="font-size: 0.6rem; color: #aaa; text-transform: uppercase;">Махачкала</div>
-        <div class="money" id="money-display">0</div>
-        <div style="font-size: 0.8rem; margin-top: 5px; display: flex; justify-content: center; gap: 8px;">
-            <span style="color: var(--nagets)">🍗 <span id="nagets-display">0</span></span>
-            <span style="color: var(--prestige)">👑 <span id="prestige-display">0</span></span>
-        </div>
-    </div>
-    <div id="burger-btn">🍔</div>
-    <div id="income-stats" style="margin-top: 15px; color: #555; font-size: 0.7rem;">Авто: 0/сек</div>
+<div id="side-menu">
+    <h1 style="text-shadow: 0 0 15px var(--neon); letter-spacing: 8px; margin-bottom: 50px;">WAVE</h1>
+    <button class="menu-btn" onclick="startPlay()">PLAY</button>
+    <button class="menu-btn" onclick="openSkins()">SKINS</button>
+    <button class="menu-btn" onclick="openSettings()">SETTINGS</button>
 </div>
 
-<div id="shop">
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="upg">УЛУЧШЕНИЯ</button>
-        <button class="tab-btn" data-tab="loc">МИР</button>
-        <button class="tab-btn" data-tab="skin">АРТЫ</button>
-        <button class="tab-btn" data-tab="bunker">БУНКЕР</button>
+<div id="game-container">
+    <div id="score">SCORE: 0</div>
+    <div id="prep-display">3</div>
+    
+    <div id="skins-screen" class="overlay-screen hidden">
+        <h2 style="letter-spacing: 5px;">SELECT SKIN</h2>
+        <div class="skin-grid" id="skin-grid"></div>
+        <button class="menu-btn" onclick="closeOverlays()">DONE</button>
     </div>
-    <div id="shop-content"></div>
-</div>
 
-<div id="dima-game">
-    <h2 style="color: var(--nagets)">ЗАЖМИ И СОБИРАЙ!</h2>
-    <div id="game-timer" style="font-size: 3rem;">10</div>
+    <div id="settings-screen" class="overlay-screen hidden">
+        <h2 style="letter-spacing: 5px;">SETTINGS</h2>
+        <p>DEATH VOL</p>
+        <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5">
+        <button class="menu-btn" onclick="closeOverlays()" style="margin-top:20px">Back</button>
+    </div>
+
+    <canvas id="game"></canvas>
 </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.setHeaderColor('#050505');
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const sideMenu = document.getElementById('side-menu');
+const scoreEl = document.getElementById('score');
+const prepDisplay = document.getElementById('prep-display');
 
-    function vib(type = 'light') { if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type); }
+let state = 'menu'; 
+let score = 0;
+let skinColor = '#00f2ff';
+let deathVolume = 0.5;
+let prepTimer = 0;
 
-    let state = JSON.parse(localStorage.getItem('vova_v9_stable')) || {
-        money: 0, nagets: 0, prestigeGold: 0, click: 1, auto: 0, mult: 1, locIdx: 0, 
-        upgLvl: {}, totalClicks: 0, skins: { current: '🍔' }, unlockedSkins: ['🍔']
-    };
+// Difficulty scaling constants
+let currentWorldSpeed = 7;
+let currentGap = 350;
 
-    let activeTab = 'upg';
-    let isPressed = false;
-    window.addEventListener('mousedown', () => isPressed = true);
-    window.addEventListener('mouseup', () => isPressed = false);
-    window.addEventListener('touchstart', () => isPressed = true);
-    window.addEventListener('touchend', () => isPressed = false);
+const PLAYER_X = 300; 
+const MOVE_SPEED = 7;
 
-    const upgrades = [
-        { id: 'u1', n: "Острый перец", b: 15, p: 2, t: 'click', r: 'common', d: "+2 к клику" },
-        { id: 'u2', n: "Студент-курьер", b: 100, p: 5, t: 'auto', r: 'common', d: "+5 БХ/сек" },
-        { id: 'u3', n: "Двойная котлета", b: 500, p: 15, t: 'click', r: 'rare', d: "+15 к клику" },
-        { id: 'u4', n: "Гриль-машина", b: 2000, p: 50, t: 'auto', r: 'rare', d: "+50 БХ/сек" },
-        { id: 'u5', n: "Золотая франшиза", b: 10000, p: 2, t: 'mult', r: 'rare', d: "Доход x2" },
-        { id: 'u6', n: "SMM Менеджер", b: 25000, p: 200, t: 'auto', r: 'rare', d: "+200 БХ/сек" },
-        { id: 'u7', n: "Вертолет доставки", b: 80000, p: 700, t: 'auto', r: 'mythic', d: "+700 БХ/сек" },
-        { id: 'u8', n: "Секретный ингредиент", b: 250000, p: 2000, t: 'click', r: 'mythic', d: "+2к к клику" },
-        { id: 'u9', n: "Космический маркетинг", b: 600000, p: 3, t: 'mult', r: 'mythic', d: "Доход x3" },
-        { id: 'l1', n: "👑 КОРОЛЬ МИРА", b: 20, p: 10, t: 'mult', r: 'legendary', cur: 'n', d: "Доход x10" },
-        { id: 'l2', n: "👑 Читы от Димы", b: 100, p: 100000, t: 'auto', r: 'legendary', cur: 'n', d: "+100к БХ/сек" },
-        { id: 'l3', n: "👑 Квантовый соус", b: 250, p: 200000, t: 'click', r: 'legendary', cur: 'n', d: "+200к к клику" }
-    ];
+const player = {
+    y: 300, isClimbing: false,
+    trail: []
+};
 
-    const locations = [
-        { n: "МАХАЧКАЛА", req: 0, m: 1 }, { n: "ТУРЦИЯ", req: 15000, m: 5 },
-        { n: "США", req: 300000, m: 25 }, { n: "ЯПОНИЯ", req: 2000000, m: 100 },
-        { n: "МАРС", req: 100000000, m: 1000 }
-    ];
+let tunnelPoints = [];
 
-    const skinData = {
-        '🍔': { n: "Обычный", b: "Нет", req: 0, t: "Старт" },
-        '📀': { n: "Золотой", b: "События чаще", req: 1000000, cur: 'money', t: "1М БХ" },
-        '🍖': { n: "Гига", b: "Доход x5", req: 5000, cur: 'clicks', t: "5000 кликов" },
-        '🐻': { n: "Миша", b: "Клик +1% авто", req: 200, cur: 'nagets', t: "200 нагетсов" }
-    };
-
-    function save() { localStorage.setItem('vova_v9_stable', JSON.stringify(state)); }
-
-    // ГЛОБАЛЬНЫЙ КЛИКЕР (Event Delegation)
-    document.addEventListener('click', function(e) {
-        const target = e.target;
-
-        // Клик по бургеру
-        if (target.id === 'burger-btn') {
-            vib('light');
-            let bM = state.skins.current === '🍖' ? 5 : 1;
-            let misha = state.skins.current === '🐻' ? (state.auto * state.mult * 0.01) : 0;
-            let val = (state.click + misha) * state.mult * locations[state.locIdx].m * bM;
-            state.money += val; state.totalClicks++;
-            
-            const f = document.createElement('div'); f.className = 'f-text';
-            f.style.left = e.clientX + 'px'; f.style.top = e.clientY + 'px';
-            f.innerText = `+${Math.floor(val)}`; document.body.appendChild(f);
-            setTimeout(() => f.remove(), 600);
-            updateUI();
-            return;
-        }
-
-        // Переключение табов
-        if (target.dataset.tab) {
-            activeTab = target.dataset.tab;
-            render();
-            return;
-        }
-
-        // Покупка улучшений
-        if (target.dataset.buyUpg) {
-            const u = upgrades.find(x => x.id === target.dataset.buyUpg);
-            const lvl = state.upgLvl[u.id] || 0;
-            const cost = u.cur === 'n' ? u.b : Math.floor(u.b * Math.pow(1.7, lvl));
-            if (u.cur === 'n' ? state.nagets >= cost : state.money >= cost) {
-                vib('medium');
-                if (u.cur === 'n') state.nagets -= cost; else state.money -= cost;
-                if (u.t === 'click') state.click += u.p;
-                if (u.t === 'auto') state.auto += u.p;
-                if (u.t === 'mult') state.mult *= u.p;
-                state.upgLvl[u.id] = lvl + 1;
-                save(); render();
-            }
-            return;
-        }
-
-        // Переезд
-        if (target.dataset.setLoc) {
-            const idx = parseInt(target.dataset.setLoc);
-            if (state.money >= locations[idx].req) {
-                vib('medium'); state.locIdx = idx; save(); render();
-            }
-            return;
-        }
-
-        // Скины
-        if (target.dataset.setSkin) {
-            const icon = target.dataset.setSkin;
-            const can = target.dataset.can === "true";
-            if (can && !state.unlockedSkins.includes(icon)) state.unlockedSkins.push(icon);
-            if (state.unlockedSkins.includes(icon)) state.skins.current = icon;
-            save(); render(); updateUI();
-            return;
-        }
-
-        // Престиж
-        if (target.id === 'prestige-btn') {
-            if (confirm("Сбросить всё ради золота?")) {
-                state.prestigeGold += Math.floor((state.money * state.nagets) / 10000);
-                state.money=0; state.nagets=0; state.click=1; state.auto=0; state.mult=1; 
-                state.locIdx=0; state.upgLvl={}; state.totalClicks=0; 
-                save(); location.reload();
-            }
-        }
-    });
-
-    function render() {
-        const cont = document.getElementById('shop-content');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === activeTab));
-        let html = '';
-
-        if (activeTab === 'upg') {
-            upgrades.forEach(u => {
-                const lvl = state.upgLvl[u.id] || 0;
-                const cost = u.cur === 'n' ? u.b : Math.floor(u.b * Math.pow(1.7, lvl));
-                html += `<div class="item ${u.r}">
-                    <b>${u.n} (Ур.${lvl})</b><span class="profit">${u.d}</span>
-                    <button class="action-btn" data-buy-upg="${u.id}" style="${u.cur==='n'?'background:#ff6600':''}">
-                        ${u.cur==='n'?'🍗 ':''}${cost.toLocaleString()}
-                    </button>
-                </div>`;
-            });
-        } else if (activeTab === 'loc') {
-            locations.forEach((l, i) => {
-                html += `<div class="item">
-                    <b>${l.n} (x${l.m})</b>
-                    <button class="action-btn" data-set-loc="${i}">
-                        ${state.locIdx === i ? 'ДОМА' : 'ПЕРЕЕЗД: ' + l.req.toLocaleString()}
-                    </button>
-                </div>`;
-            });
-        } else if (activeTab === 'skin') {
-            Object.entries(skinData).forEach(([icon, d]) => {
-                const isUn = state.unlockedSkins.includes(icon);
-                const prog = d.cur === 'money' ? state.money : (d.cur === 'clicks' ? state.totalClicks : state.nagets);
-                const can = prog >= d.req || isUn;
-                html += `<div class="item ${isUn?'legendary':''}">
-                    <b>${icon} ${d.n}</b><small>${d.b}</small><br>
-                    <small style="color:var(--gold)">${d.t}: ${Math.floor(prog)}/${d.req}</small>
-                    <button class="action-btn" data-set-skin="${icon}" data-can="${can}" style="background:${isUn?'#444':''}">
-                        ${isUn ? (state.skins.current === icon ? 'АКТИВЕН' : 'ВЫБРАТЬ') : 'ЗАКРЫТО'}
-                    </button>
-                </div>`;
-            });
-        } else if (activeTab === 'bunker') {
-            let pot = Math.floor((state.money * state.nagets) / 10000);
-            html = `<div class="item legendary" style="text-align:center">
-                <b>👑 БУНКЕР ВОВЫ</b><p>Золото: ${state.prestigeGold}</p>
-                <p>При престиже: <span style="color:var(--gold)">+${pot} 👑</span></p>
-                <button class="action-btn" id="prestige-btn" style="background:#c0392b" ${pot <= 0 ? 'disabled' : ''}>СБРОСИТЬ ВСЁ</button>
-            </div>`;
-        }
-        cont.innerHTML = html;
-        updateUI();
+function initTunnel() {
+    tunnelPoints = [];
+    let startY = canvas.height / 2 - 175;
+    for(let i = 0; i < 40; i++) {
+        tunnelPoints.push({ x: i * 50, y: startY });
     }
+}
 
-    function updateUI() {
-        document.getElementById('money-display').innerText = Math.floor(state.money).toLocaleString();
-        document.getElementById('nagets-display').innerText = state.nagets;
-        document.getElementById('prestige-display').innerText = state.prestigeGold;
-        document.getElementById('burger-btn').innerText = state.skins.current;
-        document.getElementById('loc-display').innerText = locations[state.locIdx].n;
-        let bM = state.skins.current === '🍖' ? 5 : 1;
-        document.getElementById('income-stats').innerText = `Авто: ${Math.floor(state.auto * state.mult * locations[state.locIdx].m * bM)}/с`;
-
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            if (btn.dataset.buyUpg) {
-                const u = upgrades.find(x => x.id === btn.dataset.buyUpg);
-                const lvl = state.upgLvl[u.id] || 0;
-                const cost = u.cur === 'n' ? u.b : Math.floor(u.b * Math.pow(1.7, lvl));
-                btn.disabled = u.cur === 'n' ? state.nagets < cost : state.money < cost;
-            } else if (btn.dataset.setLoc) {
-                const idx = parseInt(btn.dataset.setLoc);
-                if (state.locIdx !== idx) btn.disabled = state.money < locations[idx].req;
-                else btn.disabled = true;
-            } else if (btn.dataset.setSkin) {
-                const isUn = state.unlockedSkins.includes(btn.dataset.setSkin);
-                const can = btn.dataset.can === "true";
-                if (!isUn && !can) btn.disabled = true;
-            }
-        });
-    }
-
-    // ШТОРМ
-    window.addEventListener('touchmove', function(e) {
-        if (document.getElementById('dima-game').style.display === 'flex') {
-            let touch = e.touches[0];
-            let el = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (el && el.classList.contains('falling-nagets') && !el.dataset.c) {
-                vib('medium'); el.dataset.c = 1; state.nagets++; updateUI();
-                el.style.transform = 'scale(2)'; el.style.opacity = '0';
-                setTimeout(() => el.remove(), 200);
-            }
-        }
-    }, { passive: false });
-
-    function startStorm() {
-        const overlay = document.getElementById('dima-game');
-        overlay.style.display = 'flex';
-        let tl = 10;
-        let tInterval = setInterval(() => { tl--; document.getElementById('game-timer').innerText = tl; if(tl <= 0){ clearInterval(tInterval); overlay.style.display='none'; } }, 1000);
-        let sInterval = setInterval(() => {
-            if(tl <= 0){ clearInterval(sInterval); return; }
-            const n = document.createElement('div'); n.className = 'falling-nagets'; n.innerText = '🍗';
-            n.style.left = Math.random() * 80 + 10 + '%'; n.style.top = '-50px';
-            document.body.appendChild(n);
-            n.animate([{ top: '-50px' }, { top: '100vh' }], { duration: 2000 });
-            setTimeout(() => n.remove(), 2000);
-        }, 300);
-    }
-
-    setInterval(() => { state.money += (state.auto * state.mult * locations[state.locIdx].m * (state.skins.current === '🍖' ? 5 : 1)) / 10; updateUI(); }, 100);
-    setInterval(() => { if(Math.random() < (state.skins.current === '📀' ? 0.6 : 0.2)) startStorm(); }, 40000);
+function addPoint() {
+    const lastPoint = tunnelPoints[tunnelPoints.length-1];
+    const x = lastPoint.x + 50;
     
-    render();
+    // Difficulty: variation increases, gap decreases
+    const difficultyFactor = Math.min(2.5, 1 + (score / 4000));
+    const variation = 65 * difficultyFactor;
+    
+    let newY = lastPoint.y + (Math.random() - 0.5) * variation;
+    newY = Math.max(50, Math.min(canvas.height - currentGap - 50, newY));
+    
+    tunnelPoints.push({ x, y: newY });
+}
+
+function update() {
+    // Progressive Difficulty: Much faster narrowing
+    if(state === 'playing' && prepTimer <= 0) {
+        currentWorldSpeed += 0.0015; 
+        currentGap = Math.max(120, 350 - (score / 100)); // Narrowing is more aggressive here
+    }
+
+    tunnelPoints.forEach(p => p.x -= currentWorldSpeed);
+    if(tunnelPoints[0].x < -100) {
+        tunnelPoints.shift();
+        addPoint();
+    }
+
+    if (state === 'menu') {
+        const target = getTunnelAt(PLAYER_X).y + currentGap/2;
+        player.y += (target - player.y) * 0.12; // Smooth AI
+    } else if (prepTimer > 0) {
+        // Safe Zone / Preparation
+        const target = getTunnelAt(PLAYER_X).y + currentGap/2;
+        player.y += (target - player.y) * 0.12;
+        prepTimer--;
+        
+        prepDisplay.innerText = Math.ceil(prepTimer / 60);
+        prepDisplay.classList.add('show');
+        if(prepTimer <= 0) prepDisplay.classList.remove('show');
+    } else {
+        // Player Control
+        if (player.isClimbing) player.y -= MOVE_SPEED;
+        else player.y += MOVE_SPEED;
+        score += 1;
+    }
+
+    // High-visibility Trail
+    player.trail.push({x: PLAYER_X, y: player.y});
+    if (player.trail.length > 55) player.trail.shift();
+    player.trail.forEach(t => t.x -= currentWorldSpeed);
+
+    // Collisions
+    if(state === 'playing' && prepTimer <= 0) {
+        const tunnel = getTunnelAt(PLAYER_X);
+        if(player.y < tunnel.y || player.y > tunnel.y + currentGap) die();
+    }
+    
+    scoreEl.innerText = `SCORE: ${Math.floor(score/5)}`;
+}
+
+function getTunnelAt(x) {
+    for(let i = 0; i < tunnelPoints.length - 1; i++) {
+        if(x >= tunnelPoints[i].x && x <= tunnelPoints[i+1].x) {
+            const t = (x - tunnelPoints[i].x) / (tunnelPoints[i+1].x - tunnelPoints[i].x);
+            return { y: tunnelPoints[i].y + (tunnelPoints[i+1].y - tunnelPoints[i].y) * t };
+        }
+    }
+    return { y: canvas.height / 2 };
+}
+
+function draw() {
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Tunnel Lines
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = skinColor;
+    ctx.strokeStyle = skinColor;
+    ctx.lineWidth = 4;
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath(); 
+    tunnelPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+
+    ctx.beginPath(); 
+    tunnelPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y + currentGap) : ctx.lineTo(p.x, p.y + currentGap));
+    ctx.stroke();
+
+    // Glowing Trail
+    if(player.trail.length > 1) {
+        ctx.shadowBlur = 25;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(player.trail[0].x, player.trail[0].y);
+        player.trail.forEach(t => ctx.lineTo(t.x, t.y));
+        ctx.stroke();
+    }
+
+    // Wave Triangle
+    ctx.save();
+    ctx.translate(PLAYER_X, player.y);
+    const angle = (state === 'playing' && prepTimer <= 0) ? (player.isClimbing ? -Math.PI/4 : Math.PI/4) : 0;
+    ctx.rotate(angle);
+    ctx.shadowBlur = 35;
+    ctx.fillStyle = skinColor;
+    ctx.beginPath();
+    ctx.moveTo(22, 0); ctx.lineTo(-12, -13); ctx.lineTo(-12, 13);
+    ctx.fill();
+    ctx.restore();
+
+    requestAnimationFrame(() => { update(); draw(); });
+}
+
+function startPlay() {
+    state = 'playing';
+    score = 0;
+    prepTimer = 180; 
+    currentWorldSpeed = 7;
+    currentGap = 350;
+    sideMenu.classList.add('hidden');
+    setTimeout(resize, 100);
+}
+
+function die() {
+    playDeathSound();
+    state = 'menu';
+    prepDisplay.classList.remove('show');
+    sideMenu.classList.remove('hidden');
+    setTimeout(resize, 100);
+}
+
+function playDeathSound() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(deathVolume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+}
+
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+}
+
+window.addEventListener('resize', resize);
+window.onmousedown = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
+window.onmouseup = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = false; };
+window.ontouchstart = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
+window.ontouchend = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = false; };
+
+const colors = ['#00f2ff', '#ff0055', '#00ff44', '#ffff00', '#ff8800', '#cc00ff', '#ffffff', '#0077ff', '#ff00ff', '#44ffcc'];
+colors.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'skin-item';
+    div.style.background = c;
+    div.onclick = () => {
+        skinColor = c;
+        document.querySelectorAll('.skin-item').forEach(i => i.classList.remove('active'));
+        div.classList.add('active');
+    };
+    document.getElementById('skin-grid').appendChild(div);
+});
+
+function openSkins() { document.getElementById('skins-screen').classList.remove('hidden'); }
+function openSettings() { document.getElementById('settings-screen').classList.remove('hidden'); }
+function closeOverlays() { document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden')); }
+document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
+
+resize();
+initTunnel();
+draw();
 </script>
 </body>
 </html>
-
