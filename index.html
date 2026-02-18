@@ -75,9 +75,18 @@
     <div id="prep-display">3</div>
     
     <div id="skins-screen" class="overlay-screen hidden">
-        <h2 style="letter-spacing: 5px;">SELECT SKIN</h2>
-        <div class="skin-grid" id="skin-grid"></div>
-        <button class="menu-btn" onclick="closeOverlays()">DONE</button>
+        <h2 style="letter-spacing: 5px;">SKIN</h2>
+        
+        <h3 style="margin-top:15px; letter-spacing:2px;">TRAIL</h3>
+        <div class="skin-grid" id="trail-colors"></div>
+        
+        <h3 style="margin-top:10px; letter-spacing:2px;">PLAYER</h3>
+        <div class="skin-grid" id="wave-colors"></div>
+        
+        <h3 style="margin-top:10px; letter-spacing:2px;">TUNNEL</h3>
+        <div class="skin-grid" id="map-colors"></div>
+        
+        <button class="menu-btn" onclick="closeOverlays()" style="margin-top:20px;">DONE</button>
     </div>
 
     <div id="settings-screen" class="overlay-screen hidden">
@@ -100,7 +109,12 @@ const prepDisplay = document.getElementById('prep-display');
 
 let state = 'menu'; 
 let score = 0;
-let skinColor = '#00f2ff';
+
+// --- Три отдельных цвета ---
+let trailColor = '#00f2ff';   // след
+let waveColor  = '#00f2ff';   // треугольник (волна)
+let mapColor   = '#00f2ff';   // линии туннеля
+
 let deathVolume = 0.5;
 let prepTimer = 0;
 
@@ -237,10 +251,10 @@ function draw() {
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Tunnel Lines
+    // --- 1. Туннель (карта) ---
     ctx.shadowBlur = 15;
-    ctx.shadowColor = skinColor;
-    ctx.strokeStyle = skinColor;
+    ctx.shadowColor = mapColor;
+    ctx.strokeStyle = mapColor;
     ctx.lineWidth = 4;
     ctx.lineJoin = 'round';
 
@@ -252,9 +266,11 @@ function draw() {
     tunnelPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y + currentGap) : ctx.lineTo(p.x, p.y + currentGap));
     ctx.stroke();
 
-    // Glowing Trail
+    // --- 2. След (trail) ---
     if(player.trail.length > 1) {
         ctx.shadowBlur = 25;
+        ctx.shadowColor = trailColor;
+        ctx.strokeStyle = trailColor;
         ctx.lineWidth = 6;
         ctx.beginPath();
         ctx.moveTo(player.trail[0].x, player.trail[0].y);
@@ -262,13 +278,14 @@ function draw() {
         ctx.stroke();
     }
 
-    // Wave Triangle
+    // --- 3. Треугольник (волна) ---
     ctx.save();
     ctx.translate(PLAYER_X, player.y);
     const angle = (state === 'playing' && prepTimer <= 0) ? (player.isClimbing ? -Math.PI/4 : Math.PI/4) : 0;
     ctx.rotate(angle);
     ctx.shadowBlur = 35;
-    ctx.fillStyle = skinColor;
+    ctx.shadowColor = waveColor;
+    ctx.fillStyle = waveColor;
     ctx.beginPath();
     ctx.moveTo(22, 0); ctx.lineTo(-12, -13); ctx.lineTo(-12, 13);
     ctx.fill();
@@ -346,22 +363,49 @@ window.onmouseup = () => { if(state === 'playing' && prepTimer <= 0) player.isCl
 window.ontouchstart = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
 window.ontouchend = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = false; };
 
+// ---------- Цветовые сетки (три отдельные категории) ----------
 const colors = ['#00f2ff', '#ff0055', '#00ff44', '#ffff00', '#ff8800', '#cc00ff', '#ffffff', '#0077ff', '#ff00ff', '#44ffcc'];
-colors.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'skin-item';
-    div.style.background = c;
-    div.onclick = () => {
-        skinColor = c;
-        document.querySelectorAll('.skin-item').forEach(i => i.classList.remove('active'));
-        div.classList.add('active');
-    };
-    document.getElementById('skin-grid').appendChild(div);
+
+// Утилита для заполнения контейнера
+function createColorGrid(containerId, setterCallback, currentColor) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    colors.forEach(hex => {
+        const div = document.createElement('div');
+        div.className = 'skin-item';
+        div.style.backgroundColor = hex;
+        div.dataset.color = hex;
+        div.onclick = function() {
+            // обновляем соответствующий цвет
+            setterCallback(hex);
+            // снимаем active со всех в этой группе
+            container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+        };
+        container.appendChild(div);
+    });
+    // отметим активный элемент, соответствующий текущему цвету
+    const activeDiv = Array.from(container.children).find(el => el.dataset.color === currentColor);
+    if (activeDiv) activeDiv.classList.add('active');
+}
+
+// Создаём три сетки после полной загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+    createColorGrid('trail-colors', (c) => trailColor = c, trailColor);
+    createColorGrid('wave-colors',  (c) => waveColor = c, waveColor);
+    createColorGrid('map-colors',   (c) => mapColor = c, mapColor);
 });
 
-function openSkins() { document.getElementById('skins-screen').classList.remove('hidden'); }
-function openSettings() { document.getElementById('settings-screen').classList.remove('hidden'); }
-function closeOverlays() { document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden')); }
+// ---------- Управление окнами ----------
+function openSkins() { 
+    document.getElementById('skins-screen').classList.remove('hidden'); 
+}
+function openSettings() { 
+    document.getElementById('settings-screen').classList.remove('hidden'); 
+}
+function closeOverlays() { 
+    document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden')); 
+}
 document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
 
 // Начальная инициализация
