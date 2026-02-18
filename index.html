@@ -8,7 +8,6 @@
         :root { --neon: #d9ff00; --bg: #000000; }
         body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; display: flex; }
         
-        /* Side Menu (адаптивная ширина) */
         #side-menu {
             width: min(350px, 25%);
             min-width: 200px;
@@ -24,8 +23,21 @@
         }
         #side-menu.hidden { transform: translateX(-100%); position: absolute; }
 
-        #game-container { flex-grow: 1; position: relative; overflow: hidden; background: #000; }
-        canvas { display: block; width: 100%; height: 100%; }
+        #game-container { 
+            flex-grow: 1; 
+            position: relative; 
+            overflow: hidden; 
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain;
+        }
 
         .menu-btn { 
             background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon); color: white; 
@@ -41,14 +53,13 @@
             background: rgba(0,0,0,0.95); z-index: 30; 
             padding: 20px 10px;
             box-sizing: border-box;
-            overflow-y: auto; /* добавляем прокрутку, если контент не влезает */
+            overflow-y: auto;
         }
         .hidden { display: none !important; }
 
         #score { position: absolute; top: 20px; right: 30px; font-size: clamp(24px, 5vw, 32px); color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
         #high-score { position: absolute; top: 70px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
         
-        /* Preparation Timer in Center */
         #prep-display {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             font-size: clamp(80px, 20vw, 120px); font-weight: bold; color: white; pointer-events: none;
@@ -56,7 +67,6 @@
         }
         #prep-display.show { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
 
-        /* Адаптивная сетка скинов */
         .skin-grid { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -77,7 +87,6 @@
         .skin-item:hover { transform: scale(1.1); }
         .skin-item.active { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
 
-        /* Вкладки */
         .tab-buttons {
             display: flex;
             gap: 15px;
@@ -121,14 +130,12 @@
             font-size: clamp(14px, 3vw, 18px);
         }
 
-        /* Portrait orientation adjustments */
         @media (orientation: portrait) {
             body { flex-direction: column; }
             #side-menu { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgb(0, 242, 255); padding: 10px 0; }
             .menu-btn { width: 90%; margin: 5px auto; }
         }
 
-        /* Дополнительная адаптация для очень маленьких экранов */
         @media (max-width: 600px) {
             .skin-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -214,27 +221,28 @@ const scoreEl = document.getElementById('score');
 const highScoreEl = document.getElementById('high-score');
 const prepDisplay = document.getElementById('prep-display');
 
+canvas.width = 1600;
+canvas.height = 900;
+
 let state = 'menu'; 
 let score = 0;
 
-// --- Три отдельных цвета ---
-let trailColor = '#00f2ff';   // след
-let waveColor  = '#00f2ff';   // треугольник (волна)
-let mapColor   = '#00f2ff';   // линии туннеля
+let trailColor = '#00f2ff';
+let waveColor  = '#00f2ff';
+let mapColor   = '#00f2ff';
 
 let deathVolume = 0.5;
 let prepTimer = 0;
 
-// High score
 let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
 highScoreEl.innerText = `HIGH: ${highScore}`;
 
-// Difficulty scaling constants
 let currentWorldSpeed = 7;
-let currentGap = 350; // будет переопределено при старте под размер экрана
+const BASE_GAP = 350;
+let currentGap = BASE_GAP;
 
 const PLAYER_X = 300; 
-const MOVE_SPEED = 7;
+const MOVE_SPEED = 5;
 
 const player = {
     y: 300, isClimbing: false,
@@ -243,65 +251,35 @@ const player = {
 
 let tunnelPoints = [];
 
-// Функция для получения адаптивного начального зазора в зависимости от высоты экрана
-function getAdaptiveGap() {
-    return Math.min(350, Math.max(200, canvas.height * 0.6));
-}
-
-// Инициализация туннеля с учётом текущей высоты canvas
 function initTunnel() {
     tunnelPoints = [];
-    let startGap = getAdaptiveGap();
-    let startY = (canvas.height - startGap) / 2; // центр по вертикали
-    // Ограничиваем, чтобы туннель не упирался в края (но он уже по центру)
-    startY = Math.max(20, Math.min(canvas.height - startGap - 20, startY));
+    let startY = (canvas.height - currentGap) / 2;
+    startY = Math.max(20, Math.min(canvas.height - currentGap - 20, startY));
     
     for(let i = 0; i < 40; i++) {
         tunnelPoints.push({ x: i * 50, y: startY });
     }
-    // Если мы в игре, то currentGap должно соответствовать начальному
-    if (state !== 'playing') {
-        currentGap = startGap;
-    }
-}
-
-// Масштабирование туннеля при изменении размера окна во время игры
-function rescaleTunnel(oldHeight, newHeight) {
-    if (oldHeight === newHeight) return;
-    const scale = newHeight / oldHeight;
-    tunnelPoints.forEach(p => {
-        p.y = p.y * scale;
-    });
-    // Также масштабируем зазор
-    currentGap = currentGap * scale;
-    // Корректируем позицию игрока, чтобы он оставался относительно туннеля
-    player.y = player.y * scale;
-    // Масштабируем трейл
-    player.trail.forEach(t => {
-        t.y = t.y * scale;
-    });
 }
 
 function addPoint() {
     const lastPoint = tunnelPoints[tunnelPoints.length-1];
-    const x = lastPoint.x + 50;
+    const x = lastPoint.x + 40;
     
-    // Difficulty: variation increases, gap decreases
-    const difficultyFactor = Math.min(2.5, 1 + (score / 4000));
-    const variation = 65 * difficultyFactor;
+    // MODIFIED: увеличен разброс генерации
+    const difficultyFactor = Math.min(2.5, 1 + (score / 2500)); // раньше было min(2.5, 1+score/4000)
+    const variation = 70 * difficultyFactor;                 // раньше было 65 * difficultyFactor
     
     let newY = lastPoint.y + (Math.random() - 0.5) * variation;
-    // Ограничиваем, чтобы туннель не уходил за границы с учётом currentGap
-    newY = Math.max(20, Math.min(canvas.height - currentGap - 20, newY));
+    newY = Math.max(20, Math.min(canvas.height - currentGap - 25, newY));
     
     tunnelPoints.push({ x, y: newY });
 }
 
 function update() {
-    // Progressive Difficulty: Much faster narrowing
     if(state === 'playing' && prepTimer <= 0) {
-        currentWorldSpeed += 0.0015; 
-        currentGap = Math.max(120, getAdaptiveGap() - (score / 100)); // Начальный gap зависит от экрана
+        currentWorldSpeed += 0.00005; 
+        // MODIFIED: более быстрое сужение зазора
+        currentGap = Math.max(100, BASE_GAP - (score / 50)); // раньше было Math.max(120, BASE_GAP - (score/100))
     }
 
     tunnelPoints.forEach(p => p.x -= currentWorldSpeed);
@@ -312,9 +290,8 @@ function update() {
 
     if (state === 'menu') {
         const target = getTunnelAt(PLAYER_X).y + currentGap/2;
-        player.y += (target - player.y) * 0.12; // Smooth AI
+        player.y += (target - player.y) * 0.12;
     } else if (prepTimer > 0) {
-        // Safe Zone / Preparation
         const target = getTunnelAt(PLAYER_X).y + currentGap/2;
         player.y += (target - player.y) * 0.12;
         prepTimer--;
@@ -323,18 +300,15 @@ function update() {
         prepDisplay.classList.add('show');
         if(prepTimer <= 0) prepDisplay.classList.remove('show');
     } else {
-        // Player Control
         if (player.isClimbing) player.y -= MOVE_SPEED;
         else player.y += MOVE_SPEED;
         score += 1;
     }
 
-    // High-visibility Trail
     player.trail.push({x: PLAYER_X, y: player.y});
     if (player.trail.length > 55) player.trail.shift();
     player.trail.forEach(t => t.x -= currentWorldSpeed);
 
-    // Collisions
     if(state === 'playing' && prepTimer <= 0) {
         const tunnel = getTunnelAt(PLAYER_X);
         if(player.y < tunnel.y || player.y > tunnel.y + currentGap) die();
@@ -358,7 +332,6 @@ function draw() {
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // --- 1. Туннель (карта) ---
     ctx.shadowBlur = 15;
     ctx.shadowColor = mapColor;
     ctx.strokeStyle = mapColor;
@@ -373,7 +346,6 @@ function draw() {
     tunnelPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y + currentGap) : ctx.lineTo(p.x, p.y + currentGap));
     ctx.stroke();
 
-    // --- 2. След (trail) ---
     if(player.trail.length > 1) {
         ctx.shadowBlur = 25;
         ctx.shadowColor = trailColor;
@@ -385,7 +357,6 @@ function draw() {
         ctx.stroke();
     }
 
-    // --- 3. Треугольник (волна) ---
     ctx.save();
     ctx.translate(PLAYER_X, player.y);
     const angle = (state === 'playing' && prepTimer <= 0) ? (player.isClimbing ? -Math.PI/4 : Math.PI/4) : 0;
@@ -406,12 +377,9 @@ function startPlay() {
     score = 0;
     prepTimer = 180; 
     currentWorldSpeed = 7;
-    // Устанавливаем начальный зазор на основе текущего размера экрана
-    currentGap = getAdaptiveGap();
-    // Перестраиваем туннель с новым зазором
+    currentGap = BASE_GAP;
     initTunnel();
     sideMenu.classList.add('hidden');
-    setTimeout(resize, 100);
 }
 
 function die() {
@@ -425,7 +393,6 @@ function die() {
     state = 'menu';
     prepDisplay.classList.remove('show');
     sideMenu.classList.remove('hidden');
-    // При возврате в меню перестраиваем туннель под текущий размер
     initTunnel();
     let tunnelY = getTunnelAt(PLAYER_X).y;
     player.y = tunnelY + currentGap/2;
@@ -443,23 +410,8 @@ function playDeathSound() {
     osc.start(); osc.stop(audioCtx.currentTime + 0.5);
 }
 
-let lastCanvasHeight = canvas.height; // для отслеживания изменения высоты
-
 function resize() {
-    const oldHeight = canvas.height;
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    
-    if (state === 'playing') {
-        // Масштабируем туннель пропорционально изменению высоты
-        rescaleTunnel(oldHeight, canvas.height);
-    } else {
-        // В меню просто перестраиваем туннель под новый размер
-        initTunnel();
-        // Обновляем позицию игрока
-        let tunnelY = getTunnelAt(PLAYER_X).y;
-        player.y = tunnelY + currentGap/2;
-    }
+    // пусто, чтобы не ломать старые вызовы
 }
 
 window.addEventListener('resize', resize);
@@ -470,10 +422,8 @@ window.onmouseup = () => { if(state === 'playing' && prepTimer <= 0) player.isCl
 window.ontouchstart = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
 window.ontouchend = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = false; };
 
-// ---------- Цветовые сетки (три отдельные категории) ----------
 const colors = ['#00f2ff', '#ff0055', '#00ff44', '#ffff00', '#ff8800', '#cc00ff', '#ffffff', '#0077ff', '#ff00ff', '#44ffcc'];
 
-// Утилита для заполнения контейнера
 function createColorGrid(containerId, setterCallback, currentColor) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -483,30 +433,23 @@ function createColorGrid(containerId, setterCallback, currentColor) {
         div.style.backgroundColor = hex;
         div.dataset.color = hex;
         div.onclick = function() {
-            // обновляем соответствующий цвет
             setterCallback(hex);
-            // снимаем active со всех в этой группе
             container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
             this.classList.add('active');
         };
         container.appendChild(div);
     });
-    // отметим активный элемент, соответствующий текущему цвету
     const activeDiv = Array.from(container.children).find(el => el.dataset.color === currentColor);
     if (activeDiv) activeDiv.classList.add('active');
 }
 
-// Функция переключения вкладок SKINS
 function switchSkinTab(category) {
-    // Скрываем все секции
     document.querySelectorAll('.skin-section').forEach(section => {
         section.classList.add('hidden');
     });
-    // Показываем выбранную
     const activeSection = document.querySelector(`.skin-section[data-category="${category}"]`);
     if (activeSection) activeSection.classList.remove('hidden');
 
-    // Обновляем активное состояние кнопок
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -514,10 +457,9 @@ function switchSkinTab(category) {
     if (activeBtn) activeBtn.classList.add('active');
 }
 
-// Открытие окна SKINS (с показом первой вкладки)
 function openSkins() {
     document.getElementById('skins-screen').classList.remove('hidden');
-    switchSkinTab('player'); // по умолчанию открываем PLAYER
+    switchSkinTab('player');
 }
 
 function openSettings() { 
@@ -530,25 +472,19 @@ function closeOverlays() {
 
 document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
 
-// Создаём сетки после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
     createColorGrid('trail-colors', (c) => trailColor = c, trailColor);
     createColorGrid('wave-colors',  (c) => waveColor = c, waveColor);
     createColorGrid('map-colors',   (c) => mapColor = c, mapColor);
 
-    // Добавляем обработчики для вкладок
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const category = e.target.dataset.category;
             switchSkinTab(category);
         });
     });
-
-    // Изначально все секции скрыты, откроется при вызове openSkins()
 });
 
-// Начальная инициализация
-resize();
 initTunnel();
 draw();
 </script>
