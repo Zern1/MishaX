@@ -37,6 +37,7 @@
         .hidden { display: none !important; }
 
         #score { position: absolute; top: 20px; right: 30px; font-size: 32px; color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
+        #high-score { position: absolute; top: 70px; right: 30px; font-size: 20px; color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
         
         /* Preparation Timer in Center */
         #prep-display {
@@ -50,6 +51,13 @@
         .skin-item { width: 45px; height: 45px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; }
         .skin-item:hover { transform: scale(1.1); }
         .skin-item.active { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
+
+        /* Portrait orientation adjustments */
+        @media (orientation: portrait) {
+            body { flex-direction: column; }
+            #side-menu { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgb(0, 242, 255); padding: 10px 0; }
+            .menu-btn { width: 80%; margin: 5px auto; }
+        }
     </style>
 </head>
 <body>
@@ -63,6 +71,7 @@
 
 <div id="game-container">
     <div id="score">SCORE: 0</div>
+    <div id="high-score">HIGH: 0</div>
     <div id="prep-display">3</div>
     
     <div id="skins-screen" class="overlay-screen hidden">
@@ -86,6 +95,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const sideMenu = document.getElementById('side-menu');
 const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('high-score');
 const prepDisplay = document.getElementById('prep-display');
 
 let state = 'menu'; 
@@ -93,6 +103,10 @@ let score = 0;
 let skinColor = '#00f2ff';
 let deathVolume = 0.5;
 let prepTimer = 0;
+
+// High score
+let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+highScoreEl.innerText = `HIGH: ${highScore}`;
 
 // Difficulty scaling constants
 let currentWorldSpeed = 7;
@@ -173,14 +187,15 @@ function update() {
         if(player.y < tunnel.y || player.y > tunnel.y + currentGap) die();
     }
     
-    scoreEl.innerText = `SCORE: ${Math.floor(score/5)}`;
+    let displayScore = Math.floor(score/5);
+    scoreEl.innerText = `SCORE: ${displayScore}`;
 }
 
 function getTunnelAt(x) {
     for(let i = 0; i < tunnelPoints.length - 1; i++) {
         if(x >= tunnelPoints[i].x && x <= tunnelPoints[i+1].x) {
             const t = (x - tunnelPoints[i].x) / (tunnelPoints[i+1].x - tunnelPoints[i].x);
-            return { y: tunnelPoints[i].y + (tunnelPoints[i+1].y - tunnelPoints[i].y) * t };
+            return { y: tunnelPoints[i].y + (t * (tunnelPoints[i+1].y - tunnelPoints[i].y)) };
         }
     }
     return { y: canvas.height / 2 };
@@ -241,6 +256,12 @@ function startPlay() {
 }
 
 function die() {
+    let finalScore = Math.floor(score/5);
+    if (finalScore > highScore) {
+        highScore = finalScore;
+        localStorage.setItem('highScore', highScore);
+        highScoreEl.innerText = `HIGH: ${highScore}`;
+    }
     playDeathSound();
     state = 'menu';
     prepDisplay.classList.remove('show');
@@ -263,9 +284,19 @@ function playDeathSound() {
 function resize() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
+    
+    // If not in game, reinitialize tunnel to fit new dimensions
+    if (state !== 'playing') {
+        initTunnel();
+        // Place player in the middle of the tunnel
+        let tunnelY = getTunnelAt(PLAYER_X).y;
+        player.y = tunnelY + currentGap/2;
+    }
 }
 
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
+
 window.onmousedown = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
 window.onmouseup = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = false; };
 window.ontouchstart = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
