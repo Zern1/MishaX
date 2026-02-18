@@ -2,20 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neon Wave</title>
     <style>
         :root { --neon: #d9ff00; --bg: #000000; }
         body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; display: flex; }
         
-        /* Side Menu (Semi-transparent) */
+        /* Side Menu (адаптивная ширина) */
         #side-menu {
-            width: 350px; height: 100vh; 
+            width: min(350px, 25%);
+            min-width: 200px;
+            height: 100vh; 
             background: rgb(0, 0, 0);
             backdrop-filter: blur(25px); 
             border-right: 1px solid rgb(0, 242, 255);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 20; position: relative;
+            padding: 10px 0;
+            box-sizing: border-box;
         }
         #side-menu.hidden { transform: translateX(-100%); position: absolute; }
 
@@ -24,39 +29,129 @@
 
         .menu-btn { 
             background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon); color: white; 
-            padding: 15px; margin: 10px; width: 220px; cursor: pointer; border-radius: 4px;
-            font-size: 14px; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+            padding: 15px; margin: 8px 0; width: 90%; max-width: 220px; cursor: pointer; border-radius: 4px;
+            font-size: clamp(12px, 2vw, 14px); text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+            box-sizing: border-box;
         }
         .menu-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
 
         .overlay-screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.9); z-index: 30; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: rgba(0,0,0,0.95); z-index: 30; 
+            padding: 20px 10px;
+            box-sizing: border-box;
+            overflow-y: auto; /* добавляем прокрутку, если контент не влезает */
         }
         .hidden { display: none !important; }
 
-        #score { position: absolute; top: 20px; right: 30px; font-size: 32px; color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
-        #high-score { position: absolute; top: 70px; right: 30px; font-size: 20px; color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
+        #score { position: absolute; top: 20px; right: 30px; font-size: clamp(24px, 5vw, 32px); color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
+        #high-score { position: absolute; top: 70px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
         
         /* Preparation Timer in Center */
         #prep-display {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 120px; font-weight: bold; color: white; pointer-events: none;
+            font-size: clamp(80px, 20vw, 120px); font-weight: bold; color: white; pointer-events: none;
             text-shadow: 0 0 30px var(--neon); z-index: 15; opacity: 0; transition: 0.2s;
         }
         #prep-display.show { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
 
-        .skin-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 20px; }
-        .skin-item { width: 45px; height: 45px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s; }
+        /* Адаптивная сетка скинов */
+        .skin-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px; 
+            padding: 10px; 
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .skin-item { 
+            width: 100%; 
+            aspect-ratio: 1 / 1; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
         .skin-item:hover { transform: scale(1.1); }
         .skin-item.active { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
+
+        /* Вкладки */
+        .tab-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--neon);
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: clamp(12px, 2vw, 14px);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .tab-btn.active,
+        .tab-btn:hover {
+            background: var(--neon);
+            color: black;
+            box-shadow: 0 0 20px var(--neon);
+        }
+        .skin-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .skin-section.hidden {
+            display: none;
+        }
+        .skin-section h3 {
+            margin: 10px 0 5px;
+            letter-spacing: 2px;
+            color: var(--neon);
+            text-shadow: 0 0 8px var(--neon);
+            font-size: clamp(14px, 3vw, 18px);
+        }
 
         /* Portrait orientation adjustments */
         @media (orientation: portrait) {
             body { flex-direction: column; }
             #side-menu { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgb(0, 242, 255); padding: 10px 0; }
-            .menu-btn { width: 80%; margin: 5px auto; }
+            .menu-btn { width: 90%; margin: 5px auto; }
+        }
+
+        /* Дополнительная адаптация для очень маленьких экранов */
+        @media (max-width: 600px) {
+            .skin-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .tab-btn {
+                padding: 8px 12px;
+                letter-spacing: 1px;
+            }
+            #score { top: 10px; right: 15px; }
+            #high-score { top: 50px; right: 15px; }
+        }
+
+        @media (max-width: 400px) {
+            .skin-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .menu-btn {
+                font-size: 11px;
+                padding: 10px;
+            }
+            h1 { font-size: 24px; letter-spacing: 4px; }
+            h2 { font-size: 20px; }
         }
     </style>
 </head>
@@ -77,14 +172,26 @@
     <div id="skins-screen" class="overlay-screen hidden">
         <h2 style="letter-spacing: 5px;">SKIN</h2>
         
-        <h3 style="margin-top:15px; letter-spacing:2px;">TRAIL</h3>
-        <div class="skin-grid" id="trail-colors"></div>
-        
-        <h3 style="margin-top:10px; letter-spacing:2px;">PLAYER</h3>
-        <div class="skin-grid" id="wave-colors"></div>
-        
-        <h3 style="margin-top:10px; letter-spacing:2px;">TUNNEL</h3>
-        <div class="skin-grid" id="map-colors"></div>
+        <div class="tab-buttons">
+            <button class="tab-btn" data-category="player">PLAYER</button>
+            <button class="tab-btn" data-category="trail">TRAIL</button>
+            <button class="tab-btn" data-category="tunnel">TUNNEL</button>
+        </div>
+
+        <div class="skin-section" data-category="player">
+            <h3>PLAYER</h3>
+            <div class="skin-grid" id="wave-colors"></div>
+        </div>
+
+        <div class="skin-section" data-category="trail">
+            <h3>TRAIL</h3>
+            <div class="skin-grid" id="trail-colors"></div>
+        </div>
+
+        <div class="skin-section" data-category="tunnel">
+            <h3>TUNNEL</h3>
+            <div class="skin-grid" id="map-colors"></div>
+        </div>
         
         <button class="menu-btn" onclick="closeOverlays()" style="margin-top:20px;">DONE</button>
     </div>
@@ -389,24 +496,56 @@ function createColorGrid(containerId, setterCallback, currentColor) {
     if (activeDiv) activeDiv.classList.add('active');
 }
 
-// Создаём три сетки после полной загрузки DOM
+// Функция переключения вкладок SKINS
+function switchSkinTab(category) {
+    // Скрываем все секции
+    document.querySelectorAll('.skin-section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    // Показываем выбранную
+    const activeSection = document.querySelector(`.skin-section[data-category="${category}"]`);
+    if (activeSection) activeSection.classList.remove('hidden');
+
+    // Обновляем активное состояние кнопок
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeBtn = document.querySelector(`.tab-btn[data-category="${category}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+}
+
+// Открытие окна SKINS (с показом первой вкладки)
+function openSkins() {
+    document.getElementById('skins-screen').classList.remove('hidden');
+    switchSkinTab('player'); // по умолчанию открываем PLAYER
+}
+
+function openSettings() { 
+    document.getElementById('settings-screen').classList.remove('hidden'); 
+}
+
+function closeOverlays() { 
+    document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden')); 
+}
+
+document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
+
+// Создаём сетки после полной загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
     createColorGrid('trail-colors', (c) => trailColor = c, trailColor);
     createColorGrid('wave-colors',  (c) => waveColor = c, waveColor);
     createColorGrid('map-colors',   (c) => mapColor = c, mapColor);
-});
 
-// ---------- Управление окнами ----------
-function openSkins() { 
-    document.getElementById('skins-screen').classList.remove('hidden'); 
-}
-function openSettings() { 
-    document.getElementById('settings-screen').classList.remove('hidden'); 
-}
-function closeOverlays() { 
-    document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden')); 
-}
-document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
+    // Добавляем обработчики для вкладок
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const category = e.target.dataset.category;
+            switchSkinTab(category);
+        });
+    });
+
+    // Изначально все секции скрыты, откроется при вызове openSkins()
+});
 
 // Начальная инициализация
 resize();
