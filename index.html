@@ -110,7 +110,7 @@ highScoreEl.innerText = `HIGH: ${highScore}`;
 
 // Difficulty scaling constants
 let currentWorldSpeed = 7;
-let currentGap = 350;
+let currentGap = 350; // будет переопределено при старте под размер экрана
 
 const PLAYER_X = 300; 
 const MOVE_SPEED = 7;
@@ -122,12 +122,43 @@ const player = {
 
 let tunnelPoints = [];
 
+// Функция для получения адаптивного начального зазора в зависимости от высоты экрана
+function getAdaptiveGap() {
+    return Math.min(350, Math.max(200, canvas.height * 0.6));
+}
+
+// Инициализация туннеля с учётом текущей высоты canvas
 function initTunnel() {
     tunnelPoints = [];
-    let startY = canvas.height / 2 - 175;
+    let startGap = getAdaptiveGap();
+    let startY = (canvas.height - startGap) / 2; // центр по вертикали
+    // Ограничиваем, чтобы туннель не упирался в края (но он уже по центру)
+    startY = Math.max(20, Math.min(canvas.height - startGap - 20, startY));
+    
     for(let i = 0; i < 40; i++) {
         tunnelPoints.push({ x: i * 50, y: startY });
     }
+    // Если мы в игре, то currentGap должно соответствовать начальному
+    if (state !== 'playing') {
+        currentGap = startGap;
+    }
+}
+
+// Масштабирование туннеля при изменении размера окна во время игры
+function rescaleTunnel(oldHeight, newHeight) {
+    if (oldHeight === newHeight) return;
+    const scale = newHeight / oldHeight;
+    tunnelPoints.forEach(p => {
+        p.y = p.y * scale;
+    });
+    // Также масштабируем зазор
+    currentGap = currentGap * scale;
+    // Корректируем позицию игрока, чтобы он оставался относительно туннеля
+    player.y = player.y * scale;
+    // Масштабируем трейл
+    player.trail.forEach(t => {
+        t.y = t.y * scale;
+    });
 }
 
 function addPoint() {
@@ -139,7 +170,8 @@ function addPoint() {
     const variation = 65 * difficultyFactor;
     
     let newY = lastPoint.y + (Math.random() - 0.5) * variation;
-    newY = Math.max(50, Math.min(canvas.height - currentGap - 50, newY));
+    // Ограничиваем, чтобы туннель не уходил за границы с учётом currentGap
+    newY = Math.max(20, Math.min(canvas.height - currentGap - 20, newY));
     
     tunnelPoints.push({ x, y: newY });
 }
@@ -148,7 +180,7 @@ function update() {
     // Progressive Difficulty: Much faster narrowing
     if(state === 'playing' && prepTimer <= 0) {
         currentWorldSpeed += 0.0015; 
-        currentGap = Math.max(120, 350 - (score / 100)); // Narrowing is more aggressive here
+        currentGap = Math.max(120, getAdaptiveGap() - (score / 100)); // Начальный gap зависит от экрана
     }
 
     tunnelPoints.forEach(p => p.x -= currentWorldSpeed);
@@ -195,7 +227,7 @@ function getTunnelAt(x) {
     for(let i = 0; i < tunnelPoints.length - 1; i++) {
         if(x >= tunnelPoints[i].x && x <= tunnelPoints[i+1].x) {
             const t = (x - tunnelPoints[i].x) / (tunnelPoints[i+1].x - tunnelPoints[i].x);
-            return { y: tunnelPoints[i].y + (t * (tunnelPoints[i+1].y - tunnelPoints[i].y)) };
+            return { y: tunnelPoints[i].y + t * (tunnelPoints[i+1].y - tunnelPoints[i].y) };
         }
     }
     return { y: canvas.height / 2 };
@@ -250,7 +282,10 @@ function startPlay() {
     score = 0;
     prepTimer = 180; 
     currentWorldSpeed = 7;
-    currentGap = 350;
+    // Устанавливаем начальный зазор на основе текущего размера экрана
+    currentGap = getAdaptiveGap();
+    // Перестраиваем туннель с новым зазором
+    initTunnel();
     sideMenu.classList.add('hidden');
     setTimeout(resize, 100);
 }
@@ -266,7 +301,10 @@ function die() {
     state = 'menu';
     prepDisplay.classList.remove('show');
     sideMenu.classList.remove('hidden');
-    setTimeout(resize, 100);
+    // При возврате в меню перестраиваем туннель под текущий размер
+    initTunnel();
+    let tunnelY = getTunnelAt(PLAYER_X).y;
+    player.y = tunnelY + currentGap/2;
 }
 
 function playDeathSound() {
@@ -281,14 +319,20 @@ function playDeathSound() {
     osc.start(); osc.stop(audioCtx.currentTime + 0.5);
 }
 
+let lastCanvasHeight = canvas.height; // для отслеживания изменения высоты
+
 function resize() {
+    const oldHeight = canvas.height;
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
     
-    // If not in game, reinitialize tunnel to fit new dimensions
-    if (state !== 'playing') {
+    if (state === 'playing') {
+        // Масштабируем туннель пропорционально изменению высоты
+        rescaleTunnel(oldHeight, canvas.height);
+    } else {
+        // В меню просто перестраиваем туннель под новый размер
         initTunnel();
-        // Place player in the middle of the tunnel
+        // Обновляем позицию игрока
         let tunnelY = getTunnelAt(PLAYER_X).y;
         player.y = tunnelY + currentGap/2;
     }
@@ -320,6 +364,7 @@ function openSettings() { document.getElementById('settings-screen').classList.r
 function closeOverlays() { document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden')); }
 document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
 
+// Начальная инициализация
 resize();
 initTunnel();
 draw();
