@@ -130,6 +130,36 @@
             font-size: clamp(14px, 3vw, 18px);
         }
 
+        /* Стили для настроек размера */
+        .size-option {
+            margin: 10px 0;
+            text-align: left;
+            width: 100%;
+            max-width: 300px;
+        }
+        .size-option label {
+            display: block;
+            margin: 5px 0;
+            color: var(--neon);
+            letter-spacing: 1px;
+        }
+        .size-option input[type="number"] {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--neon);
+            color: white;
+            padding: 8px;
+            width: 100px;
+            margin: 5px;
+            border-radius: 4px;
+        }
+        .size-option button {
+            margin-top: 10px;
+        }
+        #current-size {
+            color: var(--neon);
+            font-weight: bold;
+        }
+
         @media (orientation: portrait) {
             body { flex-direction: column; }
             #side-menu { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgb(0, 242, 255); padding: 10px 0; }
@@ -183,6 +213,7 @@
             <button class="tab-btn" data-category="player">PLAYER</button>
             <button class="tab-btn" data-category="trail">TRAIL</button>
             <button class="tab-btn" data-category="tunnel">TUNNEL</button>
+            <button class="tab-btn" data-category="shape">SHAPE</button>
         </div>
 
         <div class="skin-section" data-category="player">
@@ -199,15 +230,39 @@
             <h3>TUNNEL</h3>
             <div class="skin-grid" id="map-colors"></div>
         </div>
+
+        <div class="skin-section" data-category="shape">
+            <h3>SHAPE</h3>
+            <div class="skin-grid" id="shape-options"></div>
+        </div>
         
-        <button class="menu-btn" onclick="closeOverlays()" style="margin-top:20px;">DONE</button>
+        <!-- Кнопка DONE удалена -->
     </div>
 
     <div id="settings-screen" class="overlay-screen hidden">
         <h2 style="letter-spacing: 5px;">SETTINGS</h2>
-        <p>DEATH VOL</p>
-        <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5">
-        <button class="menu-btn" onclick="closeOverlays()" style="margin-top:20px">Back</button>
+        
+        <div class="size-option">
+            <p>DEATH VOL</p>
+            <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5">
+        </div>
+
+        <div class="size-option">
+            <p>GAME SIZE</p>
+            <label><input type="radio" name="aspect" value="16:9" checked> 16:9 </label><br>
+            <label><input type="radio" name="aspect" value="4:3"> 4:3 </label><br>
+            <label><input type="radio" name="aspect" value="custom">Custom</label>
+        </div>
+
+        <div id="custom-size-inputs" style="display: none; margin-bottom: 20px;">
+            <input type="number" id="custom-width" placeholder="Width" min="800" max="2560" value="1600">
+            <input type="number" id="custom-height" placeholder="Height" min="600" max="1600" value="900">
+            <button class="menu-btn" onclick="applyCustomSize()">Apply</button>
+        </div>
+
+        <p>Current: <span id="current-size">1600x900</span></p>
+
+        <!-- Кнопка Back удалена -->
     </div>
 
     <canvas id="game"></canvas>
@@ -221,15 +276,28 @@ const scoreEl = document.getElementById('score');
 const highScoreEl = document.getElementById('high-score');
 const prepDisplay = document.getElementById('prep-display');
 
-canvas.width = 1600;
-canvas.height = 900;
+// Размеры игры (логические)
+let gameWidth = 1600;
+let gameHeight = 900;
+
+// Зависимые параметры
+let playerX = Math.floor(gameWidth * 0.1875);          // 300 при 1600
+let baseGap = Math.max(100, Math.floor(gameHeight * 0.2778)); // 250 при 900
+let minGap = Math.floor(gameHeight * 0.1);             // 90 при 900 (минимум 100 будет через Math.max)
+let trailMaxLength = Math.floor(gameWidth * 0.2);      // 320 при 1600 (было 300, чуть увеличим)
+let variationBase = Math.floor(gameHeight * 0.08);     // 72 при 900 (было 70)
+
+canvas.width = gameWidth;
+canvas.height = gameHeight;
 
 let state = 'menu'; 
 let score = 0;
 
+// Цвета
 let trailColor = '#00f2ff';
 let waveColor  = '#00f2ff';
 let mapColor   = '#00f2ff';
+let playerShape = 'triangle';
 
 let deathVolume = 0.5;
 let prepTimer = 0;
@@ -237,12 +305,10 @@ let prepTimer = 0;
 let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
 highScoreEl.innerText = `HIGH: ${highScore}`;
 
-let currentWorldSpeed = 7;
-const BASE_GAP = 350;
-let currentGap = BASE_GAP;
+let currentWorldSpeed = 2.7;
+let currentGap = baseGap;
 
-const PLAYER_X = 300; 
-const MOVE_SPEED = 5;
+const MOVE_SPEED = 2; // можно оставить абсолютным
 
 const player = {
     y: 300, isClimbing: false,
@@ -251,10 +317,20 @@ const player = {
 
 let tunnelPoints = [];
 
+// Функция обновления всех размерозависимых переменных
+function updateDimensions() {
+    playerX = Math.floor(gameWidth * 0.1875);
+    baseGap = Math.max(100, Math.floor(gameHeight * 0.2778));
+    minGap = Math.floor(gameHeight * 0.1);
+    trailMaxLength = Math.floor(gameWidth * 0.2);
+    variationBase = Math.floor(gameHeight * 0.08);
+    currentGap = baseGap; // сброс при изменении
+}
+
 function initTunnel() {
     tunnelPoints = [];
-    let startY = (canvas.height - currentGap) / 2;
-    startY = Math.max(20, Math.min(canvas.height - currentGap - 20, startY));
+    let startY = (gameHeight - currentGap) / 2;
+    startY = Math.max(20, Math.min(gameHeight - currentGap - 20, startY));
     
     for(let i = 0; i < 40; i++) {
         tunnelPoints.push({ x: i * 50, y: startY });
@@ -265,21 +341,19 @@ function addPoint() {
     const lastPoint = tunnelPoints[tunnelPoints.length-1];
     const x = lastPoint.x + 40;
     
-    // MODIFIED: увеличен разброс генерации
-    const difficultyFactor = Math.min(2.5, 1 + (score / 2500)); // раньше было min(2.5, 1+score/4000)
-    const variation = 70 * difficultyFactor;                 // раньше было 65 * difficultyFactor
+    const difficultyFactor = Math.min(2.5, 1 + (score / 4000));
+    const variation = variationBase * difficultyFactor;
     
     let newY = lastPoint.y + (Math.random() - 0.5) * variation;
-    newY = Math.max(20, Math.min(canvas.height - currentGap - 25, newY));
+    newY = Math.max(20, Math.min(gameHeight - currentGap - 25, newY));
     
     tunnelPoints.push({ x, y: newY });
 }
 
 function update() {
     if(state === 'playing' && prepTimer <= 0) {
-        currentWorldSpeed += 0.00005; 
-        // MODIFIED: более быстрое сужение зазора
-        currentGap = Math.max(100, BASE_GAP - (score / 50)); // раньше было Math.max(120, BASE_GAP - (score/100))
+        currentWorldSpeed += 0.00003; 
+        currentGap = Math.max(minGap, baseGap - (score / 100));
     }
 
     tunnelPoints.forEach(p => p.x -= currentWorldSpeed);
@@ -289,10 +363,10 @@ function update() {
     }
 
     if (state === 'menu') {
-        const target = getTunnelAt(PLAYER_X).y + currentGap/2;
+        const target = getTunnelAt(playerX).y + currentGap/2;
         player.y += (target - player.y) * 0.12;
     } else if (prepTimer > 0) {
-        const target = getTunnelAt(PLAYER_X).y + currentGap/2;
+        const target = getTunnelAt(playerX).y + currentGap/2;
         player.y += (target - player.y) * 0.12;
         prepTimer--;
         
@@ -302,15 +376,15 @@ function update() {
     } else {
         if (player.isClimbing) player.y -= MOVE_SPEED;
         else player.y += MOVE_SPEED;
-        score += 1;
+        score += 0.5;
     }
 
-    player.trail.push({x: PLAYER_X, y: player.y});
-    if (player.trail.length > 55) player.trail.shift();
+    player.trail.push({x: playerX, y: player.y});
+    if (player.trail.length > trailMaxLength) player.trail.shift();
     player.trail.forEach(t => t.x -= currentWorldSpeed);
 
     if(state === 'playing' && prepTimer <= 0) {
-        const tunnel = getTunnelAt(PLAYER_X);
+        const tunnel = getTunnelAt(playerX);
         if(player.y < tunnel.y || player.y > tunnel.y + currentGap) die();
     }
     
@@ -325,17 +399,17 @@ function getTunnelAt(x) {
             return { y: tunnelPoints[i].y + t * (tunnelPoints[i+1].y - tunnelPoints[i].y) };
         }
     }
-    return { y: canvas.height / 2 };
+    return { y: gameHeight / 2 };
 }
 
 function draw() {
     ctx.fillStyle = '#050505';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, gameWidth, gameHeight);
 
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 100;
     ctx.shadowColor = mapColor;
     ctx.strokeStyle = mapColor;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
     ctx.lineJoin = 'round';
 
     ctx.beginPath(); 
@@ -347,37 +421,114 @@ function draw() {
     ctx.stroke();
 
     if(player.trail.length > 1) {
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 30;
         ctx.shadowColor = trailColor;
         ctx.strokeStyle = trailColor;
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(player.trail[0].x, player.trail[0].y);
         player.trail.forEach(t => ctx.lineTo(t.x, t.y));
         ctx.stroke();
     }
 
+    // Отрисовка игрока
     ctx.save();
-    ctx.translate(PLAYER_X, player.y);
+    ctx.translate(playerX, player.y);
     const angle = (state === 'playing' && prepTimer <= 0) ? (player.isClimbing ? -Math.PI/4 : Math.PI/4) : 0;
     ctx.rotate(angle);
-    ctx.shadowBlur = 35;
+    ctx.shadowBlur = 50;
     ctx.shadowColor = waveColor;
     ctx.fillStyle = waveColor;
     ctx.beginPath();
-    ctx.moveTo(22, 0); ctx.lineTo(-12, -13); ctx.lineTo(-12, 13);
+
+    switch (playerShape) {
+        case 'triangle':
+            ctx.moveTo(22, 0);
+            ctx.lineTo(-12, -13);
+            ctx.lineTo(-12, 13);
+            break;
+        case 'square':
+            ctx.rect(-12, -12, 24, 24);
+            break;
+        case 'circle':
+            ctx.arc(0, 0, 12, 0, 2 * Math.PI);
+            break;
+        case 'diamond':
+            ctx.moveTo(0, -16);
+            ctx.lineTo(16, 0);
+            ctx.lineTo(0, 16);
+            ctx.lineTo(-16, 0);
+            ctx.closePath();
+            break;
+        default:
+            ctx.moveTo(22, 0);
+            ctx.lineTo(-12, -13);
+            ctx.lineTo(-12, 13);
+    }
+
     ctx.fill();
     ctx.restore();
 
     requestAnimationFrame(() => { update(); draw(); });
 }
 
+// Изменение размера canvas
+function resizeGame(width, height) {
+    gameWidth = width;
+    gameHeight = height;
+    canvas.width = width;
+    canvas.height = height;
+    updateDimensions();
+    
+    // Сброс игры в меню
+    state = 'menu';
+    score = 0;
+    prepTimer = 0;
+    currentWorldSpeed = 2.7;
+    currentGap = baseGap;
+    player.trail = [];
+    initTunnel();
+    player.y = getTunnelAt(playerX).y + currentGap/2;
+    
+    // Обновить отображение текущего размера
+    document.getElementById('current-size').innerText = `${width}x${height}`;
+    
+    // Скрыть меню, если оно было открыто? Оставим как есть.
+}
+
+// Применить
+function applyPreset(aspect) {
+    let w, h;
+    if (aspect === '16:9') {
+        w = 1600;
+        h = 900;
+    } else if (aspect === '4:3') {
+        w = 1000;
+        h = 750;
+    } else {
+        return; // custom обрабатывается отдельно
+    }
+    resizeGame(w, h);
+    // Скрыть настройки? Можно оставить открытыми.
+}
+
+// Применить пользовательский размер
+function applyCustomSize() {
+    const w = parseInt(document.getElementById('custom-width').value);
+    const h = parseInt(document.getElementById('custom-height').value);
+    if (w && h && w >= 800 && w <= 2560 && h >= 600 && h <= 1600) {
+        resizeGame(w, h);
+    } else {
+        alert('Width must be 800-2560, Height 600-1600');
+    }
+}
+
 function startPlay() {
     state = 'playing';
     score = 0;
     prepTimer = 180; 
-    currentWorldSpeed = 7;
-    currentGap = BASE_GAP;
+    currentWorldSpeed = 2.7;
+    currentGap = baseGap;
     initTunnel();
     sideMenu.classList.add('hidden');
 }
@@ -393,8 +544,12 @@ function die() {
     state = 'menu';
     prepDisplay.classList.remove('show');
     sideMenu.classList.remove('hidden');
+    
+    currentWorldSpeed = 2.7;
+    currentGap = baseGap;
+    
     initTunnel();
-    let tunnelY = getTunnelAt(PLAYER_X).y;
+    let tunnelY = getTunnelAt(playerX).y;
     player.y = tunnelY + currentGap/2;
 }
 
@@ -443,6 +598,37 @@ function createColorGrid(containerId, setterCallback, currentColor) {
     if (activeDiv) activeDiv.classList.add('active');
 }
 
+function createShapeGrid() {
+    const container = document.getElementById('shape-options');
+    if (!container) return;
+    const shapes = [
+        { id: 'triangle', symbol: '▲' },
+        { id: 'square',   symbol: '■' },
+        { id: 'circle',   symbol: '●' },
+        { id: 'diamond',  symbol: '◆' }
+    ];
+    shapes.forEach(shape => {
+        const div = document.createElement('div');
+        div.className = 'skin-item';
+        div.style.backgroundColor = 'transparent';
+        div.style.color = waveColor;
+        div.style.fontSize = '32px';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.justifyContent = 'center';
+        div.textContent = shape.symbol;
+        div.dataset.shape = shape.id;
+        div.onclick = function() {
+            playerShape = shape.id;
+            container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+        };
+        container.appendChild(div);
+    });
+    const activeDiv = Array.from(container.children).find(el => el.dataset.shape === playerShape);
+    if (activeDiv) activeDiv.classList.add('active');
+}
+
 function switchSkinTab(category) {
     document.querySelectorAll('.skin-section').forEach(section => {
         section.classList.add('hidden');
@@ -457,13 +643,28 @@ function switchSkinTab(category) {
     if (activeBtn) activeBtn.classList.add('active');
 }
 
+// Изменённая функция openSkins: переключает видимость экрана SKINS
 function openSkins() {
-    document.getElementById('skins-screen').classList.remove('hidden');
-    switchSkinTab('player');
+    const skinsScreen = document.getElementById('skins-screen');
+    if (skinsScreen.classList.contains('hidden')) {
+        // Закрываем все другие оверлеи и показываем SKINS
+        closeOverlays();
+        skinsScreen.classList.remove('hidden');
+        switchSkinTab('player'); // по умолчанию открываем вкладку PLAYER
+    } else {
+        skinsScreen.classList.add('hidden');
+    }
 }
 
+// Изменённая функция openSettings: переключает видимость экрана SETTINGS
 function openSettings() { 
-    document.getElementById('settings-screen').classList.remove('hidden'); 
+    const settingsScreen = document.getElementById('settings-screen');
+    if (settingsScreen.classList.contains('hidden')) {
+        closeOverlays();
+        settingsScreen.classList.remove('hidden');
+    } else {
+        settingsScreen.classList.add('hidden');
+    }
 }
 
 function closeOverlays() { 
@@ -472,10 +673,24 @@ function closeOverlays() {
 
 document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
 
+// Обработчики для выбора размера
+document.querySelectorAll('input[name="aspect"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'custom') {
+            document.getElementById('custom-size-inputs').style.display = 'block';
+        } else {
+            document.getElementById('custom-size-inputs').style.display = 'none';
+            applyPreset(val);
+        }
+    });
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     createColorGrid('trail-colors', (c) => trailColor = c, trailColor);
     createColorGrid('wave-colors',  (c) => waveColor = c, waveColor);
     createColorGrid('map-colors',   (c) => mapColor = c, mapColor);
+    createShapeGrid();
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -483,10 +698,12 @@ document.addEventListener('DOMContentLoaded', () => {
             switchSkinTab(category);
         });
     });
-});
 
-initTunnel();
-draw();
+    // Инициализация туннеля и старт отрисовки
+    initTunnel();
+    player.y = getTunnelAt(playerX).y + currentGap/2;
+    draw();
+});
 </script>
 </body>
 </html>
