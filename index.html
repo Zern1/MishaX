@@ -59,6 +59,7 @@
 
         #score { position: absolute; top: 20px; right: 30px; font-size: clamp(24px, 5vw, 32px); color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
         #high-score { position: absolute; top: 70px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
+        #amethysts { position: absolute; top: 120px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: #cc88ff; text-shadow: 0 0 15px #aa66ff; z-index: 10; }
         
         #prep-display {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -83,9 +84,24 @@
             border: 1px solid rgba(255,255,255,0.2); 
             cursor: pointer; 
             transition: 0.2s; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background-size: cover;
         }
         .skin-item:hover { transform: scale(1.1); }
         .skin-item.active { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
+        .skin-item.locked { opacity: 0.5; cursor: not-allowed; }
+        .skin-item.locked:hover { transform: none; }
+        .price-tag {
+            font-size: 12px;
+            background: rgba(0,0,0,0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #cc88ff;
+            border: 1px solid #cc88ff;
+        }
 
         .tab-buttons {
             display: flex;
@@ -160,6 +176,15 @@
             font-weight: bold;
         }
 
+        /* Кнопки выбора режима */
+        .mode-btn {
+            width: 80%;
+            max-width: 300px;
+            margin: 15px 0;
+            padding: 20px;
+            font-size: clamp(18px, 4vw, 24px);
+        }
+
         @media (orientation: portrait) {
             body { flex-direction: column; }
             #side-menu { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgb(0, 242, 255); padding: 10px 0; }
@@ -177,6 +202,7 @@
             }
             #score { top: 10px; right: 15px; }
             #high-score { top: 50px; right: 15px; }
+            #amethysts { top: 90px; right: 15px; }
         }
 
         @media (max-width: 400px) {
@@ -196,7 +222,7 @@
 
 <div id="side-menu">
     <h1 style="text-shadow: 0 0 15px var(--neon); letter-spacing: 8px; margin-bottom: 50px;">WAVE</h1>
-    <button class="menu-btn" onclick="startPlay()">PLAY</button>
+    <button class="menu-btn" onclick="toggleModeSelect()">PLAY</button>
     <button class="menu-btn" onclick="openSkins()">SKINS</button>
     <button class="menu-btn" onclick="openSettings()">SETTINGS</button>
 </div>
@@ -204,7 +230,15 @@
 <div id="game-container">
     <div id="score">SCORE: 0</div>
     <div id="high-score">HIGH: 0</div>
+    <div id="amethysts">AMETHYSTS: 0</div>
     <div id="prep-display">3</div>
+    
+    <!-- Экран выбора режима -->
+    <div id="mode-select-screen" class="overlay-screen hidden">
+        <h2 style="letter-spacing: 5px; margin-bottom: 30px;">SELECT MODE</h2>
+        <button class="menu-btn mode-btn" onclick="startNormalGame()">NORMAL</button>
+        <button class="menu-btn mode-btn" onclick="startAmethystGame()">AMETHYST</button>
+    </div>
     
     <div id="skins-screen" class="overlay-screen hidden">
         <h2 style="letter-spacing: 5px;">SKIN</h2>
@@ -235,8 +269,6 @@
             <h3>SHAPE</h3>
             <div class="skin-grid" id="shape-options"></div>
         </div>
-        
-        <!-- Кнопка DONE удалена -->
     </div>
 
     <div id="settings-screen" class="overlay-screen hidden">
@@ -261,8 +293,6 @@
         </div>
 
         <p>Current: <span id="current-size">1600x900</span></p>
-
-        <!-- Кнопка Back удалена -->
     </div>
 
     <canvas id="game"></canvas>
@@ -274,6 +304,7 @@ const ctx = canvas.getContext('2d');
 const sideMenu = document.getElementById('side-menu');
 const scoreEl = document.getElementById('score');
 const highScoreEl = document.getElementById('high-score');
+const amethystsEl = document.getElementById('amethysts');
 const prepDisplay = document.getElementById('prep-display');
 
 // Размеры игры (логические)
@@ -283,21 +314,28 @@ let gameHeight = 900;
 // Зависимые параметры
 let playerX = Math.floor(gameWidth * 0.1875);          // 300 при 1600
 let baseGap = Math.max(100, Math.floor(gameHeight * 0.2778)); // 250 при 900
-let minGap = Math.floor(gameHeight * 0.1);             // 90 при 900 (минимум 100 будет через Math.max)
-let trailMaxLength = Math.floor(gameWidth * 0.2);      // 320 при 1600 (было 300, чуть увеличим)
-let variationBase = Math.floor(gameHeight * 0.08);     // 72 при 900 (было 70)
+let amethystGap = Math.max(70, Math.floor(gameHeight * 0.15)); // 1.5 раза уже
+let minGap = Math.floor(gameHeight * 0.1);             // 90 при 900
+let trailMaxLength = Math.floor(gameWidth * 0.2);      // 320 при 1600
+let variationBase = Math.floor(gameHeight * 0.08);     // 72 при 900
 
 canvas.width = gameWidth;
 canvas.height = gameHeight;
 
 let state = 'menu'; 
 let score = 0;
+let gameMode = 'normal'; // 'normal' или 'amethyst'
 
-// Цвета
+// Цвета и скины
 let trailColor = '#00f2ff';
 let waveColor  = '#00f2ff';
 let mapColor   = '#00f2ff';
 let playerShape = 'triangle';
+let purchasedBroken = false;
+
+// Флаги покупки градиентов
+let purchasedYellowBlue = localStorage.getItem('purchasedYellowBlue') === 'true';
+let purchasedRedPurple = localStorage.getItem('purchasedRedPurple') === 'true';
 
 let deathVolume = 0.5;
 let prepTimer = 0;
@@ -305,10 +343,52 @@ let prepTimer = 0;
 let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
 highScoreEl.innerText = `HIGH: ${highScore}`;
 
+let amethysts = localStorage.getItem('amethysts') ? parseInt(localStorage.getItem('amethysts')) : 0;
+amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
+
+// Массив цветов для скинов (обычные и градиенты)
+const colorItems = [
+    { value: '#00f2ff', price: 0 },
+    { value: '#ff0055', price: 0 },
+    { value: '#00ff44', price: 0 },
+    { value: '#ffff00', price: 0 },
+    { value: '#ff8800', price: 0 },
+    { value: '#cc00ff', price: 0 },
+    { value: '#ffffff', price: 0 },
+    { value: '#0077ff', price: 0 },
+    { value: '#ff00ff', price: 0 },
+    { value: '#44ffcc', price: 0 },
+    { value: 'yellow-blue-gradient', price: 1000, gradient: true },
+    { value: 'red-purple-gradient', price: 1000, gradient: true }
+];
+
+// Загрузка сохранённых скинов
+function loadSavedSkins() {
+    if (localStorage.getItem('trailColor')) trailColor = localStorage.getItem('trailColor');
+    if (localStorage.getItem('waveColor')) waveColor = localStorage.getItem('waveColor');
+    if (localStorage.getItem('mapColor')) mapColor = localStorage.getItem('mapColor');
+    if (localStorage.getItem('playerShape')) playerShape = localStorage.getItem('playerShape');
+    if (localStorage.getItem('purchasedBroken') === 'true') purchasedBroken = true;
+    purchasedYellowBlue = localStorage.getItem('purchasedYellowBlue') === 'true';
+    purchasedRedPurple = localStorage.getItem('purchasedRedPurple') === 'true';
+}
+loadSavedSkins();
+
+function saveSkins() {
+    localStorage.setItem('trailColor', trailColor);
+    localStorage.setItem('waveColor', waveColor);
+    localStorage.setItem('mapColor', mapColor);
+    localStorage.setItem('playerShape', playerShape);
+    localStorage.setItem('purchasedBroken', purchasedBroken);
+    localStorage.setItem('purchasedYellowBlue', purchasedYellowBlue);
+    localStorage.setItem('purchasedRedPurple', purchasedRedPurple);
+}
+
 let currentWorldSpeed = 2.7;
 let currentGap = baseGap;
 
-const MOVE_SPEED = 2; // можно оставить абсолютным
+// Скорость перемещения игрока (вертикальная)
+let currentMoveSpeed = 2.7;   // по умолчанию для normal
 
 const player = {
     y: 300, isClimbing: false,
@@ -321,10 +401,15 @@ let tunnelPoints = [];
 function updateDimensions() {
     playerX = Math.floor(gameWidth * 0.1875);
     baseGap = Math.max(100, Math.floor(gameHeight * 0.2778));
+    amethystGap = Math.max(70, Math.floor(gameHeight * 0.15));
     minGap = Math.floor(gameHeight * 0.1);
     trailMaxLength = Math.floor(gameWidth * 0.2);
     variationBase = Math.floor(gameHeight * 0.08);
-    currentGap = baseGap; // сброс при изменении
+    // Сброс к normal при изменении размера
+    gameMode = 'normal';
+    currentGap = baseGap;
+    currentWorldSpeed = 2.7;
+    currentMoveSpeed = 2.7;
 }
 
 function initTunnel() {
@@ -332,28 +417,50 @@ function initTunnel() {
     let startY = (gameHeight - currentGap) / 2;
     startY = Math.max(20, Math.min(gameHeight - currentGap - 20, startY));
     
-    for(let i = 0; i < 40; i++) {
-        tunnelPoints.push({ x: i * 50, y: startY });
+    tunnelPoints.push({ x: 0, y: startY });
+    // Заполняем до 40 точек
+    for (let i = 1; i < 40; i++) {
+        addPoint();
     }
 }
 
 function addPoint() {
     const lastPoint = tunnelPoints[tunnelPoints.length-1];
-    const x = lastPoint.x + 40;
+    let stepX = (gameMode === 'amethyst') ? 60 : 40;
+    const x = lastPoint.x + stepX;
     
-    const difficultyFactor = Math.min(2.5, 1 + (score / 4000));
-    const variation = variationBase * difficultyFactor;
-    
-    let newY = lastPoint.y + (Math.random() - 0.5) * variation;
-    newY = Math.max(20, Math.min(gameHeight - currentGap - 25, newY));
+    let newY;
+    if (gameMode === 'amethyst') {
+        // движение строго под 45° (±stepX)
+        let dy = (Math.random() > 0.5) ? stepX : -stepX;
+        let candidateY = lastPoint.y + dy;
+        const minY = 20;
+        const maxY = gameHeight - currentGap - 25;
+        
+        // Если выходит за границы — отражаем
+        if (candidateY < minY || candidateY > maxY) {
+            dy = -dy;
+            candidateY = lastPoint.y + dy;
+        }
+        // Финальное ограничение (на всякий случай)
+        newY = Math.max(minY, Math.min(maxY, candidateY));
+    } else {
+        const difficultyFactor = Math.min(2.5, 1 + (score / 4000));
+        const variation = variationBase * difficultyFactor;
+        newY = lastPoint.y + (Math.random() - 0.5) * variation;
+        newY = Math.max(20, Math.min(gameHeight - currentGap - 25, newY));
+    }
     
     tunnelPoints.push({ x, y: newY });
 }
 
 function update() {
     if(state === 'playing' && prepTimer <= 0) {
-        currentWorldSpeed += 0.00003; 
-        currentGap = Math.max(minGap, baseGap - (score / 100));
+        if (gameMode === 'normal') {
+            currentWorldSpeed += 0.00003; 
+            currentGap = Math.max(minGap, baseGap - (score / 100));
+        }
+        // В режиме amethyst скорость и зазор не меняются
     }
 
     tunnelPoints.forEach(p => p.x -= currentWorldSpeed);
@@ -374,8 +481,8 @@ function update() {
         prepDisplay.classList.add('show');
         if(prepTimer <= 0) prepDisplay.classList.remove('show');
     } else {
-        if (player.isClimbing) player.y -= MOVE_SPEED;
-        else player.y += MOVE_SPEED;
+        if (player.isClimbing) player.y -= currentMoveSpeed;
+        else player.y += currentMoveSpeed;
         score += 0.5;
     }
 
@@ -402,13 +509,102 @@ function getTunnelAt(x) {
     return { y: gameHeight / 2 };
 }
 
+// Вспомогательная функция для получения стиля (цвет или градиент)
+function getColorStyle(color, type, points) {
+    if (color === 'yellow-blue-gradient') {
+        if (type === 'player') {
+            // Определяем границы фигуры для линейного градиента от правого края к левому
+            let leftX, rightX;
+            switch (playerShape) {
+                case 'triangle':
+                    rightX = 22;
+                    leftX = -12;
+                    break;
+                case 'square':
+                case 'circle':
+                    rightX = 12;
+                    leftX = -12;
+                    break;
+                case 'diamond':
+                    rightX = 16;
+                    leftX = -16;
+                    break;
+                case 'broken':
+                    // Масштаб 3, исходные точки от -5 до 5
+                    rightX = 15;
+                    leftX = -15;
+                    break;
+                default:
+                    rightX = 12;
+                    leftX = -12;
+            }
+            const grad = ctx.createLinearGradient(rightX, 0, leftX, 0);
+            grad.addColorStop(0, 'yellow');
+            grad.addColorStop(1, 'blue');
+            return grad;
+        } else if (type === 'trail' && points && points.length > 1) {
+            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
+            grad.addColorStop(0, 'yellow');
+            grad.addColorStop(1, 'blue');
+            return grad;
+        } else if (type === 'tunnel' && points && points.length > 1) {
+            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
+            grad.addColorStop(0, 'yellow');
+            grad.addColorStop(1, 'blue');
+            return grad;
+        }
+    } else if (color === 'red-purple-gradient') {
+        if (type === 'player') {
+            let leftX, rightX;
+            switch (playerShape) {
+                case 'triangle':
+                    rightX = 22;
+                    leftX = -12;
+                    break;
+                case 'square':
+                case 'circle':
+                    rightX = 12;
+                    leftX = -12;
+                    break;
+                case 'diamond':
+                    rightX = 16;
+                    leftX = -16;
+                    break;
+                case 'broken':
+                    rightX = 15;
+                    leftX = -15;
+                    break;
+                default:
+                    rightX = 12;
+                    leftX = -12;
+            }
+            const grad = ctx.createLinearGradient(rightX, 0, leftX, 0);
+            grad.addColorStop(0, 'red');
+            grad.addColorStop(1, 'purple');
+            return grad;
+        } else if (type === 'trail' && points && points.length > 1) {
+            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
+            grad.addColorStop(0, 'red');
+            grad.addColorStop(1, 'purple');
+            return grad;
+        } else if (type === 'tunnel' && points && points.length > 1) {
+            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
+            grad.addColorStop(0, 'red');
+            grad.addColorStop(1, 'purple');
+            return grad;
+        }
+    }
+    return color; // обычный цвет
+}
+
 function draw() {
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, gameWidth, gameHeight);
 
     ctx.shadowBlur = 100;
     ctx.shadowColor = mapColor;
-    ctx.strokeStyle = mapColor;
+    // Для туннеля используем градиент, если нужно
+    ctx.strokeStyle = getColorStyle(mapColor, 'tunnel', tunnelPoints);
     ctx.lineWidth = 5;
     ctx.lineJoin = 'round';
 
@@ -423,7 +619,7 @@ function draw() {
     if(player.trail.length > 1) {
         ctx.shadowBlur = 30;
         ctx.shadowColor = trailColor;
-        ctx.strokeStyle = trailColor;
+        ctx.strokeStyle = getColorStyle(trailColor, 'trail', player.trail);
         ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(player.trail[0].x, player.trail[0].y);
@@ -438,7 +634,7 @@ function draw() {
     ctx.rotate(angle);
     ctx.shadowBlur = 50;
     ctx.shadowColor = waveColor;
-    ctx.fillStyle = waveColor;
+    ctx.fillStyle = getColorStyle(waveColor, 'player');
     ctx.beginPath();
 
     switch (playerShape) {
@@ -446,6 +642,7 @@ function draw() {
             ctx.moveTo(22, 0);
             ctx.lineTo(-12, -13);
             ctx.lineTo(-12, 13);
+            ctx.closePath();
             break;
         case 'square':
             ctx.rect(-12, -12, 24, 24);
@@ -460,10 +657,47 @@ function draw() {
             ctx.lineTo(-16, 0);
             ctx.closePath();
             break;
+        case 'broken': {
+            const scale = 3;
+            const points = [
+            [-5.00,  5.50],
+            [-5.00,  4.38],
+            [-4.04,  3.25],
+            [-3.08,  2.13],
+            [-2.12,  1.00],
+            [-3.08, -0.12],
+            [-4.04, -1.25],
+            [-5.00, -2.38],
+            [-5.00, -3.50],
+            [-3.85, -3.50],
+            [-2.69, -3.50],
+            [-0.77, -2.38],
+            [ 0.96, -1.25],
+            [ 3.08, -0.12],
+            [ 5.00,  1.00],
+            [ 3.08,  2.13],
+            [ 0.96,  3.25],
+            [-0.77,  4.38],
+            [-2.69,  5.50],
+            [-3.85,  5.50],
+            [-5.00,  5.50]
+        ];
+            ctx.beginPath();
+            points.forEach((pt, i) => {
+                const x = pt[0] * scale;
+                const y = pt[1] * scale;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath(); // гарантирует замкнутость
+            ctx.fill();
+            break;
+        }
         default:
             ctx.moveTo(22, 0);
             ctx.lineTo(-12, -13);
             ctx.lineTo(-12, 13);
+            ctx.closePath();
     }
 
     ctx.fill();
@@ -480,23 +714,21 @@ function resizeGame(width, height) {
     canvas.height = height;
     updateDimensions();
     
-    // Сброс игры в меню
+    // Сброс игры в меню, режим normal
     state = 'menu';
+    gameMode = 'normal';
     score = 0;
     prepTimer = 0;
     currentWorldSpeed = 2.7;
     currentGap = baseGap;
+    currentMoveSpeed = 2.7;
     player.trail = [];
     initTunnel();
     player.y = getTunnelAt(playerX).y + currentGap/2;
     
-    // Обновить отображение текущего размера
     document.getElementById('current-size').innerText = `${width}x${height}`;
-    
-    // Скрыть меню, если оно было открыто? Оставим как есть.
 }
 
-// Применить
 function applyPreset(aspect) {
     let w, h;
     if (aspect === '16:9') {
@@ -506,13 +738,11 @@ function applyPreset(aspect) {
         w = 1000;
         h = 750;
     } else {
-        return; // custom обрабатывается отдельно
+        return;
     }
     resizeGame(w, h);
-    // Скрыть настройки? Можно оставить открытыми.
 }
 
-// Применить пользовательский размер
 function applyCustomSize() {
     const w = parseInt(document.getElementById('custom-width').value);
     const h = parseInt(document.getElementById('custom-height').value);
@@ -523,14 +753,45 @@ function applyCustomSize() {
     }
 }
 
-function startPlay() {
-    state = 'playing';
-    score = 0;
-    prepTimer = 180; 
+// Переключение меню выбора режима
+function toggleModeSelect() {
+    const modeScreen = document.getElementById('mode-select-screen');
+    if (modeScreen.classList.contains('hidden')) {
+        closeOverlays(); // закрываем скины и настройки
+        modeScreen.classList.remove('hidden');
+    } else {
+        modeScreen.classList.add('hidden');
+    }
+}
+
+function startNormalGame() {
+    gameMode = 'normal';
     currentWorldSpeed = 2.7;
     currentGap = baseGap;
-    initTunnel();
+    currentMoveSpeed = 2.6;   // устанавливаем скорость normal
+    
+    closeOverlays();
     sideMenu.classList.add('hidden');
+    state = 'playing';
+    score = 0;
+    prepTimer = 180;
+    initTunnel();
+    player.y = getTunnelAt(playerX).y + currentGap/2;
+}
+
+function startAmethystGame() {
+    gameMode = 'amethyst';
+    currentWorldSpeed = 4;
+    currentGap = amethystGap;
+    currentMoveSpeed = 4;      // устанавливаем скорость amethyst
+    
+    closeOverlays();
+    sideMenu.classList.add('hidden');
+    state = 'playing';
+    score = 0;
+    prepTimer = 180;
+    initTunnel();                      // шаг 60, генерация с углом 45°
+    player.y = getTunnelAt(playerX).y + currentGap/2;
 }
 
 function die() {
@@ -540,13 +801,23 @@ function die() {
         localStorage.setItem('highScore', highScore);
         highScoreEl.innerText = `HIGH: ${highScore}`;
     }
+    // Начисление аметистов за режим Amethyst
+    if (gameMode === 'amethyst') {
+        amethysts += finalScore;
+        localStorage.setItem('amethysts', amethysts);
+        amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
+    }
+    
     playDeathSound();
     state = 'menu';
     prepDisplay.classList.remove('show');
     sideMenu.classList.remove('hidden');
     
+    // Сбрасываем параметры normal (меню всегда normal)
+    gameMode = 'normal';
     currentWorldSpeed = 2.7;
     currentGap = baseGap;
+    currentMoveSpeed = 2.6;
     
     initTunnel();
     let tunnelY = getTunnelAt(playerX).y;
@@ -565,9 +836,7 @@ function playDeathSound() {
     osc.start(); osc.stop(audioCtx.currentTime + 0.5);
 }
 
-function resize() {
-    // пусто, чтобы не ломать старые вызовы
-}
+function resize() { /* пусто */ }
 
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', resize);
@@ -577,56 +846,135 @@ window.onmouseup = () => { if(state === 'playing' && prepTimer <= 0) player.isCl
 window.ontouchstart = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = true; };
 window.ontouchend = () => { if(state === 'playing' && prepTimer <= 0) player.isClimbing = false; };
 
-const colors = ['#00f2ff', '#ff0055', '#00ff44', '#ffff00', '#ff8800', '#cc00ff', '#ffffff', '#0077ff', '#ff00ff', '#44ffcc'];
-
+// Функция создания сетки цветов (с поддержкой цен и градиентов)
 function createColorGrid(containerId, setterCallback, currentColor) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    colors.forEach(hex => {
+    container.innerHTML = ''; // очищаем перед созданием
+
+    colorItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'skin-item';
-        div.style.backgroundColor = hex;
-        div.dataset.color = hex;
-        div.onclick = function() {
-            setterCallback(hex);
-            container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
-            this.classList.add('active');
-        };
+        div.dataset.color = item.value;
+
+        // Определяем фон ячейки
+        if (item.gradient) {
+            if (item.value === 'yellow-blue-gradient') {
+                div.style.background = 'linear-gradient(45deg, yellow, blue)';
+            } else if (item.value === 'red-purple-gradient') {
+                div.style.background = 'linear-gradient(45deg, red, purple)';
+            }
+        } else {
+            div.style.backgroundColor = item.value;
+        }
+
+        // Проверка блокировки (цена > 0 и не куплено)
+        let isLocked = false;
+        if (item.price > 0) {
+            if (item.value === 'yellow-blue-gradient' && !purchasedYellowBlue) isLocked = true;
+            if (item.value === 'red-purple-gradient' && !purchasedRedPurple) isLocked = true;
+        }
+
+        if (isLocked) {
+            div.classList.add('locked');
+            div.innerHTML = `<span class="price-tag">${item.price}</span>`;
+            div.onclick = (e) => {
+                e.stopPropagation();
+                if (amethysts >= item.price) {
+                    // покупка
+                    amethysts -= item.price;
+                    localStorage.setItem('amethysts', amethysts);
+                    amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
+                    if (item.value === 'yellow-blue-gradient') purchasedYellowBlue = true;
+                    if (item.value === 'red-purple-gradient') purchasedRedPurple = true;
+                    saveSkins();
+                    // пересоздаём эту сетку, чтобы убрать замок
+                    createColorGrid(containerId, setterCallback, currentColor);
+                    // после покупки можно сразу выбрать цвет
+                    setterCallback(item.value);
+                    // подсветить активный
+                    const activeDiv = Array.from(container.children).find(el => el.dataset.color === item.value);
+                    if (activeDiv) activeDiv.classList.add('active');
+                } else {
+                    alert('Not enough amethysts!');
+                }
+            };
+        } else {
+            // обычный или уже купленный градиент
+            div.onclick = function() {
+                setterCallback(item.value);
+                container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                saveSkins();
+            };
+        }
+
         container.appendChild(div);
     });
+
+    // Помечаем активный цвет
     const activeDiv = Array.from(container.children).find(el => el.dataset.color === currentColor);
-    if (activeDiv) activeDiv.classList.add('active');
+    if (activeDiv && !activeDiv.classList.contains('locked')) activeDiv.classList.add('active');
 }
 
 function createShapeGrid() {
     const container = document.getElementById('shape-options');
     if (!container) return;
+    container.innerHTML = ''; // очищаем перед созданием
     const shapes = [
-        { id: 'triangle', symbol: '▲' },
-        { id: 'square',   symbol: '■' },
-        { id: 'circle',   symbol: '●' },
-        { id: 'diamond',  symbol: '◆' }
+        { id: 'triangle', symbol: '▲', price: 0 },
+        { id: 'square',   symbol: '■', price: 0 },
+        { id: 'circle',   symbol: '●', price: 0 },
+        { id: 'diamond',  symbol: '◆', price: 0 },
+        { id: 'broken',   symbol: '⬟', price: 3000 }
     ];
+
     shapes.forEach(shape => {
         const div = document.createElement('div');
         div.className = 'skin-item';
         div.style.backgroundColor = 'transparent';
         div.style.color = waveColor;
         div.style.fontSize = '32px';
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.justifyContent = 'center';
-        div.textContent = shape.symbol;
+        div.style.flexDirection = 'column';
+        div.style.gap = '4px';
         div.dataset.shape = shape.id;
-        div.onclick = function() {
-            playerShape = shape.id;
-            container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
-            this.classList.add('active');
-        };
+
+        if (shape.id === 'broken' && !purchasedBroken) {
+            div.classList.add('locked');
+            div.innerHTML = `${shape.symbol}<span class="price-tag">${shape.price}</span>`;
+            div.onclick = (e) => {
+                e.stopPropagation();
+                if (amethysts >= shape.price) {
+                    amethysts -= shape.price;
+                    localStorage.setItem('amethysts', amethysts);
+                    amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
+                    purchasedBroken = true;
+                    saveSkins();
+                    createShapeGrid();
+                    playerShape = 'broken';
+                    saveSkins();
+                    const activeDiv = Array.from(container.children).find(el => el.dataset.shape === playerShape);
+                    if (activeDiv) activeDiv.classList.add('active');
+                } else {
+                    alert('Not enough amethysts!');
+                }
+            };
+        } else {
+            div.textContent = shape.symbol;
+            div.onclick = function() {
+                if (shape.id === 'broken' && !purchasedBroken) return;
+                playerShape = shape.id;
+                container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                saveSkins();
+            };
+        }
+
         container.appendChild(div);
     });
+
     const activeDiv = Array.from(container.children).find(el => el.dataset.shape === playerShape);
-    if (activeDiv) activeDiv.classList.add('active');
+    if (activeDiv && !activeDiv.classList.contains('locked')) activeDiv.classList.add('active');
 }
 
 function switchSkinTab(category) {
@@ -641,22 +989,31 @@ function switchSkinTab(category) {
     });
     const activeBtn = document.querySelector(`.tab-btn[data-category="${category}"]`);
     if (activeBtn) activeBtn.classList.add('active');
+
+    if (category === 'shape') {
+        createShapeGrid();
+    }
 }
 
-// Изменённая функция openSkins: переключает видимость экрана SKINS
 function openSkins() {
     const skinsScreen = document.getElementById('skins-screen');
     if (skinsScreen.classList.contains('hidden')) {
-        // Закрываем все другие оверлеи и показываем SKINS
         closeOverlays();
         skinsScreen.classList.remove('hidden');
-        switchSkinTab('player'); // по умолчанию открываем вкладку PLAYER
+        switchSkinTab('player');
+        // При открытии скинов пересоздаём все цветовые сетки с сохранёнными значениями
+        document.getElementById('trail-colors').innerHTML = '';
+        document.getElementById('wave-colors').innerHTML = '';
+        document.getElementById('map-colors').innerHTML = '';
+        createColorGrid('trail-colors', (c) => { trailColor = c; saveSkins(); }, trailColor);
+        createColorGrid('wave-colors',  (c) => { waveColor = c; saveSkins(); }, waveColor);
+        createColorGrid('map-colors',   (c) => { mapColor = c; saveSkins(); }, mapColor);
+        createShapeGrid();
     } else {
         skinsScreen.classList.add('hidden');
     }
 }
 
-// Изменённая функция openSettings: переключает видимость экрана SETTINGS
 function openSettings() { 
     const settingsScreen = document.getElementById('settings-screen');
     if (settingsScreen.classList.contains('hidden')) {
@@ -673,7 +1030,6 @@ function closeOverlays() {
 
 document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
 
-// Обработчики для выбора размера
 document.querySelectorAll('input[name="aspect"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
         const val = e.target.value;
@@ -687,9 +1043,10 @@ document.querySelectorAll('input[name="aspect"]').forEach(radio => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    createColorGrid('trail-colors', (c) => trailColor = c, trailColor);
-    createColorGrid('wave-colors',  (c) => waveColor = c, waveColor);
-    createColorGrid('map-colors',   (c) => mapColor = c, mapColor);
+    // Инициализация сеток с сохранёнными цветами
+    createColorGrid('trail-colors', (c) => { trailColor = c; saveSkins(); }, trailColor);
+    createColorGrid('wave-colors',  (c) => { waveColor = c; saveSkins(); }, waveColor);
+    createColorGrid('map-colors',   (c) => { mapColor = c; saveSkins(); }, mapColor);
     createShapeGrid();
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -699,7 +1056,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Инициализация туннеля и старт отрисовки
     initTunnel();
     player.y = getTunnelAt(playerX).y + currentGap/2;
     draw();
