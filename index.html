@@ -23,9 +23,9 @@
         }
         #side-menu.hidden { transform: translateX(-100%); position: absolute; }
 
-        /* Портретное меню */
+        /* Портретное меню (три кнопки в ряд) */
         #portrait-menu {
-            display: none; /* скрыто по умолчанию */
+            display: none; /* скрыто по умолчанию, покажется только в portrait */
             position: fixed;
             bottom: 0;
             left: 0;
@@ -34,45 +34,42 @@
             backdrop-filter: blur(10px);
             border-top: 2px solid var(--neon);
             z-index: 40;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 10px 30px;
+            padding: 15px 10px 20px;
             box-sizing: border-box;
-            gap: 15px;
         }
-        .portrait-play-btn {
-            width: 80%;
-            max-width: 300px;
-            padding: 20px;
-            font-size: 28px;
-            margin: 0;
-            background: rgba(0, 242, 255, 0.2);
-        }
-        .portrait-tabs {
+        .portrait-menu-inner {
             display: flex;
-            gap: 20px;
-            justify-content: center;
+            justify-content: space-around;
+            align-items: center;
             width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        .portrait-tab {
-            background: rgba(0, 242, 255, 0.05);
-            border: 1px solid var(--neon);
+        .portrait-menu-btn {
+            background: transparent;
+            border: none;
             color: white;
-            padding: 15px 25px;
-            border-radius: 4px;
-            font-size: 20px;
+            font-size: 22px;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
+            padding: 10px 15px;
             cursor: pointer;
             transition: 0.3s;
-            flex: 0 1 auto;
-            min-width: 120px;
+            white-space: nowrap;
+            border-radius: 4px;
         }
-        .portrait-tab.active,
-        .portrait-tab:hover {
+        .portrait-menu-btn:hover,
+        .portrait-menu-btn.active {
             background: var(--neon);
             color: black;
             box-shadow: 0 0 20px var(--neon);
+        }
+        .portrait-divider {
+            width: 2px;
+            height: 30px;
+            background: var(--neon);
+            box-shadow: 0 0 10px var(--neon);
         }
 
         #game-container { 
@@ -112,6 +109,26 @@
         #score { position: absolute; top: 20px; right: 30px; font-size: clamp(24px, 5vw, 32px); color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
         #high-score { position: absolute; top: 70px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
         #amethysts { position: absolute; top: 120px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: #cc88ff; text-shadow: 0 0 15px #aa66ff; z-index: 10; }
+
+        /* Портретный заголовок WAVE */
+        #portrait-title {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            color: white;
+            font-size: clamp(28px, 6vw, 48px);
+            font-weight: bold;
+            text-shadow: 0 0 15px var(--neon);
+            letter-spacing: 8px;
+            z-index: 45;
+            display: none;
+        }
+        @media (orientation: portrait) {
+            #portrait-title { display: block; }
+        }
+        @media (orientation: landscape) {
+            #portrait-title { display: none; }
+        }
         
         #prep-display {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -259,14 +276,12 @@
 
         @media (orientation: portrait) {
             #side-menu { display: none; }
-            #portrait-menu { display: flex; }
-            body { flex-direction: column; }
-            #game-container { height: calc(100vh - 180px); } /* освобождаем место под портретное меню */
-            .portrait-play-btn { font-size: 24px; padding: 15px; }
-            .portrait-tab { font-size: 18px; padding: 12px 20px; min-width: 100px; }
+            #portrait-menu { display: block; }
         }
 
         @media (max-width: 600px) {
+            .portrait-menu-btn { font-size: 18px; padding: 8px 10px; }
+            .portrait-divider { height: 25px; }
             .skin-grid {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 8px;
@@ -278,9 +293,12 @@
             #score { top: 10px; right: 15px; }
             #high-score { top: 50px; right: 15px; }
             #amethysts { top: 90px; right: 15px; }
+            #portrait-title { font-size: 24px; left: 15px; }
         }
 
         @media (max-width: 400px) {
+            .portrait-menu-btn { font-size: 16px; padding: 6px 8px; }
+            .portrait-divider { height: 20px; }
             .skin-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -290,6 +308,7 @@
             }
             h1 { font-size: 24px; letter-spacing: 4px; }
             h2 { font-size: 20px; }
+            #portrait-title { font-size: 20px; left: 10px; }
         }
     </style>
 </head>
@@ -302,16 +321,19 @@
     <button class="menu-btn" onclick="openSettings()">SETTINGS</button>
 </div>
 
-<!-- Портретное меню (появляется только в portrait) -->
-<div id="portrait-menu" class="hidden">
-    <button class="menu-btn portrait-play-btn" onclick="toggleModeSelect()">PLAY</button>
-    <div class="portrait-tabs">
-        <button class="portrait-tab" data-tab="skins" onclick="togglePortraitTab('skins')">SKINS</button>
-        <button class="portrait-tab" data-tab="settings" onclick="togglePortraitTab('settings')">SETTINGS</button>
+<!-- Портретное меню (три кнопки) -->
+<div id="portrait-menu">
+    <div class="portrait-menu-inner">
+        <button class="portrait-menu-btn" data-tab="skins" onclick="togglePortraitTab('skins')">SKINS</button>
+        <div class="portrait-divider"></div>
+        <button class="portrait-menu-btn play-btn" onclick="toggleModeSelect()">PLAY</button>
+        <div class="portrait-divider"></div>
+        <button class="portrait-menu-btn" data-tab="settings" onclick="togglePortraitTab('settings')">SETTINGS</button>
     </div>
 </div>
 
 <div id="game-container">
+    <div id="portrait-title" class="hidden">WAVE</div>
     <div id="score">SCORE: 0</div>
     <div id="high-score">HIGH: 0</div>
     <div id="amethysts">AMETHYSTS: 0</div>
@@ -394,6 +416,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const sideMenu = document.getElementById('side-menu');
 const portraitMenu = document.getElementById('portrait-menu');
+const portraitTitle = document.getElementById('portrait-title');
 const scoreEl = document.getElementById('score');
 const highScoreEl = document.getElementById('high-score');
 const amethystsEl = document.getElementById('amethysts');
@@ -858,7 +881,8 @@ function startNormalGame() {
     
     closeOverlays();
     sideMenu.classList.add('hidden');
-    portraitMenu.classList.add('hidden'); // скрываем портретное меню
+    portraitMenu.classList.add('hidden');
+    portraitTitle.classList.add('hidden'); // скрываем заголовок во время игры
     state = 'playing';
     paused = false;
     player.isClimbing = false;
@@ -879,6 +903,7 @@ function startAmethystGame() {
     closeOverlays();
     sideMenu.classList.add('hidden');
     portraitMenu.classList.add('hidden');
+    portraitTitle.classList.add('hidden'); // скрываем заголовок во время игры
     state = 'playing';
     paused = false;
     player.isClimbing = false;
@@ -961,7 +986,8 @@ function exitToMenu() {
     pauseMenu.classList.add('hidden');
     pauseButton.classList.add('hidden');
     sideMenu.classList.remove('hidden');
-    portraitMenu.classList.remove('hidden'); // показываем портретное меню, если в портрете
+    portraitMenu.classList.remove('hidden');
+    portraitTitle.classList.remove('hidden'); // показываем заголовок в меню
     state = 'menu';
     gameMode = 'normal';
     currentWorldSpeed = 2.7;
@@ -1136,7 +1162,7 @@ function openSkins() {
         // Если портретное меню видимо, обновим подсветку табов
         if (!portraitMenu.classList.contains('hidden')) {
             removePortraitHighlights();
-            document.querySelector('.portrait-tab[data-tab="skins"]').classList.add('active');
+            document.querySelector('.portrait-menu-btn[data-tab="skins"]').classList.add('active');
         }
     } else {
         skinsScreen.classList.add('hidden');
@@ -1151,7 +1177,7 @@ function openSettings() {
         settingsScreen.classList.remove('hidden');
         if (!portraitMenu.classList.contains('hidden')) {
             removePortraitHighlights();
-            document.querySelector('.portrait-tab[data-tab="settings"]').classList.add('active');
+            document.querySelector('.portrait-menu-btn[data-tab="settings"]').classList.add('active');
         }
     } else {
         settingsScreen.classList.add('hidden');
@@ -1164,15 +1190,15 @@ function closeOverlays() {
 }
 
 function removePortraitHighlights() {
-    const tabs = document.querySelectorAll('.portrait-tab');
-    tabs.forEach(t => t.classList.remove('active'));
+    const btns = document.querySelectorAll('.portrait-menu-btn');
+    btns.forEach(btn => btn.classList.remove('active'));
 }
 
 function togglePortraitTab(tab) {
     const skinsScreen = document.getElementById('skins-screen');
     const settingsScreen = document.getElementById('settings-screen');
-    const skinsTab = document.querySelector('.portrait-tab[data-tab="skins"]');
-    const settingsTab = document.querySelector('.portrait-tab[data-tab="settings"]');
+    const skinsBtn = document.querySelector('.portrait-menu-btn[data-tab="skins"]');
+    const settingsBtn = document.querySelector('.portrait-menu-btn[data-tab="settings"]');
 
     if (tab === 'skins') {
         if (skinsScreen.classList.contains('hidden')) {
@@ -1181,7 +1207,7 @@ function togglePortraitTab(tab) {
             skinsScreen.classList.remove('hidden');
             switchSkinTab('player');
             removePortraitHighlights();
-            skinsTab.classList.add('active');
+            skinsBtn.classList.add('active');
         } else {
             // Закрываем
             skinsScreen.classList.add('hidden');
@@ -1192,7 +1218,7 @@ function togglePortraitTab(tab) {
             closeOverlays();
             settingsScreen.classList.remove('hidden');
             removePortraitHighlights();
-            settingsTab.classList.add('active');
+            settingsBtn.classList.add('active');
         } else {
             settingsScreen.classList.add('hidden');
             removePortraitHighlights();
@@ -1230,6 +1256,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initTunnel();
     player.y = getTunnelAt(playerX).y + currentGap/2;
     draw();
+
+    // Показываем заголовок в портрете при загрузке (так как state = 'menu')
+    portraitTitle.classList.remove('hidden');
 });
 </script>
 </body>
