@@ -1,1265 +1,1491 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Wave</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minimal Flight: Tunnel Run</title>
     <style>
-        :root { --neon: #d9ff00; --bg: #000000; }
-        body { margin: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: white; display: flex; }
-        
-        #side-menu {
-            width: min(350px, 25%);
-            min-width: 200px;
-            height: 100vh; 
-            background: rgb(0, 0, 0);
-            backdrop-filter: blur(25px); 
-            border-right: 1px solid rgb(0, 242, 255);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 20; position: relative;
-            padding: 10px 0;
-            box-sizing: border-box;
-        }
-        #side-menu.hidden { transform: translateX(-100%); position: absolute; }
-
-        /* Портретное меню (три кнопки в ряд) */
-        #portrait-menu {
-            display: none; /* скрыто по умолчанию, покажется только в portrait */
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            border-top: 2px solid var(--neon);
-            z-index: 40;
-            padding: 15px 10px 20px;
-            box-sizing: border-box;
-        }
-        .portrait-menu-inner {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .portrait-menu-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            padding: 10px 15px;
-            cursor: pointer;
-            transition: 0.3s;
-            white-space: nowrap;
-            border-radius: 4px;
-        }
-        .portrait-menu-btn:hover,
-        .portrait-menu-btn.active {
-            background: var(--neon);
-            color: black;
-            box-shadow: 0 0 20px var(--neon);
-        }
-        .portrait-divider {
-            width: 2px;
-            height: 30px;
-            background: var(--neon);
-            box-shadow: 0 0 10px var(--neon);
+        :root {
+            --ui-bg: rgba(255, 255, 255, 0.1);
+            --ui-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --accent-color: #4caf50;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
-        #game-container { 
-            flex-grow: 1; 
-            position: relative; 
-            overflow: hidden; 
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas { 
-            display: block; 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain;
-        }
-
-        .menu-btn { 
-            background: rgba(0, 242, 255, 0.05); border: 1px solid var(--neon); color: white; 
-            padding: 15px; margin: 8px 0; width: 90%; max-width: 220px; cursor: pointer; border-radius: 4px;
-            font-size: clamp(12px, 2vw, 14px); text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
-            box-sizing: border-box;
-        }
-        .menu-btn:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
-
-        .overlay-screen { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            background: rgba(0,0,0,0.95); z-index: 30; 
-            padding: 20px 10px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-        .hidden { display: none !important; }
-
-        #score { position: absolute; top: 20px; right: 30px; font-size: clamp(24px, 5vw, 32px); color: var(--neon); text-shadow: 0 0 15px var(--neon); z-index: 10; }
-        #high-score { position: absolute; top: 70px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: rgba(255,255,255,0.7); text-shadow: 0 0 10px var(--neon); z-index: 10; }
-        #amethysts { position: absolute; top: 120px; right: 30px; font-size: clamp(16px, 3vw, 20px); color: #cc88ff; text-shadow: 0 0 15px #aa66ff; z-index: 10; }
-
-        /* Портретный заголовок WAVE */
-        #portrait-title {
-            position: absolute;
-            top: 20px;
-            left: 30px;
-            color: white;
-            font-size: clamp(28px, 6vw, 48px);
-            font-weight: bold;
-            text-shadow: 0 0 15px var(--neon);
-            letter-spacing: 8px;
-            z-index: 45;
-            display: none;
-        }
-        @media (orientation: portrait) {
-            #portrait-title { display: block; }
-        }
-        @media (orientation: landscape) {
-            #portrait-title { display: none; }
-        }
-        
-        #prep-display {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: clamp(80px, 20vw, 120px); font-weight: bold; color: white; pointer-events: none;
-            text-shadow: 0 0 30px var(--neon); z-index: 15; opacity: 0; transition: 0.2s;
-        }
-        #prep-display.show { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-
-        #pause-button {
-            position: absolute; top: 20px; left: 30px; z-index: 25;
-            background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon); color: white;
-            width: 35px; height: 35px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 4px;
-            font-size: 24px;
-            cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s;
+        body, html {
+            margin: 0;
             padding: 0;
-            letter-spacing: normal;
-        }
-        #pause-button:hover { background: var(--neon); color: black; box-shadow: 0 0 20px var(--neon); }
-        #pause-button.hidden { display: none; }
-
-        #pause-menu {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.85); z-index: 35;
-        }
-        #pause-menu.hidden { display: none; }
-        #pause-menu button { width: 200px; margin: 15px; }
-
-        .skin-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; 
-            padding: 10px; 
             width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            box-sizing: border-box;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            font-family: var(--font-family);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
-        .skin-item { 
-            width: 100%; 
-            aspect-ratio: 1 / 1; 
-            border: 1px solid rgba(255,255,255,0.2); 
-            cursor: pointer; 
-            transition: 0.2s; 
+
+        canvas {
+            display: block;
+        }
+
+        /* --- UI ELEMENTS --- */
+        #taskbar {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            height: 50px;
+            background: var(--ui-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--ui-border);
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            background-size: cover;
-        }
-        .skin-item:hover { transform: scale(1.1); }
-        .skin-item.active { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
-        .skin-item.locked { opacity: 0.5; cursor: not-allowed; }
-        .skin-item.locked:hover { transform: none; }
-        .price-tag {
-            font-size: 12px;
-            background: rgba(0,0,0,0.8);
-            padding: 4px 8px;
-            border-radius: 4px;
-            color: #cc88ff;
-            border: 1px solid #cc88ff;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            color: var(--text-color);
+            z-index: 100;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .tab-buttons {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            justify-content: center;
+        #taskbar.hidden {
+            transform: translateX(-50%) translateY(100px);
         }
-        .tab-btn {
-            background: transparent;
-            border: 1px solid var(--neon);
-            color: white;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: clamp(12px, 2vw, 14px);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: 0.3s;
-            white-space: nowrap;
-        }
-        .tab-btn.active,
-        .tab-btn:hover {
-            background: var(--neon);
-            color: black;
-            box-shadow: 0 0 20px var(--neon);
-        }
-        .skin-section {
-            width: 100%;
+
+        .clock-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-        .skin-section.hidden {
-            display: none;
-        }
-        .skin-section h3 {
-            margin: 10px 0 5px;
-            letter-spacing: 2px;
-            color: var(--neon);
-            text-shadow: 0 0 8px var(--neon);
-            font-size: clamp(14px, 3vw, 18px);
+            justify-content: center;
+            width: 100%;
         }
 
-        .size-option {
-            margin: 10px 0;
-            text-align: left;
-            width: 100%;
-            max-width: 300px;
-        }
-        .size-option label {
-            display: block;
-            margin: 5px 0;
-            color: var(--neon);
+        .clock {
+            font-size: 1.2rem;
+            font-weight: 300;
             letter-spacing: 1px;
         }
-        .size-option input[type="number"] {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid var(--neon);
+
+        .score-display {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        #time-bar-container {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            z-index: 99;
+            transition: opacity 0.5s;
+        }
+
+        #time-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--text-color);
+            transition: width 1s linear;
+        }
+
+        #pause-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--ui-bg);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--ui-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 110;
+            color: var(--text-color);
+            font-size: 20px;
+            transition: background 0.2s;
+        }
+
+        #pause-btn:active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        #pause-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        #pause-menu.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-box {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
             color: white;
-            padding: 8px;
-            width: 100px;
-            margin: 5px;
-            border-radius: 4px;
+            min-width: 200px;
         }
-        .size-option button {
-            margin-top: 10px;
+
+        .menu-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
         }
-        #current-size {
-            color: var(--neon);
+
+        .menu-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+
+        #joystick-zone {
+            position: absolute;
+            bottom: 80px;
+            left: 40px;
+            width: 120px;
+            height: 120px;
+            z-index: 90;
+            transition: opacity 0.3s;
+        }
+        
+        #joystick-zone.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .joystick-base {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            pointer-events: auto;
+        }
+
+        .joystick-stick {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: transform 0.05s;
+        }
+
+        #hint {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        #tunnel-score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-color);
+            font-size: 2rem;
             font-weight: bold;
+            text-shadow: 0 0 15px var(--text-color);
+            z-index: 50;
+            display: none;
         }
 
-        .mode-btn {
-            width: 80%;
-            max-width: 300px;
-            margin: 15px 0;
-            padding: 20px;
-            font-size: clamp(18px, 4vw, 24px);
+        #tunnel-hint {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+            text-align: center;
+        }
+        
+        #tunnel-timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-color);
+            font-size: 4rem;
+            font-weight: bold;
+            z-index: 50;
+            display: none;
+            text-shadow: 0 0 20px var(--text-color);
         }
 
-        @media (orientation: portrait) {
-            #side-menu { display: none; }
-            #portrait-menu { display: block; }
+        /* === SHOP COLOR PICKER MENU === */
+        #color-picker-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            color: white;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            min-width: 280px;
         }
 
-        @media (max-width: 600px) {
-            .portrait-menu-btn { font-size: 18px; padding: 8px 10px; }
-            .portrait-divider { height: 25px; }
-            .skin-grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            .tab-btn {
-                padding: 8px 12px;
-                letter-spacing: 1px;
-            }
-            #score { top: 10px; right: 15px; }
-            #high-score { top: 50px; right: 15px; }
-            #amethysts { top: 90px; right: 15px; }
-            #portrait-title { font-size: 24px; left: 15px; }
+        #color-picker-menu.active {
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        @media (max-width: 400px) {
-            .portrait-menu-btn { font-size: 16px; padding: 6px 8px; }
-            .portrait-divider { height: 20px; }
-            .skin-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .menu-btn {
-                font-size: 11px;
-                padding: 10px;
-            }
-            h1 { font-size: 24px; letter-spacing: 4px; }
-            h2 { font-size: 20px; }
-            #portrait-title { font-size: 20px; left: 10px; }
+        #color-picker-menu h2 {
+            margin: 0 0 20px 0;
+            font-size: 1.5rem;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .color-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        .color-btn.selected {
+            border-color: #4caf50;
+            box-shadow: 0 0 15px #4caf50;
+        }
+
+        .color-btn.default {
+            background: linear-gradient(135deg, #ffffff 50%, #1a1a1a 50%);
+        }
+
+        .color-btn.red {
+            background: #ff4444;
+        }
+
+        .color-btn.blue {
+            background: #4444ff;
+        }
+
+        .close-picker-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-picker-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+
+        #shop-hint {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
         }
     </style>
 </head>
 <body>
+    <div id="hint">Fly to the Portal</div>
+    <div id="shop-hint">Fly to exit the shop</div>
+    <div id="tunnel-hint">Press & Hold to Fly Up • Release to Fall Down</div>
+    <div id="tunnel-score">0</div>
+    <div id="tunnel-timer">3</div>
 
-<div id="side-menu">
-    <h1 style="text-shadow: 0 0 15px var(--neon); letter-spacing: 8px; margin-bottom: 50px;">WAVE</h1>
-    <button class="menu-btn" onclick="toggleModeSelect()">PLAY</button>
-    <button class="menu-btn" onclick="openSkins()">SKINS</button>
-    <button class="menu-btn" onclick="openSettings()">SETTINGS</button>
-</div>
+    <div id="pause-btn">❚❚</div>
 
-<!-- Портретное меню (три кнопки) -->
-<div id="portrait-menu">
-    <div class="portrait-menu-inner">
-        <button class="portrait-menu-btn" data-tab="skins" onclick="togglePortraitTab('skins')">SKINS</button>
-        <div class="portrait-divider"></div>
-        <button class="portrait-menu-btn play-btn" onclick="toggleModeSelect()">PLAY</button>
-        <div class="portrait-divider"></div>
-        <button class="portrait-menu-btn" data-tab="settings" onclick="togglePortraitTab('settings')">SETTINGS</button>
+    <div id="time-bar-container">
+        <div id="time-bar-fill"></div>
     </div>
-</div>
 
-<div id="game-container">
-    <div id="portrait-title" class="hidden">WAVE</div>
-    <div id="score">SCORE: 0</div>
-    <div id="high-score">HIGH: 0</div>
-    <div id="amethysts">AMETHYSTS: 0</div>
-    <div id="prep-display">3</div>
-    
-    <div id="pause-button" class="hidden" onclick="togglePause()">I I</div>
-
-    <div id="pause-menu" class="hidden">
-        <h2 style="letter-spacing: 5px; margin-bottom: 30px;">PAUSE</h2>
-        <button class="menu-btn" onclick="resumeGame()">RESUME</button>
-        <button class="menu-btn" onclick="exitToMenu()">EXIT</button>
-    </div>
-    
-    <div id="mode-select-screen" class="overlay-screen hidden">
-        <h2 style="letter-spacing: 5px; margin-bottom: 30px;">SELECT MODE</h2>
-        <button class="menu-btn mode-btn" onclick="startNormalGame()">NORMAL</button>
-        <button class="menu-btn mode-btn" onclick="startAmethystGame()">AMETHYST</button>
-    </div>
-    
-    <div id="skins-screen" class="overlay-screen hidden">
-        <h2 style="letter-spacing: 5px;">SKIN</h2>
-        
-        <div class="tab-buttons">
-            <button class="tab-btn" data-category="player">PLAYER</button>
-            <button class="tab-btn" data-category="trail">TRAIL</button>
-            <button class="tab-btn" data-category="tunnel">TUNNEL</button>
-            <button class="tab-btn" data-category="shape">SHAPE</button>
-        </div>
-
-        <div class="skin-section" data-category="player">
-            <h3>PLAYER</h3>
-            <div class="skin-grid" id="wave-colors"></div>
-        </div>
-
-        <div class="skin-section" data-category="trail">
-            <h3>TRAIL</h3>
-            <div class="skin-grid" id="trail-colors"></div>
-        </div>
-
-        <div class="skin-section" data-category="tunnel">
-            <h3>TUNNEL</h3>
-            <div class="skin-grid" id="map-colors"></div>
-        </div>
-
-        <div class="skin-section" data-category="shape">
-            <h3>SHAPE</h3>
-            <div class="skin-grid" id="shape-options"></div>
+    <div id="joystick-zone">
+        <div class="joystick-base" id="joy-base">
+            <div class="joystick-stick" id="joy-stick"></div>
         </div>
     </div>
 
-    <div id="settings-screen" class="overlay-screen hidden">
-        <h2 style="letter-spacing: 5px;">SETTINGS</h2>
-        
-        <div class="size-option">
-            <p>DEATH VOL</p>
-            <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5">
+    <div id="taskbar">
+        <div class="clock-container">
+            <div class="clock" id="clock">00:00</div>
+            <div class="score-display" id="score-display">Best: 0</div>
         </div>
-
-        <div class="size-option">
-            <p>GAME SIZE</p>
-            <label><input type="radio" name="aspect" value="16:9" checked> 16:9 </label><br>
-            <label><input type="radio" name="aspect" value="4:3"> 4:3 </label><br>
-            <label><input type="radio" name="aspect" value="custom">Custom</label>
-        </div>
-
-        <div id="custom-size-inputs" style="display: none; margin-bottom: 20px;">
-            <input type="number" id="custom-width" placeholder="Width" min="800" max="2560" value="1600">
-            <input type="number" id="custom-height" placeholder="Height" min="600" max="1600" value="900">
-            <button class="menu-btn" onclick="applyCustomSize()">Apply</button>
-        </div>
-
-        <p>Current: <span id="current-size">1600x900</span></p>
     </div>
 
-    <canvas id="game"></canvas>
-</div>
+    <div id="pause-menu">
+        <div class="menu-box">
+            <h2>PAUSED</h2>
+            <button class="menu-btn" id="resume-btn">RESUME</button>
+            <button class="menu-btn" id="exit-btn">EXIT TO MAP</button>
+        </div>
+    </div>
+
+    <!-- === COLOR PICKER MENU === -->
+    <div id="color-picker-menu">
+        <h2 id="picker-title">Select Color</h2>
+        <div class="color-options">
+            <div class="color-btn default" data-color="default"></div>
+            <div class="color-btn red" data-color="red"></div>
+            <div class="color-btn blue" data-color="blue"></div>
+        </div>
+        <button class="close-picker-btn" id="close-picker-btn">CLOSE</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
 
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const sideMenu = document.getElementById('side-menu');
-const portraitMenu = document.getElementById('portrait-menu');
-const portraitTitle = document.getElementById('portrait-title');
-const scoreEl = document.getElementById('score');
-const highScoreEl = document.getElementById('high-score');
-const amethystsEl = document.getElementById('amethysts');
-const prepDisplay = document.getElementById('prep-display');
-const pauseButton = document.getElementById('pause-button');
-const pauseMenu = document.getElementById('pause-menu');
-
-let gameWidth = 1600;
-let gameHeight = 900;
-
-let playerX = Math.floor(gameWidth * 0.1875);
-let baseGap = Math.max(100, Math.floor(gameHeight * 0.2778));
-let amethystGap = Math.max(70, Math.floor(gameHeight * 0.15));
-let minGap = Math.floor(gameHeight * 0.1);
-let trailMaxLength = Math.floor(gameWidth * 0.2);
-let variationBase = Math.floor(gameHeight * 0.08);
-
-canvas.width = gameWidth;
-canvas.height = gameHeight;
-
-let state = 'menu'; 
-let paused = false;
-let score = 0;
-let gameMode = 'normal';
-
-let trailColor = '#00f2ff';
-let waveColor  = '#00f2ff';
-let mapColor   = '#00f2ff';
-let playerShape = 'triangle';
-let purchasedBroken = false;
-let purchasedYellowBlue = localStorage.getItem('purchasedYellowBlue') === 'true';
-let purchasedRedPurple = localStorage.getItem('purchasedRedPurple') === 'true';
-
-let deathVolume = 0.5;
-let prepTimer = 0;
-
-let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
-highScoreEl.innerText = `HIGH: ${highScore}`;
-
-let amethysts = localStorage.getItem('amethysts') ? parseInt(localStorage.getItem('amethysts')) : 0;
-amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
-
-const colorItems = [
-    { value: '#00f2ff', price: 0 },
-    { value: '#ff0055', price: 0 },
-    { value: '#00ff44', price: 0 },
-    { value: '#ffff00', price: 0 },
-    { value: '#ff8800', price: 0 },
-    { value: '#cc00ff', price: 0 },
-    { value: '#ffffff', price: 0 },
-    { value: '#0077ff', price: 0 },
-    { value: '#ff00ff', price: 0 },
-    { value: '#44ffcc', price: 0 },
-    { value: 'yellow-blue-gradient', price: 1000, gradient: true },
-    { value: 'red-purple-gradient', price: 1000, gradient: true }
-];
-
-function loadSavedSkins() {
-    if (localStorage.getItem('trailColor')) trailColor = localStorage.getItem('trailColor');
-    if (localStorage.getItem('waveColor')) waveColor = localStorage.getItem('waveColor');
-    if (localStorage.getItem('mapColor')) mapColor = localStorage.getItem('mapColor');
-    if (localStorage.getItem('playerShape')) playerShape = localStorage.getItem('playerShape');
-    if (localStorage.getItem('purchasedBroken') === 'true') purchasedBroken = true;
-    purchasedYellowBlue = localStorage.getItem('purchasedYellowBlue') === 'true';
-    purchasedRedPurple = localStorage.getItem('purchasedRedPurple') === 'true';
-}
-loadSavedSkins();
-
-function saveSkins() {
-    localStorage.setItem('trailColor', trailColor);
-    localStorage.setItem('waveColor', waveColor);
-    localStorage.setItem('mapColor', mapColor);
-    localStorage.setItem('playerShape', playerShape);
-    localStorage.setItem('purchasedBroken', purchasedBroken);
-    localStorage.setItem('purchasedYellowBlue', purchasedYellowBlue);
-    localStorage.setItem('purchasedRedPurple', purchasedRedPurple);
-}
-
-let currentWorldSpeed = 2.7;
-let currentGap = baseGap;
-let currentMoveSpeed = 2.7;
-
-const player = {
-    y: 300, isClimbing: false,
-    trail: []
-};
-
-let tunnelPoints = [];
-
-function updateDimensions() {
-    playerX = Math.floor(gameWidth * 0.1875);
-    baseGap = Math.max(100, Math.floor(gameHeight * 0.2778));
-    amethystGap = Math.max(70, Math.floor(gameHeight * 0.15));
-    minGap = Math.floor(gameHeight * 0.1);
-    trailMaxLength = Math.floor(gameWidth * 0.2);
-    variationBase = Math.floor(gameHeight * 0.08);
-    gameMode = 'normal';
-    currentGap = baseGap;
-    currentWorldSpeed = 2.7;
-    currentMoveSpeed = 2.7;
-}
-
-function initTunnel() {
-    tunnelPoints = [];
-    let startY = (gameHeight - currentGap) / 2;
-    startY = Math.max(20, Math.min(gameHeight - currentGap - 20, startY));
+    // --- CONFIG & STATE ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
     
-    tunnelPoints.push({ x: 0, y: startY });
-    for (let i = 1; i < 40; i++) {
-        addPoint();
+    const MODE = {
+        MAP: 'MAP',
+        TUNNEL: 'TUNNEL',
+        SHOP: 'SHOP',
+        PAUSED: 'PAUSED'
+    };
+    
+    let currentState = MODE.MAP;
+    let lastTime = 0;
+    
+    // Player (Map)
+    const player = {
+        x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15, speed: 0.5, friction: 0.96
+    };
+
+    // Portals
+    const portal = { x: 500, y: -500, radius: 40, active: true, color: '#00f2ff' };
+    const shopPortal = { x: -600, y: 0, radius: 40, active: true, color: '#ff4444' };
+
+    // Joystick
+    const joystick = {
+        active: false, originX: 0, originY: 0, dx: 0, dy: 0, maxRadius: 35
+    };
+
+    // Time System
+    const CYCLE_DURATION_SECONDS = 720;
+    const HOURS_IN_DAY = 24;
+    let gameTimeSeconds = 0;
+
+    // Tunnel Game State
+    let tunnelPoints = [];
+    let tunnelGap = 100;
+    let tunnelSpeed = 3.5;
+    let tunnelMoveSpeed = 3.5;
+    let tunnelScore = 0;
+    let tunnelPlayerY = 0;
+    let tunnelIsClimbing = false;
+    let tunnelTrail = [];
+    const tunnelTrailMaxLength = 200;
+    const playerX = 100;
+    
+    let tunnelTimer = 0;
+    const TUNNEL_START_DELAY = 1.0;
+
+    // High Score
+    let highScore = parseInt(localStorage.getItem('tunnelHighScore')) || 0;
+    document.getElementById('score-display').innerText = `Best: ${highScore}`;
+
+    // === SHOP STATE ===
+    const shopConfig = {
+        gridSize: 100,
+        gridCount: 10,
+        corridorWidth: 120,
+        shopSize: 200
+    };
+
+    let shopPlayer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0 };
+    let shopCamera = { x: 0, y: 0, zoom: 1, targetZoom: 1 };
+    let currentShop = null; // 'trail', 'player', 'tunnel', 'shape', or null
+    let activeColorPicker = null; // Which color we're picking
+
+    // === CUSTOMIZATION STATE ===
+    let customization = {
+        playerColor: localStorage.getItem('playerColor') || 'default',
+        trailColor: localStorage.getItem('trailColor') || 'default',
+        tunnelColor: localStorage.getItem('tunnelColor') || 'default',
+        playerShape: localStorage.getItem('playerShape') || 'triangle'
+    };
+
+    // Shop definitions
+    const shops = {
+        trail: { 
+            name: 'TRAIL', 
+            x: -400, 
+            y: -400, 
+            colorKey: 'trailColor',
+            cashRegister: { x: -480, y: -480, radius: 30 }
+        },
+        player: { 
+            name: 'PLAYER', 
+            x: 400, 
+            y: -400, 
+            colorKey: 'playerColor',
+            cashRegister: { x: 480, y: -480, radius: 30 }
+        },
+        tunnel: { 
+            name: 'TUNNEL', 
+            x: -400, 
+            y: 400, 
+            colorKey: 'tunnelColor',
+            cashRegister: { x: -480, y: 480, radius: 30 }
+        },
+        shape: { 
+            name: 'SHAPE', 
+            x: 400, 
+            y: 400, 
+            colorKey: 'playerShape',
+            cashRegister: { x: 480, y: 480, radius: 30 }
+        }
+    };
+
+    // Color values
+    const colorValues = {
+        default: { light: '#ffffff', dark: '#1a1a1a' },
+        red: { light: '#ff4444', dark: '#cc0000' },
+        blue: { light: '#4444ff', dark: '#0000cc' }
+    };
+
+    // --- RESIZE ---
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
-}
+    window.addEventListener('resize', resize);
+    resize();
 
-function addPoint() {
-    const lastPoint = tunnelPoints[tunnelPoints.length-1];
-    let stepX = (gameMode === 'amethyst') ? 60 : 40;
-    const x = lastPoint.x + stepX;
-    
-    let newY;
-    if (gameMode === 'amethyst') {
+    // --- UI ELEMENTS ---
+    const joyBase = document.getElementById('joy-base');
+    const joyStick = document.getElementById('joy-stick');
+    const pauseBtn = document.getElementById('pause-btn');
+    const resumeBtn = document.getElementById('resume-btn');
+    const exitBtn = document.getElementById('exit-btn');
+    const pauseMenu = document.getElementById('pause-menu');
+    const taskbar = document.getElementById('taskbar');
+    const joyZone = document.getElementById('joystick-zone');
+    const hint = document.getElementById('hint');
+    const shopHint = document.getElementById('shop-hint');
+    const timeBarContainer = document.getElementById('time-bar-container');
+    const tunnelScoreEl = document.getElementById('tunnel-score');
+    const tunnelHint = document.getElementById('tunnel-hint');
+    const tunnelTimerEl = document.getElementById('tunnel-timer');
+    const colorPickerMenu = document.getElementById('color-picker-menu');
+    const pickerTitle = document.getElementById('picker-title');
+    const closePickerBtn = document.getElementById('close-picker-btn');
+    const colorBtns = document.querySelectorAll('.color-btn');
+
+    // --- JOYSTICK INPUT ---
+    function handleStart(e) {
+        if (currentState !== MODE.MAP && currentState !== MODE.SHOP) return;
+        joystick.active = true;
+        const rect = joyBase.getBoundingClientRect();
+        joystick.originX = rect.left + rect.width / 2;
+        joystick.originY = rect.top + rect.height / 2;
+        handleMove(e);
+    }
+
+    function handleMove(e) {
+        if (!joystick.active) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - joystick.originX;
+        const deltaY = clientY - joystick.originY;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const angle = Math.atan2(deltaY, deltaX);
+        const clampedDist = Math.min(distance, joystick.maxRadius);
+        
+        joystick.dx = (clampedDist / joystick.maxRadius) * Math.cos(angle);
+        joystick.dy = (clampedDist / joystick.maxRadius) * Math.sin(angle);
+
+        const stickX = joystick.dx * joystick.maxRadius;
+        const stickY = joystick.dy * joystick.maxRadius;
+        joyStick.style.transform = `translate(calc(-50% + ${stickX}px), calc(-50% + ${stickY}px))`;
+    }
+
+    function handleEnd() {
+        joystick.active = false;
+        joystick.dx = 0;
+        joystick.dy = 0;
+        joyStick.style.transform = `translate(-50%, -50%)`;
+    }
+
+    joyBase.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    joyBase.addEventListener('touchstart', handleStart);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+
+    // --- TUNNEL INPUT ---
+    function handleTunnelInputStart() {
+        if (currentState !== MODE.TUNNEL || currentState === MODE.PAUSED) return;
+        tunnelIsClimbing = true;
+    }
+
+    function handleTunnelInputEnd() {
+        if (currentState !== MODE.TUNNEL) return;
+        tunnelIsClimbing = false;
+    }
+
+    window.addEventListener('touchstart', (e) => {
+        if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED) {
+            e.preventDefault();
+            handleTunnelInputStart();
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+        if (currentState === MODE.TUNNEL) {
+            e.preventDefault();
+            handleTunnelInputEnd();
+        }
+    }, { passive: false });
+
+    window.addEventListener('mousedown', (e) => {
+        if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED && 
+            e.target !== pauseBtn && e.target !== resumeBtn && e.target !== exitBtn) {
+            handleTunnelInputStart();
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        handleTunnelInputEnd();
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED) {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                tunnelIsClimbing = true;
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (currentState === MODE.TUNNEL) {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                tunnelIsClimbing = false;
+            }
+        }
+    });
+
+    // --- PAUSE CONTROLS ---
+    pauseBtn.addEventListener('click', togglePause);
+    resumeBtn.addEventListener('click', () => {
+        togglePause();
+    });
+    exitBtn.addEventListener('click', () => {
+        togglePause();
+        if (currentState === MODE.TUNNEL || currentState === MODE.SHOP || currentState === MODE.PAUSED) {
+            if (currentState === MODE.SHOP) {
+                exitShop();
+            } else if (currentState === MODE.TUNNEL) {
+                exitTunnel();
+            }
+        }
+    });
+
+    function togglePause() {
+        if (currentState === MODE.MAP) return;
+        
+        if (currentState === MODE.PAUSED) {
+            if (currentShop) {
+                currentState = MODE.SHOP;
+            } else {
+                currentState = MODE.TUNNEL;
+            }
+            pauseMenu.classList.remove('active');
+            lastTime = performance.now();
+            requestAnimationFrame(loop);
+        } else {
+            currentState = MODE.PAUSED;
+            pauseMenu.classList.add('active');
+        }
+    }
+
+    function exitTunnel() {
+        currentState = MODE.MAP;
+        tunnelScore = 0;
+        tunnelPoints = [];
+        tunnelTrail = [];
+        tunnelScoreEl.style.display = 'none';
+        tunnelHint.style.display = 'none';
+        tunnelTimerEl.style.display = 'none';
+        taskbar.classList.remove('hidden');
+        joyZone.classList.remove('hidden');
+        timeBarContainer.style.opacity = '1';
+        hint.style.display = 'block';
+        shopHint.style.display = 'none';
+        pauseBtn.style.display = 'flex';
+        
+        player.x = portal.x + 100;
+        player.y = portal.y + 100;
+        player.vx = 0;
+        player.vy = 0;
+    }
+
+    function exitShop() {
+        currentState = MODE.MAP;
+        currentShop = null;
+        shopCamera.zoom = 1;
+        shopCamera.targetZoom = 1;
+        taskbar.classList.remove('hidden');
+        joyZone.classList.remove('hidden');
+        hint.style.display = 'block';
+        shopHint.style.display = 'none';
+        timeBarContainer.style.opacity = '1';
+        pauseBtn.style.display = 'flex';
+        
+        // Return near shop portal
+        player.x = shopPortal.x + 150;
+        player.y = shopPortal.y;
+        player.vx = 0;
+        player.vy = 0;
+    }
+
+    // === SHOP FUNCTIONS ===
+    function enterShop() {
+        currentState = MODE.SHOP;
+        shopPlayer.x = 0;
+        shopPlayer.y = 0;
+        shopPlayer.vx = 0;
+        shopPlayer.vy = 0;
+        shopPlayer.angle = 0;
+        shopCamera.x = 0;
+        shopCamera.y = 0;
+        shopCamera.zoom = 1;
+        shopCamera.targetZoom = 1;
+        currentShop = null;
+        
+        tunnelScoreEl.style.display = 'none';
+        tunnelHint.style.display = 'none';
+        tunnelTimerEl.style.display = 'none';
+        taskbar.classList.add('hidden');
+        joyZone.classList.remove('hidden');
+        hint.style.display = 'none';
+        shopHint.style.display = 'block';
+        timeBarContainer.style.opacity = '0';
+        pauseBtn.style.display = 'flex';
+    }
+
+    function checkShopEntry() {
+        // Check if player entered a shop zone
+        for (const [key, shop] of Object.entries(shops)) {
+            const dx = shopPlayer.x - shop.x;
+            const dy = shopPlayer.y - shop.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < shopConfig.shopSize / 2) {
+                if (currentShop !== key) {
+                    currentShop = key;
+                    shopCamera.targetZoom = 1.5;
+                }
+                return;
+            }
+        }
+        
+        // Check if player is in corridor
+        if (Math.abs(shopPlayer.x) < shopConfig.corridorWidth / 2 || 
+            Math.abs(shopPlayer.y) < shopConfig.corridorWidth / 2) {
+            if (currentShop !== null) {
+                currentShop = null;
+                shopCamera.targetZoom = 1;
+            }
+        }
+        
+        // Check exit zone (end of corridor)
+        if (shopPlayer.y < -shopConfig.gridSize * 4) {
+            exitShop();
+        }
+    }
+
+    function checkCashRegister() {
+        if (!currentShop) return;
+        
+        const shop = shops[currentShop];
+        const dx = shopPlayer.x - shop.cashRegister.x;
+        const dy = shopPlayer.y - shop.cashRegister.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist < shop.cashRegister.radius + player.size) {
+            openColorPicker(currentShop);
+        }
+    }
+
+    function updateShop(deltaTime) {
+        // Player movement
+        if (joystick.active) {
+            shopPlayer.vx += joystick.dx * player.speed;
+            shopPlayer.vy += joystick.dy * player.speed;
+        }
+        shopPlayer.vx *= player.friction;
+        shopPlayer.vy *= player.friction;
+        shopPlayer.x += shopPlayer.vx;
+        shopPlayer.y += shopPlayer.vy;
+
+        if (Math.abs(shopPlayer.vx) > 0.1 || Math.abs(shopPlayer.vy) > 0.1) {
+            shopPlayer.angle = Math.atan2(shopPlayer.vy, shopPlayer.vx);
+        }
+
+        // Camera zoom interpolation
+        shopCamera.zoom += (shopCamera.targetZoom - shopCamera.zoom) * 5 * deltaTime;
+
+        // Check shop entry/exit
+        checkShopEntry();
+        
+        // Check cash register
+        if (currentShop && shops[currentShop].colorKey !== 'playerShape') {
+            checkCashRegister();
+        }
+    }
+
+    // === COLOR PICKER ===
+    function openColorPicker(shopKey) {
+        activeColorPicker = shopKey;
+        const shop = shops[shopKey];
+        pickerTitle.innerText = `Select ${shop.name} Color`;
+        colorPickerMenu.classList.add('active');
+        
+        // Set current selection
+        const currentColor = customization[shop.colorKey];
+        colorBtns.forEach(btn => {
+            btn.classList.remove('selected');
+            if (btn.dataset.color === currentColor) {
+                btn.classList.add('selected');
+            }
+        });
+    }
+
+    function closeColorPicker() {
+        colorPickerMenu.classList.remove('active');
+        activeColorPicker = null;
+    }
+
+    function selectColor(color) {
+        if (activeColorPicker && shops[activeColorPicker]) {
+            const shop = shops[activeColorPicker];
+            customization[shop.colorKey] = color;
+            localStorage.setItem(shop.colorKey, color);
+            
+            // Update selection visual
+            colorBtns.forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+    }
+
+    colorBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectColor(btn.dataset.color);
+        });
+    });
+
+    closePickerBtn.addEventListener('click', closeColorPicker);
+
+    // --- TUNNEL FUNCTIONS ---
+    function startTunnel() {
+        currentState = MODE.TUNNEL;
+        resetTunnel();
+        
+        tunnelScoreEl.style.display = 'block';
+        tunnelHint.style.display = 'block';
+        tunnelTimerEl.style.display = 'block';
+        taskbar.classList.add('hidden');
+        joyZone.classList.add('hidden');
+        timeBarContainer.style.opacity = '0';
+        hint.style.display = 'none';
+        shopHint.style.display = 'none';
+        pauseBtn.style.display = 'flex';
+    }
+
+    function resetTunnel() {
+        tunnelScore = 0;
+        tunnelPoints = [];
+        tunnelTrail = [];
+        tunnelPlayerY = canvas.height / 2;
+        tunnelIsClimbing = false;
+        tunnelTimer = TUNNEL_START_DELAY;
+        
+        tunnelGap = Math.max(150, Math.floor(canvas.height * 0.25));
+        tunnelSpeed = 3.5;
+        
+        initTunnel();
+        
+        const startTunnel = getTunnelAt(playerX);
+        tunnelPlayerY = startTunnel.y + tunnelGap / 2;
+        
+        tunnelScoreEl.innerText = '0';
+    }
+
+    function initTunnel() {
+        tunnelPoints = [];
+        let startY = (canvas.height - tunnelGap) / 2;
+        startY = Math.max(30, Math.min(canvas.height - tunnelGap - 30, startY));
+        
+        for (let i = 0; i < 40; i++) {
+            tunnelPoints.push({ x: i * 40, y: startY });
+        }
+        
+        for (let i = 40; i < 80; i++) {
+            addPoint();
+        }
+    }
+
+    function addPoint() {
+        const lastPoint = tunnelPoints[tunnelPoints.length - 1];
+        const stepX = 40;
+        const x = lastPoint.x + stepX;
+        
         let dy = (Math.random() > 0.5) ? stepX : -stepX;
         let candidateY = lastPoint.y + dy;
-        const minY = 20;
-        const maxY = gameHeight - currentGap - 25;
+        
+        const minY = 30;
+        const maxY = canvas.height - tunnelGap - 30;
+        
         if (candidateY < minY || candidateY > maxY) {
             dy = -dy;
             candidateY = lastPoint.y + dy;
         }
-        newY = Math.max(minY, Math.min(maxY, candidateY));
-    } else {
-        const difficultyFactor = Math.min(2.5, 1 + (score / 4000));
-        const variation = variationBase * difficultyFactor;
-        newY = lastPoint.y + (Math.random() - 0.5) * variation;
-        newY = Math.max(20, Math.min(gameHeight - currentGap - 25, newY));
+        
+        const newY = Math.max(minY, Math.min(maxY, candidateY));
+        tunnelPoints.push({ x, y: newY });
     }
-    
-    tunnelPoints.push({ x, y: newY });
-}
 
-function update() {
-    if (state === 'playing' && !paused) {
-        if (prepTimer <= 0) {
-            if (gameMode === 'normal') {
-                currentWorldSpeed += 0.00003; 
-                currentGap = Math.max(minGap, baseGap - (score / 100));
+    function getTunnelAt(x) {
+        for (let i = 0; i < tunnelPoints.length - 1; i++) {
+            if (x >= tunnelPoints[i].x && x <= tunnelPoints[i + 1].x) {
+                const t = (x - tunnelPoints[i].x) / (tunnelPoints[i + 1].x - tunnelPoints[i].x);
+                return { 
+                    y: tunnelPoints[i].y + t * (tunnelPoints[i + 1].y - tunnelPoints[i].y) 
+                };
             }
         }
+        return { y: canvas.height / 2 };
+    }
 
-        tunnelPoints.forEach(p => p.x -= currentWorldSpeed);
-        if(tunnelPoints[0].x < -100) {
-            tunnelPoints.shift();
-            addPoint();
-        }
-
-        if (prepTimer > 0) {
-            const target = getTunnelAt(playerX).y + currentGap/2;
-            player.y += (target - player.y) * 0.12;
-            prepTimer--;
-            
-            prepDisplay.innerText = Math.ceil(prepTimer / 60);
-            prepDisplay.classList.add('show');
-            if(prepTimer <= 0) prepDisplay.classList.remove('show');
+    function updateTunnel(deltaTime) {
+        const dt60 = deltaTime * 60;
+        
+        if (tunnelTimer > 0) {
+            tunnelTimer -= deltaTime;
+            if (tunnelTimer <= 0) {
+                tunnelTimer = 0;
+                tunnelTimerEl.style.display = 'none';
+            } else {
+                tunnelTimerEl.innerText = Math.ceil(tunnelTimer);
+            }
         } else {
-            if (player.isClimbing) player.y -= currentMoveSpeed;
-            else player.y += currentMoveSpeed;
-            score += 0.5;
-        }
-
-        player.trail.push({x: playerX, y: player.y});
-        if (player.trail.length > trailMaxLength) player.trail.shift();
-        player.trail.forEach(t => t.x -= currentWorldSpeed);
-
-        if (prepTimer <= 0) {
-            const tunnel = getTunnelAt(playerX);
-            if(player.y < tunnel.y || player.y > tunnel.y + currentGap) die();
+            if (tunnelIsClimbing) {
+                tunnelPlayerY -= tunnelMoveSpeed;
+            } else {
+                tunnelPlayerY += tunnelMoveSpeed;
+            }
         }
         
-        let displayScore = Math.floor(score/5);
-        scoreEl.innerText = `SCORE: ${displayScore}`;
-    } else if (state === 'menu') {
-        tunnelPoints.forEach(p => p.x -= 2);
-        if(tunnelPoints[0].x < -100) {
+        tunnelScore += deltaTime * 15;
+        tunnelScoreEl.innerText = Math.floor(tunnelScore);
+        
+        if (tunnelScore > highScore) {
+            highScore = Math.floor(tunnelScore);
+            localStorage.setItem('tunnelHighScore', highScore);
+            document.getElementById('score-display').innerText = `Best: ${highScore}`;
+        }
+        
+        for (let p of tunnelPoints) {
+            p.x -= tunnelSpeed;
+        }
+        
+        if (tunnelPoints.length > 0 && tunnelPoints[0].x < -100) {
             tunnelPoints.shift();
             addPoint();
         }
-        const target = getTunnelAt(playerX).y + currentGap/2;
-        player.y += (target - player.y) * 0.12;
         
-        player.trail.push({x: playerX, y: player.y});
-        if (player.trail.length > trailMaxLength) player.trail.shift();
-        player.trail.forEach(t => t.x -= 2);
-    }
-}
-
-function getTunnelAt(x) {
-    for(let i = 0; i < tunnelPoints.length - 1; i++) {
-        if(x >= tunnelPoints[i].x && x <= tunnelPoints[i+1].x) {
-            const t = (x - tunnelPoints[i].x) / (tunnelPoints[i+1].x - tunnelPoints[i].x);
-            return { y: tunnelPoints[i].y + t * (tunnelPoints[i+1].y - tunnelPoints[i].y) };
+        tunnelTrail.push({ x: playerX, y: tunnelPlayerY });
+        for (let t of tunnelTrail) {
+            t.x -= tunnelSpeed;
+        }
+        if (tunnelTrail.length > tunnelTrailMaxLength) {
+            tunnelTrail.shift();
+        }
+        
+        const tunnel = getTunnelAt(playerX);
+        if (tunnelPlayerY < tunnel.y || tunnelPlayerY > tunnel.y + tunnelGap) {
+            onTunnelCrash();
+            return;
         }
     }
-    return { y: gameHeight / 2 };
-}
 
-function getColorStyle(color, type, points) {
-    if (color === 'yellow-blue-gradient') {
-        if (type === 'player') {
-            let leftX, rightX;
-            switch (playerShape) {
-                case 'triangle':
-                    rightX = 22;
-                    leftX = -12;
-                    break;
-                case 'square':
-                case 'circle':
-                    rightX = 12;
-                    leftX = -12;
-                    break;
-                case 'diamond':
-                    rightX = 16;
-                    leftX = -16;
-                    break;
-                case 'broken':
-                    rightX = 15;
-                    leftX = -15;
-                    break;
-                default:
-                    rightX = 12;
-                    leftX = -12;
-            }
-            const grad = ctx.createLinearGradient(rightX, 0, leftX, 0);
-            grad.addColorStop(0, 'yellow');
-            grad.addColorStop(1, 'blue');
-            return grad;
-        } else if (type === 'trail' && points && points.length > 1) {
-            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
-            grad.addColorStop(0, 'yellow');
-            grad.addColorStop(1, 'blue');
-            return grad;
-        } else if (type === 'tunnel' && points && points.length > 1) {
-            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
-            grad.addColorStop(0, 'yellow');
-            grad.addColorStop(1, 'blue');
-            return grad;
+    function onTunnelCrash() {
+        canvas.style.filter = 'brightness(1.5)';
+        setTimeout(() => {
+            canvas.style.filter = '';
+        }, 100);
+        resetTunnel();
+    }
+
+    // --- MAP LOGIC ---
+    function updateMap(deltaTime) {
+        const timeScale = (HOURS_IN_DAY * 3600) / CYCLE_DURATION_SECONDS;
+        gameTimeSeconds += deltaTime * timeScale;
+        if (gameTimeSeconds >= HOURS_IN_DAY * 3600) {
+            gameTimeSeconds -= HOURS_IN_DAY * 3600;
         }
-    } else if (color === 'red-purple-gradient') {
-        if (type === 'player') {
-            let leftX, rightX;
-            switch (playerShape) {
-                case 'triangle':
-                    rightX = 22;
-                    leftX = -12;
-                    break;
-                case 'square':
-                case 'circle':
-                    rightX = 12;
-                    leftX = -12;
-                    break;
-                case 'diamond':
-                    rightX = 16;
-                    leftX = -16;
-                    break;
-                case 'broken':
-                    rightX = 15;
-                    leftX = -15;
-                    break;
-                default:
-                    rightX = 12;
-                    leftX = -12;
-            }
-            const grad = ctx.createLinearGradient(rightX, 0, leftX, 0);
-            grad.addColorStop(0, 'red');
-            grad.addColorStop(1, 'purple');
-            return grad;
-        } else if (type === 'trail' && points && points.length > 1) {
-            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
-            grad.addColorStop(0, 'red');
-            grad.addColorStop(1, 'purple');
-            return grad;
-        } else if (type === 'tunnel' && points && points.length > 1) {
-            const grad = ctx.createLinearGradient(points[0].x, points[0].y, points[points.length-1].x, points[points.length-1].y);
-            grad.addColorStop(0, 'red');
-            grad.addColorStop(1, 'purple');
-            return grad;
+
+        if (joystick.active) {
+            player.vx += joystick.dx * player.speed;
+            player.vy += joystick.dy * player.speed;
+        }
+        player.vx *= player.friction;
+        player.vy *= player.friction;
+        player.x += player.vx;
+        player.y += player.vy;
+
+        if (Math.abs(player.vx) > 0.1 || Math.abs(player.vy) > 0.1) {
+            player.angle = Math.atan2(player.vy, player.vx);
+        }
+
+        // Check portal collision
+        const dx = player.x - portal.x;
+        const dy = player.y - portal.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < portal.radius + player.size) {
+            startTunnel();
+        }
+
+        // Check shop portal collision
+        const shopDx = player.x - shopPortal.x;
+        const shopDy = player.y - shopPortal.y;
+        const shopDist = Math.sqrt(shopDx * shopDx + shopDy * shopDy);
+        if (shopDist < shopPortal.radius + player.size) {
+            enterShop();
         }
     }
-    return color;
-}
 
-function draw() {
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(0, 0, gameWidth, gameHeight);
+    // --- ENVIRONMENT & COLORS ---
+    function updateEnvironment() {
+        const totalSeconds = Math.floor(gameTimeSeconds);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        
+        document.getElementById('clock').innerText = 
+            `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 
-    ctx.shadowBlur = 100;
-    ctx.shadowColor = mapColor;
-    ctx.strokeStyle = getColorStyle(mapColor, 'tunnel', tunnelPoints);
-    ctx.lineWidth = 5;
-    ctx.lineJoin = 'round';
+        let dayFactor = 0;
+        const sunrise = 6 * 3600;
+        const sunset = 18 * 3600;
+        const noon = 12 * 3600;
 
-    ctx.beginPath(); 
-    tunnelPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-    ctx.stroke();
+        if (totalSeconds >= sunrise && totalSeconds <= sunset) {
+            const distFromNoon = Math.abs(totalSeconds - noon);
+            dayFactor = 1 - (distFromNoon / 21600);
+        } else {
+            let distFromMidnight = (totalSeconds > sunset) ? 
+                (24 * 3600 - totalSeconds) : totalSeconds;
+            dayFactor = 1 - (distFromMidnight / 21600);
+        }
+        dayFactor = Math.max(0, Math.min(1, dayFactor));
 
-    ctx.beginPath(); 
-    tunnelPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y + currentGap) : ctx.lineTo(p.x, p.y + currentGap));
-    ctx.stroke();
+        const rNight = 20, gNight = 20, bNight = 25;
+        const rDay = 230, gDay = 235, bDay = 240;
+        const r = Math.round(rNight + (rDay - rNight) * dayFactor);
+        const g = Math.round(gNight + (gDay - gNight) * dayFactor);
+        const b = Math.round(bNight + (bDay - bNight) * dayFactor);
 
-    if(player.trail.length > 1) {
-        ctx.shadowBlur = 30;
-        ctx.shadowColor = trailColor;
-        ctx.strokeStyle = getColorStyle(trailColor, 'trail', player.trail);
-        ctx.lineWidth = 5;
+        document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+        
+        const textColor = dayFactor > 0.5 ? '#1a1a1a' : '#ffffff';
+        document.documentElement.style.setProperty('--text-color', textColor);
+        
+        const uiOpacity = dayFactor > 0.5 ? 0.15 : 0.5;
+        document.documentElement.style.setProperty('--ui-bg', 
+            `rgba(255, 255, 255, ${uiOpacity})`);
+
+        const progress = (gameTimeSeconds / (24 * 3600)) * 100;
+        document.getElementById('time-bar-fill').style.width = `${progress}%`;
+
+        return { dayFactor, textColor };
+    }
+
+    // === GET COLOR FOR CUSTOMIZATION ===
+    function getCustomColor(colorKey, colors) {
+        const colorName = customization[colorKey];
+        if (colorName === 'default') {
+            return colors.textColor;
+        }
+        return colorValues[colorName] ? 
+            (colors.dayFactor > 0.5 ? colorValues[colorName].dark : colorValues[colorName].light) 
+            : colors.textColor;
+    }
+
+    // --- DRAWING ---
+    function drawMap(colors) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const gridSize = 100;
+        const offsetX = -player.x % gridSize;
+        const offsetY = -player.y % gridSize;
         ctx.beginPath();
-        ctx.moveTo(player.trail[0].x, player.trail[0].y);
-        player.trail.forEach(t => ctx.lineTo(t.x, t.y));
+        ctx.strokeStyle = colors.dayFactor > 0.5 ? 
+            'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+        ctx.lineWidth = 1;
+        for (let x = offsetX; x < canvas.width; x += gridSize) {
+            ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
+        }
+        for (let y = offsetY; y < canvas.height; y += gridSize) {
+            ctx.moveTo(0, y); ctx.lineTo(canvas.width, y);
+        }
         ctx.stroke();
+
+        // Tunnel Portal (Cyan)
+        ctx.save();
+        ctx.translate(
+            canvas.width / 2 + portal.x - player.x, 
+            canvas.height / 2 + portal.y - player.y
+        );
+        ctx.beginPath();
+        ctx.arc(0, 0, portal.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = portal.color;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = portal.color;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
+        ctx.fill();
+        ctx.restore();
+
+        // Shop Portal (Red)
+        ctx.save();
+        ctx.translate(
+            canvas.width / 2 + shopPortal.x - player.x, 
+            canvas.height / 2 + shopPortal.y - player.y
+        );
+        ctx.beginPath();
+        ctx.arc(0, 0, shopPortal.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = shopPortal.color;
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = shopPortal.color;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+        ctx.fill();
+        ctx.restore();
+
+        // Player
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(player.angle);
+        ctx.beginPath();
+        ctx.moveTo(player.size, 0);
+        ctx.lineTo(-player.size, -player.size / 1.5);
+        ctx.lineTo(-player.size, player.size / 1.5);
+        ctx.closePath();
+        ctx.fillStyle = getCustomColor('playerColor', colors);
+        ctx.fill();
+        ctx.restore();
+
+        // Compass
+        drawCompass(colors);
     }
 
-    ctx.save();
-    ctx.translate(playerX, player.y);
-    const angle = (state === 'playing' && !paused && prepTimer <= 0) ? (player.isClimbing ? -Math.PI/4 : Math.PI/4) : 0;
-    ctx.rotate(angle);
-    ctx.shadowBlur = 50;
-    ctx.shadowColor = waveColor;
-    ctx.fillStyle = getColorStyle(waveColor, 'player');
-    ctx.beginPath();
+    function drawCompass(colors) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const compassRadius = 50;
+        const markerWidth = 8;
+        const markerArc = Math.PI / 6;
 
-    switch (playerShape) {
-        case 'triangle':
-            ctx.moveTo(22, 0);
-            ctx.lineTo(-12, -13);
-            ctx.lineTo(-12, 13);
-            ctx.closePath();
-            break;
-        case 'square':
-            ctx.rect(-12, -12, 24, 24);
-            break;
-        case 'circle':
-            ctx.arc(0, 0, 12, 0, 2 * Math.PI);
-            break;
-        case 'diamond':
-            ctx.moveTo(0, -16);
-            ctx.lineTo(16, 0);
-            ctx.lineTo(0, 16);
-            ctx.lineTo(-16, 0);
-            ctx.closePath();
-            break;
-        case 'broken': {
-            const scale = 3;
-            const points = [
-            [-5.00,  5.50],
-            [-5.00,  4.38],
-            [-4.04,  3.25],
-            [-3.08,  2.13],
-            [-2.12,  1.00],
-            [-3.08, -0.12],
-            [-4.04, -1.25],
-            [-5.00, -2.38],
-            [-5.00, -3.50],
-            [-3.85, -3.50],
-            [-2.69, -3.50],
-            [-0.77, -2.38],
-            [ 0.96, -1.25],
-            [ 3.08, -0.12],
-            [ 5.00,  1.00],
-            [ 3.08,  2.13],
-            [ 0.96,  3.25],
-            [-0.77,  4.38],
-            [-2.69,  5.50],
-            [-3.85,  5.50],
-            [-5.00,  5.50]
-        ];
+        // Calculate angle to tunnel portal
+        const dx1 = portal.x - player.x;
+        const dy1 = portal.y - player.y;
+        const angleToPortal = Math.atan2(dy1, dx1);
+
+        // Calculate angle to shop portal
+        const dx2 = shopPortal.x - player.x;
+        const dy2 = shopPortal.y - player.y;
+        const angleToShop = Math.atan2(dy2, dx2);
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        
+        // Circle background
+        ctx.beginPath();
+        ctx.arc(0, 0, compassRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = colors.dayFactor > 0.5 ? 
+            'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Tunnel portal marker (Cyan)
+        ctx.beginPath();
+        ctx.arc(0, 0, compassRadius, angleToPortal - markerArc/2, angleToPortal + markerArc/2);
+        ctx.strokeStyle = portal.color;
+        ctx.lineWidth = markerWidth;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = portal.color;
+        ctx.stroke();
+
+        // Shop portal marker (Red)
+        ctx.beginPath();
+        ctx.arc(0, 0, compassRadius, angleToShop - markerArc/2, angleToShop + markerArc/2);
+        ctx.strokeStyle = shopPortal.color;
+        ctx.lineWidth = markerWidth;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = shopPortal.color;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawShop(colors) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.save();
+        
+        // Apply camera transform
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(shopCamera.zoom, shopCamera.zoom);
+        ctx.translate(-shopPlayer.x, -shopPlayer.y);
+
+        const gs = shopConfig.gridSize;
+        const gc = shopConfig.gridCount;
+        const halfGrid = (gc * gs) / 2;
+
+        // Background
+        ctx.fillStyle = colors.dayFactor > 0.5 ? '#e0e0e0' : '#2a2a2a';
+        ctx.fillRect(-halfGrid, -halfGrid, gc * gs, gc * gs);
+
+        // Grid lines
+        ctx.strokeStyle = colors.dayFactor > 0.5 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        for (let x = -halfGrid; x <= halfGrid; x += gs) {
             ctx.beginPath();
-            points.forEach((pt, i) => {
-                const x = pt[0] * scale;
-                const y = pt[1] * scale;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.closePath();
+            ctx.moveTo(x, -halfGrid);
+            ctx.lineTo(x, halfGrid);
+            ctx.stroke();
+        }
+        for (let y = -halfGrid; y <= halfGrid; y += gs) {
+            ctx.beginPath();
+            ctx.moveTo(-halfGrid, y);
+            ctx.lineTo(halfGrid, y);
+            ctx.stroke();
+        }
+
+        // Corridor walls
+        ctx.strokeStyle = colors.dayFactor > 0.5 ? '#444' : '#aaa';
+        ctx.lineWidth = 4;
+        const cw = shopConfig.corridorWidth / 2;
+        
+        // Vertical corridor
+        ctx.beginPath();
+        ctx.moveTo(-cw, -halfGrid);
+        ctx.lineTo(-cw, halfGrid);
+        ctx.moveTo(cw, -halfGrid);
+        ctx.lineTo(cw, halfGrid);
+        ctx.stroke();
+
+        // Horizontal corridor
+        ctx.beginPath();
+        ctx.moveTo(-halfGrid, -cw);
+        ctx.lineTo(halfGrid, -cw);
+        ctx.moveTo(-halfGrid, cw);
+        ctx.lineTo(halfGrid, cw);
+        ctx.stroke();
+
+        // Shop entrances (openings in corridor walls)
+        const shopEntranceSize = 80;
+        ctx.strokeStyle = colors.dayFactor > 0.5 ? '#e0e0e0' : '#2a2a2a';
+        ctx.lineWidth = 6;
+        
+        // Top-left shop entrance
+        ctx.beginPath();
+        ctx.moveTo(-cw, -cw - shopEntranceSize/2);
+        ctx.lineTo(-cw, -cw + shopEntranceSize/2);
+        ctx.moveTo(-cw - shopEntranceSize/2, -cw);
+        ctx.lineTo(-cw + shopEntranceSize/2, -cw);
+        ctx.stroke();
+
+        // Top-right shop entrance
+        ctx.beginPath();
+        ctx.moveTo(cw, -cw - shopEntranceSize/2);
+        ctx.lineTo(cw, -cw + shopEntranceSize/2);
+        ctx.moveTo(cw - shopEntranceSize/2, -cw);
+        ctx.lineTo(cw + shopEntranceSize/2, -cw);
+        ctx.stroke();
+
+        // Bottom-left shop entrance
+        ctx.beginPath();
+        ctx.moveTo(-cw, cw - shopEntranceSize/2);
+        ctx.lineTo(-cw, cw + shopEntranceSize/2);
+        ctx.moveTo(-cw - shopEntranceSize/2, cw);
+        ctx.lineTo(-cw + shopEntranceSize/2, cw);
+        ctx.stroke();
+
+        // Bottom-right shop entrance
+        ctx.beginPath();
+        ctx.moveTo(cw, cw - shopEntranceSize/2);
+        ctx.lineTo(cw, cw + shopEntranceSize/2);
+        ctx.moveTo(cw - shopEntranceSize/2, cw);
+        ctx.lineTo(cw + shopEntranceSize/2, cw);
+        ctx.stroke();
+
+        // Shop ceilings (in corridor view)
+        if (shopCamera.zoom < 1.3) {
+            ctx.fillStyle = colors.dayFactor > 0.5 ? 'rgba(100,100,100,0.7)' : 'rgba(50,50,50,0.7)';
+            ctx.strokeStyle = colors.dayFactor > 0.5 ? '#666' : '#888';
+            ctx.lineWidth = 2;
+
+            // TRAIL shop ceiling
+            ctx.fillRect(-halfGrid, -halfGrid, shopConfig.shopSize, shopConfig.shopSize);
+            ctx.strokeRect(-halfGrid, -halfGrid, shopConfig.shopSize, shopConfig.shopSize);
+            
+            // PLAYER shop ceiling
+            ctx.fillRect(halfGrid - shopConfig.shopSize, -halfGrid, shopConfig.shopSize, shopConfig.shopSize);
+            ctx.strokeRect(halfGrid - shopConfig.shopSize, -halfGrid, shopConfig.shopSize, shopConfig.shopSize);
+            
+            // TUNNEL shop ceiling
+            ctx.fillRect(-halfGrid, halfGrid - shopConfig.shopSize, shopConfig.shopSize, shopConfig.shopSize);
+            ctx.strokeRect(-halfGrid, halfGrid - shopConfig.shopSize, shopConfig.shopSize, shopConfig.shopSize);
+            
+            // SHAPE shop ceiling
+            ctx.fillRect(halfGrid - shopConfig.shopSize, halfGrid - shopConfig.shopSize, shopConfig.shopSize, shopConfig.shopSize);
+            ctx.strokeRect(halfGrid - shopConfig.shopSize, halfGrid - shopConfig.shopSize, shopConfig.shopSize, shopConfig.shopSize);
+
+            // Shop labels on ceilings
+            ctx.fillStyle = colors.dayFactor > 0.5 ? '#fff' : '#aaa';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.fillText('TRAIL', -halfGrid + shopConfig.shopSize/2, -halfGrid + shopConfig.shopSize/2);
+            ctx.fillText('PLAYER', halfGrid - shopConfig.shopSize/2, -halfGrid + shopConfig.shopSize/2);
+            ctx.fillText('TUNNEL', -halfGrid + shopConfig.shopSize/2, halfGrid - shopConfig.shopSize/2);
+            ctx.fillText('SHAPE', halfGrid - shopConfig.shopSize/2, halfGrid - shopConfig.shopSize/2);
+        }
+
+        // Shop interiors (when zoomed in)
+        if (shopCamera.zoom >= 1.3 && currentShop) {
+            const shop = shops[currentShop];
+            
+            // Shop floor
+            ctx.fillStyle = colors.dayFactor > 0.5 ? 'rgba(200,200,255,0.3)' : 'rgba(100,100,150,0.3)';
+            ctx.fillRect(shop.x - shopConfig.shopSize/2, shop.y - shopConfig.shopSize/2, 
+                        shopConfig.shopSize, shopConfig.shopSize);
+            ctx.strokeStyle = colors.dayFactor > 0.5 ? '#88f' : '#66a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(shop.x - shopConfig.shopSize/2, shop.y - shopConfig.shopSize/2, 
+                          shopConfig.shopSize, shopConfig.shopSize);
+
+            // Cash register
+            ctx.fillStyle = '#4caf50';
+            ctx.beginPath();
+            ctx.arc(shop.cashRegister.x, shop.cashRegister.y, shop.cashRegister.radius, 0, Math.PI * 2);
             ctx.fill();
-            break;
-        }
-        default:
-            ctx.moveTo(22, 0);
-            ctx.lineTo(-12, -13);
-            ctx.lineTo(-12, 13);
-            ctx.closePath();
-    }
-
-    ctx.fill();
-    ctx.restore();
-
-    requestAnimationFrame(() => { update(); draw(); });
-}
-
-function resizeGame(width, height) {
-    gameWidth = width;
-    gameHeight = height;
-    canvas.width = width;
-    canvas.height = height;
-    updateDimensions();
-    
-    state = 'menu';
-    paused = false;
-    gameMode = 'normal';
-    score = 0;
-    prepTimer = 0;
-    currentWorldSpeed = 2.7;
-    currentGap = baseGap;
-    currentMoveSpeed = 2.7;
-    player.trail = [];
-    initTunnel();
-    player.y = getTunnelAt(playerX).y + currentGap/2;
-    
-    document.getElementById('current-size').innerText = `${width}x${height}`;
-    pauseButton.classList.add('hidden');
-    pauseMenu.classList.add('hidden');
-}
-
-function applyPreset(aspect) {
-    let w, h;
-    if (aspect === '16:9') {
-        w = 1600;
-        h = 900;
-    } else if (aspect === '4:3') {
-        w = 1000;
-        h = 750;
-    } else {
-        return;
-    }
-    resizeGame(w, h);
-}
-
-function applyCustomSize() {
-    const w = parseInt(document.getElementById('custom-width').value);
-    const h = parseInt(document.getElementById('custom-height').value);
-    if (w && h && w >= 800 && w <= 2560 && h >= 600 && h <= 1600) {
-        resizeGame(w, h);
-    } else {
-        alert('Width must be 800-2560, Height 600-1600');
-    }
-}
-
-function toggleModeSelect() {
-    const modeScreen = document.getElementById('mode-select-screen');
-    if (modeScreen.classList.contains('hidden')) {
-        closeOverlays();
-        modeScreen.classList.remove('hidden');
-        // В портретном режиме снимаем подсветку с табов
-        removePortraitHighlights();
-    } else {
-        modeScreen.classList.add('hidden');
-    }
-}
-
-function startNormalGame() {
-    gameMode = 'normal';
-    currentWorldSpeed = 2.7;
-    currentGap = baseGap;
-    currentMoveSpeed = 2.6;
-    
-    closeOverlays();
-    sideMenu.classList.add('hidden');
-    portraitMenu.classList.add('hidden');
-    portraitTitle.classList.add('hidden'); // скрываем заголовок во время игры
-    state = 'playing';
-    paused = false;
-    player.isClimbing = false;
-    score = 0;
-    prepTimer = 180;
-    initTunnel();
-    player.y = getTunnelAt(playerX).y + currentGap/2;
-    pauseButton.classList.remove('hidden');
-    pauseMenu.classList.add('hidden');
-}
-
-function startAmethystGame() {
-    gameMode = 'amethyst';
-    currentWorldSpeed = 4;
-    currentGap = amethystGap;
-    currentMoveSpeed = 4;
-    
-    closeOverlays();
-    sideMenu.classList.add('hidden');
-    portraitMenu.classList.add('hidden');
-    portraitTitle.classList.add('hidden'); // скрываем заголовок во время игры
-    state = 'playing';
-    paused = false;
-    player.isClimbing = false;
-    score = 0;
-    prepTimer = 180;
-    initTunnel();
-    player.y = getTunnelAt(playerX).y + currentGap/2;
-    pauseButton.classList.remove('hidden');
-    pauseMenu.classList.add('hidden');
-}
-
-function restartGame() {
-    if (gameMode === 'normal') {
-        currentWorldSpeed = 2.7;
-        currentGap = baseGap;
-        currentMoveSpeed = 2.6;
-    } else {
-        currentWorldSpeed = 4;
-        currentGap = amethystGap;
-        currentMoveSpeed = 4;
-    }
-    player.isClimbing = false;
-    score = 0;
-    prepTimer = 180;
-    player.trail = [];
-    initTunnel();
-    player.y = getTunnelAt(playerX).y + currentGap/2;
-    paused = false;
-    pauseMenu.classList.add('hidden');
-    scoreEl.innerText = 'SCORE: 0';
-    prepDisplay.innerText = '3';
-}
-
-function die() {
-    let finalScore = Math.floor(score/5);
-    if (finalScore > highScore) {
-        highScore = finalScore;
-        localStorage.setItem('highScore', highScore);
-        highScoreEl.innerText = `HIGH: ${highScore}`;
-    }
-    if (gameMode === 'amethyst') {
-        amethysts += finalScore;
-        localStorage.setItem('amethysts', amethysts);
-        amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
-    }
-    
-    playDeathSound();
-    restartGame();
-}
-
-function playDeathSound() {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    gain.gain.setValueAtTime(deathVolume, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    osc.frequency.setValueAtTime(110, audioCtx.currentTime);
-    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-}
-
-function togglePause() {
-    if (state !== 'playing') return;
-    paused = !paused;
-    if (paused) {
-        pauseMenu.classList.remove('hidden');
-    } else {
-        pauseMenu.classList.add('hidden');
-    }
-}
-
-function resumeGame() {
-    paused = false;
-    pauseMenu.classList.add('hidden');
-}
-
-function exitToMenu() {
-    paused = false;
-    pauseMenu.classList.add('hidden');
-    pauseButton.classList.add('hidden');
-    sideMenu.classList.remove('hidden');
-    portraitMenu.classList.remove('hidden');
-    portraitTitle.classList.remove('hidden'); // показываем заголовок в меню
-    state = 'menu';
-    gameMode = 'normal';
-    currentWorldSpeed = 2.7;
-    currentGap = baseGap;
-    currentMoveSpeed = 2.6;
-    score = 0;
-    prepTimer = 0;
-    player.trail = [];
-    initTunnel();
-    player.y = getTunnelAt(playerX).y + currentGap/2;
-    prepDisplay.classList.remove('show');
-    scoreEl.innerText = 'SCORE: 0';
-    removePortraitHighlights(); // снимаем подсветку табов
-}
-
-function resize() { }
-
-window.addEventListener('resize', resize);
-window.addEventListener('orientationchange', resize);
-
-window.onmousedown = () => { if (state === 'playing' && !paused) player.isClimbing = true; };
-window.onmouseup = () => { if (state === 'playing' && !paused) player.isClimbing = false; };
-window.ontouchstart = () => { if (state === 'playing' && !paused) player.isClimbing = true; };
-window.ontouchend = () => { if (state === 'playing' && !paused) player.isClimbing = false; };
-
-function createColorGrid(containerId, setterCallback, currentColor) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-
-    colorItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'skin-item';
-        div.dataset.color = item.value;
-
-        if (item.gradient) {
-            if (item.value === 'yellow-blue-gradient') {
-                div.style.background = 'linear-gradient(45deg, yellow, blue)';
-            } else if (item.value === 'red-purple-gradient') {
-                div.style.background = 'linear-gradient(45deg, red, purple)';
-            }
-        } else {
-            div.style.backgroundColor = item.value;
+            ctx.strokeStyle = '#2e7d32';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Cash register symbol
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('$', shop.cashRegister.x, shop.cashRegister.y);
         }
 
-        let isLocked = false;
-        if (item.price > 0) {
-            if (item.value === 'yellow-blue-gradient' && !purchasedYellowBlue) isLocked = true;
-            if (item.value === 'red-purple-gradient' && !purchasedRedPurple) isLocked = true;
-        }
+        // Exit zone indicator
+        ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
+        ctx.fillRect(-cw, -halfGrid, cw * 2, -gs * 2);
+        ctx.strokeStyle = '#4caf50';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-cw, -halfGrid, cw * 2, -gs * 2);
+        
+        ctx.fillStyle = colors.dayFactor > 0.5 ? '#2e7d32' : '#81c784';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('EXIT', 0, -halfGrid + 30);
 
-        if (isLocked) {
-            div.classList.add('locked');
-            div.innerHTML = `<span class="price-tag">${item.price}</span>`;
-            div.onclick = (e) => {
-                e.stopPropagation();
-                if (amethysts >= item.price) {
-                    amethysts -= item.price;
-                    localStorage.setItem('amethysts', amethysts);
-                    amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
-                    if (item.value === 'yellow-blue-gradient') purchasedYellowBlue = true;
-                    if (item.value === 'red-purple-gradient') purchasedRedPurple = true;
-                    saveSkins();
-                    createColorGrid(containerId, setterCallback, currentColor);
-                    setterCallback(item.value);
-                    const activeDiv = Array.from(container.children).find(el => el.dataset.color === item.value);
-                    if (activeDiv) activeDiv.classList.add('active');
-                } else {
-                    alert('Not enough amethysts!');
-                }
-            };
-        } else {
-            div.onclick = function() {
-                setterCallback(item.value);
-                container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
-                this.classList.add('active');
-                saveSkins();
-            };
-        }
+        // Player
+        ctx.save();
+        ctx.translate(shopPlayer.x, shopPlayer.y);
+        ctx.rotate(shopPlayer.angle);
+        ctx.beginPath();
+        ctx.moveTo(player.size, 0);
+        ctx.lineTo(-player.size, -player.size / 1.5);
+        ctx.lineTo(-player.size, player.size / 1.5);
+        ctx.closePath();
+        ctx.fillStyle = getCustomColor('playerColor', colors);
+        ctx.fill();
+        ctx.restore();
 
-        container.appendChild(div);
-    });
-
-    const activeDiv = Array.from(container.children).find(el => el.dataset.color === currentColor);
-    if (activeDiv && !activeDiv.classList.contains('locked')) activeDiv.classList.add('active');
-}
-
-function createShapeGrid() {
-    const container = document.getElementById('shape-options');
-    if (!container) return;
-    container.innerHTML = '';
-    const shapes = [
-        { id: 'triangle', symbol: '▲', price: 0 },
-        { id: 'square',   symbol: '■', price: 0 },
-        { id: 'circle',   symbol: '●', price: 0 },
-        { id: 'diamond',  symbol: '◆', price: 0 },
-        { id: 'broken',   symbol: '★', price: 3000 }
-    ];
-
-    shapes.forEach(shape => {
-        const div = document.createElement('div');
-        div.className = 'skin-item';
-        div.style.backgroundColor = 'transparent';
-        div.style.color = waveColor;
-        div.style.fontSize = '32px';
-        div.style.flexDirection = 'column';
-        div.style.gap = '4px';
-        div.dataset.shape = shape.id;
-
-        if (shape.id === 'broken' && !purchasedBroken) {
-            div.classList.add('locked');
-            div.innerHTML = `${shape.symbol}<span class="price-tag">${shape.price}</span>`;
-            div.onclick = (e) => {
-                e.stopPropagation();
-                if (amethysts >= shape.price) {
-                    amethysts -= shape.price;
-                    localStorage.setItem('amethysts', amethysts);
-                    amethystsEl.innerText = `AMETHYSTS: ${amethysts}`;
-                    purchasedBroken = true;
-                    saveSkins();
-                    createShapeGrid();
-                    playerShape = 'broken';
-                    saveSkins();
-                    const activeDiv = Array.from(container.children).find(el => el.dataset.shape === playerShape);
-                    if (activeDiv) activeDiv.classList.add('active');
-                } else {
-                    alert('Not enough amethysts!');
-                }
-            };
-        } else {
-            div.textContent = shape.symbol;
-            div.onclick = function() {
-                if (shape.id === 'broken' && !purchasedBroken) return;
-                playerShape = shape.id;
-                container.querySelectorAll('.skin-item').forEach(el => el.classList.remove('active'));
-                this.classList.add('active');
-                saveSkins();
-            };
-        }
-
-        container.appendChild(div);
-    });
-
-    const activeDiv = Array.from(container.children).find(el => el.dataset.shape === playerShape);
-    if (activeDiv && !activeDiv.classList.contains('locked')) activeDiv.classList.add('active');
-}
-
-function switchSkinTab(category) {
-    document.querySelectorAll('.skin-section').forEach(section => {
-        section.classList.add('hidden');
-    });
-    const activeSection = document.querySelector(`.skin-section[data-category="${category}"]`);
-    if (activeSection) activeSection.classList.remove('hidden');
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    const activeBtn = document.querySelector(`.tab-btn[data-category="${category}"]`);
-    if (activeBtn) activeBtn.classList.add('active');
-
-    if (category === 'shape') {
-        createShapeGrid();
+        ctx.restore();
     }
-}
 
-function openSkins() {
-    const skinsScreen = document.getElementById('skins-screen');
-    if (skinsScreen.classList.contains('hidden')) {
-        closeOverlays();
-        skinsScreen.classList.remove('hidden');
-        switchSkinTab('player');
-        // Если портретное меню видимо, обновим подсветку табов
-        if (!portraitMenu.classList.contains('hidden')) {
-            removePortraitHighlights();
-            document.querySelector('.portrait-menu-btn[data-tab="skins"]').classList.add('active');
-        }
-    } else {
-        skinsScreen.classList.add('hidden');
-        removePortraitHighlights(); // убираем подсветку при закрытии
-    }
-}
-
-function openSettings() {
-    const settingsScreen = document.getElementById('settings-screen');
-    if (settingsScreen.classList.contains('hidden')) {
-        closeOverlays();
-        settingsScreen.classList.remove('hidden');
-        if (!portraitMenu.classList.contains('hidden')) {
-            removePortraitHighlights();
-            document.querySelector('.portrait-menu-btn[data-tab="settings"]').classList.add('active');
-        }
-    } else {
-        settingsScreen.classList.add('hidden');
-        removePortraitHighlights();
-    }
-}
-
-function closeOverlays() {
-    document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden'));
-}
-
-function removePortraitHighlights() {
-    const btns = document.querySelectorAll('.portrait-menu-btn');
-    btns.forEach(btn => btn.classList.remove('active'));
-}
-
-function togglePortraitTab(tab) {
-    const skinsScreen = document.getElementById('skins-screen');
-    const settingsScreen = document.getElementById('settings-screen');
-    const skinsBtn = document.querySelector('.portrait-menu-btn[data-tab="skins"]');
-    const settingsBtn = document.querySelector('.portrait-menu-btn[data-tab="settings"]');
-
-    if (tab === 'skins') {
-        if (skinsScreen.classList.contains('hidden')) {
-            // Открываем скины
-            closeOverlays();
-            skinsScreen.classList.remove('hidden');
-            switchSkinTab('player');
-            removePortraitHighlights();
-            skinsBtn.classList.add('active');
-        } else {
-            // Закрываем
-            skinsScreen.classList.add('hidden');
-            removePortraitHighlights();
-        }
-    } else if (tab === 'settings') {
-        if (settingsScreen.classList.contains('hidden')) {
-            closeOverlays();
-            settingsScreen.classList.remove('hidden');
-            removePortraitHighlights();
-            settingsBtn.classList.add('active');
-        } else {
-            settingsScreen.classList.add('hidden');
-            removePortraitHighlights();
-        }
-    }
-}
-
-document.getElementById('vol-slider').oninput = (e) => deathVolume = e.target.value;
-
-document.querySelectorAll('input[name="aspect"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-        const val = e.target.value;
-        if (val === 'custom') {
-            document.getElementById('custom-size-inputs').style.display = 'block';
-        } else {
-            document.getElementById('custom-size-inputs').style.display = 'none';
-            applyPreset(val);
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    createColorGrid('trail-colors', (c) => { trailColor = c; saveSkins(); }, trailColor);
-    createColorGrid('wave-colors',  (c) => { waveColor = c; saveSkins(); }, waveColor);
-    createColorGrid('map-colors',   (c) => { mapColor = c; saveSkins(); }, mapColor);
-    createShapeGrid();
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const category = e.target.dataset.category;
-            switchSkinTab(category);
+    function drawTunnel(colors) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = document.body.style.backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.save();
+        
+        ctx.shadowBlur = 100;
+        ctx.shadowColor = getCustomColor('tunnelColor', colors);
+        ctx.strokeStyle = getCustomColor('tunnelColor', colors);
+        ctx.lineWidth = 5;
+        ctx.lineJoin = 'round';
+        
+        // Top wall
+        ctx.beginPath();
+        tunnelPoints.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
         });
-    });
+        ctx.stroke();
+        
+        // Bottom wall
+        ctx.beginPath();
+        tunnelPoints.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y + tunnelGap);
+            else ctx.lineTo(p.x, p.y + tunnelGap);
+        });
+        ctx.stroke();
+        
+        // Trail
+        if (tunnelTrail.length > 1) {
+            ctx.shadowBlur = 30;
+            ctx.strokeStyle = getCustomColor('trailColor', colors);
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(tunnelTrail[0].x, tunnelTrail[0].y);
+            tunnelTrail.forEach(t => ctx.lineTo(t.x, t.y));
+            ctx.stroke();
+        }
+        
+        // Player
+        ctx.save();
+        ctx.translate(playerX, tunnelPlayerY);
+        
+        const angle = tunnelIsClimbing ? -Math.PI / 4 : Math.PI / 4;
+        ctx.rotate(angle);
+        
+        ctx.shadowBlur = 50;
+        ctx.shadowColor = getCustomColor('playerColor', colors);
+        ctx.fillStyle = getCustomColor('playerColor', colors);
+        
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.lineTo(-12, -13);
+        ctx.lineTo(-12, 13);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
+        ctx.restore();
+    }
 
-    initTunnel();
-    player.y = getTunnelAt(playerX).y + currentGap/2;
-    draw();
+    // --- MAIN LOOP ---
+    function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
+        lastTime = timestamp;
 
-    // Показываем заголовок в портрете при загрузке (так как state = 'menu')
-    portraitTitle.classList.remove('hidden');
-});
+        const colors = updateEnvironment();
+
+        if (currentState === MODE.MAP) {
+            updateMap(deltaTime);
+            drawMap(colors);
+        } else if (currentState === MODE.TUNNEL) {
+            updateTunnel(deltaTime);
+            drawTunnel(colors);
+        } else if (currentState === MODE.SHOP) {
+            updateShop(deltaTime);
+            drawShop(colors);
+        }
+
+        if (currentState !== MODE.PAUSED) {
+            requestAnimationFrame(loop);
+        }
+    }
+
+    // Start
+    requestAnimationFrame(loop);
 </script>
 </body>
 </html>
