@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -383,10 +382,10 @@
         <div class="menu-box">
             <h2>PAUSED</h2>
             <button class="menu-btn" id="resume-btn">RESUME</button>
-            <button class="menu-btn" id="exit-btn">EXIT TO MAP</button>
+            <button class="menu-btn" id="exit-btn">EXIT</button>
         </div>
     </div>
-    <!-- === COLOR PICKER MENU (CLOSE BUTTON REMOVED) === -->
+    <!-- === COLOR PICKER MENU === -->
     <div id="color-picker-menu">
         <h2 id="picker-title">Select Color</h2>
         <div class="color-options">
@@ -420,6 +419,14 @@
         // Portals
         const portal = { x: 500, y: -500, radius: 40, active: true, color: '#00f2ff' };
         const shopPortal = { x: -600, y: 0, radius: 40, active: true, color: '#ff4444' };
+
+        // === PLAYER BASE CONFIG ===
+        const playerBase = {
+            x: 0,
+            y: -2600,
+            size: 400,
+            color: '#000000'
+        };
 
         // Joystick
         const joystick = {
@@ -464,18 +471,36 @@
 
         // === SHOP WALLS (Collision - ONLY OUTER BOUNDARY WITH EXIT GAPS) ===
         const shopWalls = [
-            // --- TOP WALL (with center gap for exit) ---
             { x: -500, y: -500, w: 350, h: 10, type: 'collision' },
             { x: 150, y: -500, w: 350, h: 10, type: 'collision' },
-            // --- BOTTOM WALL (with center gap for exit) ---
             { x: -500, y: 490, w: 350, h: 10, type: 'collision' },
             { x: 150, y: 490, w: 350, h: 10, type: 'collision' },
-            // --- LEFT WALL (with center gap for exit) ---
             { x: -500, y: -500, w: 10, h: 350, type: 'collision' },
             { x: -500, y: 150, w: 10, h: 350, type: 'collision' },
-            // --- RIGHT WALL (with center gap for exit) ---
             { x: 490, y: -500, w: 10, h: 350, type: 'collision' },
             { x: 490, y: 150, w: 10, h: 350, type: 'collision' }
+        ];
+
+        // === BASE WALLS (Thinner - 4px, Black Fill) ===
+        const baseWalls = [
+            // Outer Frame
+            { x: -200, y: -2800, w: 400, h: 7 },
+            { x: -200, y: -2800, w: 7, h: 400 },
+            { x: 196, y: -2800, w: 7, h: 400 },
+            // Bottom (Split for Entrance)
+            { x: -200, y: -2407, w: 140, h: 7 },
+            { x: 60, y: -2407, w: 140, h: 7 },
+            // Internal Walls
+            { x: -2, y: -2800, w: 7, h: 340 },
+            // Left Side Layout (L-Shape)
+            { x: -150, y: -2730, w: 7, h: 270 },
+            { x: -150, y: -2464, w: 155, h: 7 },
+            // Right Side Layout (Shelves/Stalls)
+            { x: 5, y: -2600, w: 130, h: 7 },
+            { x: 40, y: -2600, w: 7, h: 50 },
+            { x: 85, y: -2600, w: 7, h: 50 },
+            { x: 128, y: -2600, w: 7, h: 50 },
+            { x: 5, y: -2500, w: 130, h: 7 }
         ];
 
         // === SHOP ZONES (Visual & Cash Registers) ===
@@ -522,7 +547,7 @@
             playerShape: localStorage.getItem('playerShape') || 'triangle'
         };
 
-        // === NEW COLORS ADDED ===
+        // === COLORS ===
         const colorValues = {
             default: { light: '#ffffff', dark: '#1a1a1a' },
             red: { light: '#ff4444', dark: '#cc0000' },
@@ -791,6 +816,22 @@
             return false;
         }
 
+        // === BASE COLLISION DETECTION ===
+        function checkBaseCollision(newX, newY) {
+            const playerRadius = player.size;
+            for (const wall of baseWalls) {
+                const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
+                const closestY = Math.max(wall.y, Math.min(newY, wall.y + wall.h));
+                const dx = newX - closestX;
+                const dy = newY - closestY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < playerRadius) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         function checkShopEntry() {
             for (const [key, shop] of Object.entries(shopZones)) {
                 if (shopPlayer.x > shop.x && shopPlayer.x < shop.x + shop.w &&
@@ -845,18 +886,14 @@
             }
             shopCamera.zoom += (shopCamera.targetZoom - shopCamera.zoom) * 5 * deltaTime;
             checkShopEntry();
-            
-            // Always check cash register when in a shop
             if (currentShop && shopZones[currentShop].colorKey !== 'playerShape') {
                 checkCashRegister();
             }
-            
-            // Auto-close picker if leaving zone
             if (activeColorPicker && currentShop) {
                 const shop = shopZones[currentShop];
                 const cr = shop.cashRegister;
                 const inZone = shopPlayer.x > cr.x && shopPlayer.x < cr.x + cr.w &&
-                               shopPlayer.y > cr.y && shopPlayer.y < cr.y + cr.h;
+                    shopPlayer.y > cr.y && shopPlayer.y < cr.y + cr.h;
                 if (!inZone) {
                     closeColorPicker();
                 }
@@ -909,8 +946,6 @@
                 selectColor(btn.dataset.color);
             }, { passive: false });
         });
-
-        // === CLOSE BUTTON REMOVED - No longer needed ===
 
         // --- TUNNEL FUNCTIONS ---
         function startTunnel() {
@@ -1047,8 +1082,15 @@
             }
             player.vx *= player.friction;
             player.vy *= player.friction;
-            player.x += player.vx;
-            player.y += player.vy;
+            // Collision with Base Walls
+            const nextX = player.x + player.vx;
+            const nextY = player.y + player.vy;
+            if (!checkBaseCollision(nextX, player.y)) {
+                player.x = nextX;
+            }
+            if (!checkBaseCollision(player.x, nextY)) {
+                player.y = nextY;
+            }
             if (Math.abs(player.vx) > 0.1 || Math.abs(player.vy) > 0.1) {
                 player.angle = Math.atan2(player.vy, player.vx);
             }
@@ -1135,6 +1177,37 @@
             }
             ctx.stroke();
 
+            // === CHECK IF PLAYER IS INSIDE BASE ===
+            const baseHalf = playerBase.size / 2;
+            const isInsideBase = player.x > playerBase.x - baseHalf &&
+                player.x < playerBase.x + baseHalf &&
+                player.y > playerBase.y - baseHalf &&
+                player.y < playerBase.y + baseHalf;
+
+            // === DRAW PLAYER BASE ===
+            ctx.save();
+            ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
+
+            // Base Floor
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fillRect(playerBase.x - playerBase.size/2, playerBase.y - playerBase.size/2, playerBase.size, playerBase.size);
+
+            // Draw Base Walls (Black Fill, Thinner - 4px)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            for (const wall of baseWalls) {
+                ctx.rect(wall.x, wall.y, wall.w, wall.h);
+            }
+            ctx.fill();
+
+            // === CEILING LOGIC (Like Shop) ===
+            if (!isInsideBase) {
+                ctx.fillStyle = 'rgba(50, 50, 50, 1)';
+                ctx.fillRect(playerBase.x - playerBase.size/2, playerBase.y - playerBase.size/2, playerBase.size, playerBase.size);
+            }
+
+            ctx.restore();
+
             // Tunnel Portal
             ctx.save();
             ctx.translate(
@@ -1197,6 +1270,10 @@
             const dx2 = shopPortal.x - player.x;
             const dy2 = shopPortal.y - player.y;
             const angleToShop = Math.atan2(dy2, dx2);
+            // === BASE COMPASS MARKER ===
+            const dx3 = playerBase.x - player.x;
+            const dy3 = playerBase.y - player.y;
+            const angleToBase = Math.atan2(dy3, dx3);
 
             ctx.save();
             ctx.translate(centerX, centerY);
@@ -1224,6 +1301,16 @@
             ctx.shadowBlur = 10;
             ctx.shadowColor = shopPortal.color;
             ctx.stroke();
+
+            // Draw Base Marker (Green)
+            ctx.beginPath();
+            ctx.arc(0, 0, compassRadius, angleToBase - markerArc/2, angleToBase + markerArc/2);
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = markerWidth;
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#4caf50';
+            ctx.stroke();
             ctx.restore();
         }
 
@@ -1233,15 +1320,10 @@
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.scale(shopCamera.zoom, shopCamera.zoom);
             ctx.translate(-shopPlayer.x, -shopPlayer.y);
-
             const halfGrid = (shopConfig.gridCount * shopConfig.gridSize) / 2;
-
-            // Background
             ctx.fillStyle = colors.dayFactor > 0.5 ? '#e0e0e0' : '#2a2a2a';
             ctx.fillRect(-halfGrid, -halfGrid, shopConfig.gridCount * shopConfig.gridSize,
                 shopConfig.gridCount * shopConfig.gridSize);
-
-            // Grid lines
             ctx.strokeStyle = colors.dayFactor > 0.5 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
             ctx.lineWidth = 1;
             for (let x = -halfGrid; x <= halfGrid; x += shopConfig.gridSize) {
@@ -1256,42 +1338,30 @@
                 ctx.lineTo(halfGrid, y);
                 ctx.stroke();
             }
-
-            // === DRAW SHOP ZONES ===
             for (const [key, shop] of Object.entries(shopZones)) {
                 const isActive = (currentShop === key);
                 const x = shop.x;
                 const y = shop.y;
                 const w = shop.w;
                 const h = shop.h;
-
-                // 1. Draw Black Outline (COMPLETE RECTANGLE)
                 ctx.strokeStyle = '#1a1a1a';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(x, y, w, h);
-
-                // 2. Draw Ceiling (Lighter, Semi-transparent) if NOT active
                 if (!isActive) {
                     ctx.fillStyle = 'rgba(200, 200, 200, 0.7)';
                     ctx.fillRect(x, y, w, h);
                 }
-
-                // 3. Draw Cash Register (Softer Green, Larger) - Only when active
                 if (isActive) {
                     const cr = shop.cashRegister;
                     ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
                     ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
                 }
-
-                // 4. Draw Shop Name
                 ctx.fillStyle = colors.dayFactor > 0.5 ? '#333' : '#ccc';
                 ctx.font = 'bold 24px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(shop.name, x + w/2, y + h/2);
             }
-
-            // Player
             ctx.save();
             ctx.translate(shopPlayer.x, shopPlayer.y);
             ctx.rotate(shopPlayer.angle);
@@ -1303,7 +1373,6 @@
             ctx.fillStyle = getCustomColor('playerColor', colors);
             ctx.fill();
             ctx.restore();
-
             ctx.restore();
         }
 
@@ -1311,28 +1380,24 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = document.body.style.backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             ctx.save();
             ctx.shadowBlur = 100;
             ctx.shadowColor = getCustomColor('tunnelColor', colors);
             ctx.strokeStyle = getCustomColor('tunnelColor', colors);
             ctx.lineWidth = 5;
             ctx.lineJoin = 'round';
-
             ctx.beginPath();
             tunnelPoints.forEach((p, i) => {
                 if (i === 0) ctx.moveTo(p.x, p.y);
                 else ctx.lineTo(p.x, p.y);
             });
             ctx.stroke();
-
             ctx.beginPath();
             tunnelPoints.forEach((p, i) => {
                 if (i === 0) ctx.moveTo(p.x, p.y + tunnelGap);
                 else ctx.lineTo(p.x, p.y + tunnelGap);
             });
             ctx.stroke();
-
             if (tunnelTrail.length > 1) {
                 ctx.shadowBlur = 30;
                 ctx.strokeStyle = getCustomColor('trailColor', colors);
@@ -1342,7 +1407,6 @@
                 tunnelTrail.forEach(t => ctx.lineTo(t.x, t.y));
                 ctx.stroke();
             }
-
             ctx.save();
             ctx.translate(playerX, tunnelPlayerY);
             const angle = tunnelIsClimbing ? -Math.PI / 4 : Math.PI / 4;
@@ -1365,11 +1429,8 @@
             if (!lastTime) lastTime = timestamp;
             const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
             lastTime = timestamp;
-            
-            // Time flows 2x faster in Shop
             const timeDelta = deltaTime * (currentState === MODE.SHOP ? 2 : 1);
             const colors = updateEnvironment(timeDelta);
-
             if (currentState === MODE.MAP) {
                 updateMap(deltaTime);
                 drawMap(colors);
@@ -1380,7 +1441,6 @@
                 updateShop(deltaTime);
                 drawShop(colors);
             }
-
             if (currentState !== MODE.PAUSED) {
                 requestAnimationFrame(loop);
             }
