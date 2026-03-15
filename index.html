@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PaperWave</title>
+    <title>NeonWaveINSPACEE(SOON)</title>
     <style>
         :root {
             --ui-bg: rgba(255, 255, 255, 0.1);
@@ -17,7 +17,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #1a1a1a;
+            background-color: #000000;
             font-family: var(--font-family);
             user-select: none;
             -webkit-user-select: none;
@@ -63,16 +63,13 @@
             font-size: 1.2rem;
             font-weight: 300;
             letter-spacing: 1px;
+            color: #ffffff;
         }
         .score-display {
             font-size: 0.8rem;
             opacity: 0.7;
             margin-top: 2px;
-        }
-        .clock.night-highlight,
-        .score-display.night-highlight {
-            color: #ffcc00 !important;
-            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+            color: #ffffff;
         }
         #time-bar-container {
             position: fixed;
@@ -91,40 +88,43 @@
         #time-bar-fill {
             height: 100%;
             width: 0%;
-            background: var(--text-color);
+            background: #ffffff;
             transition: width 1s linear;
         }
+        /* --- КНОПКА ПАУЗЫ --- */
         #pause-btn {
             position: fixed;
             top: 20px;
             right: 20px;
             width: 40px;
             height: 40px;
-            background: var(--ui-bg);
-            backdrop-filter: blur(5px);
-            border: 1px solid var(--ui-border);
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgb(180, 255, 255);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 110;
-            color: var(--text-color);
+            color: #fff;
             font-size: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            text-shadow: 0 0 5px #fff;
             transition: background 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
         #pause-btn:active {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255,255,255,0.2);
         }
+        /* --- МЕНЮ ПАУЗЫ (БЕЗ ФОНА) --- */
         #pause-menu {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
+            background: transparent;
+            backdrop-filter: blur(7px);
             z-index: 200;
             display: flex;
             align-items: center;
@@ -138,20 +138,31 @@
             pointer-events: auto;
         }
         .menu-box {
-            background: rgba(30, 30, 30, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 30px;
-            border-radius: 16px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            border-radius: 0;
             text-align: center;
             color: white;
             min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        .menu-box h2 {
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            margin-bottom: 20px;
+            color: #fff;
         }
         .menu-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
+            background: rgba(0,0,0,0.1);
+            border: 2px solid rgb(200, 255, 255);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            text-shadow: 0 0 5px #fff;
             padding: 10px 20px;
-            margin-top: 20px;
             border-radius: 8px;
             font-size: 1rem;
             cursor: pointer;
@@ -160,8 +171,9 @@
             -webkit-tap-highlight-color: transparent;
         }
         .menu-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: white;
+            background: rgba(255,255,255,0.2);
+            border-color: #fff;
+            box-shadow: 0 0 25px #0ff;
         }
         #joystick-zone {
             position: absolute;
@@ -198,6 +210,31 @@
             pointer-events: none;
             transition: transform 0.05s;
         }
+        .drive-zone {
+            position: fixed;
+            bottom: 0;
+            width: 30%;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 95;
+            pointer-events: auto;
+            transition: background 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .drive-zone.left {
+            left: 0;
+        }
+        .drive-zone.right {
+            right: 0;
+        }
+        .drive-zone.pressed {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .drive-zone.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
         #hint {
             position: absolute;
             top: 20px;
@@ -223,10 +260,10 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: var(--text-color);
+            color: #ffffff;
             font-size: 2rem;
             font-weight: bold;
-            text-shadow: 0 0 15px var(--text-color);
+            text-shadow: 0 0 15px #ffffff;
             z-index: 50;
             display: none;
         }
@@ -247,14 +284,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: var(--text-color);
+            color: #ffffff;
             font-size: 4rem;
             font-weight: bold;
             z-index: 50;
             display: none;
-            text-shadow: 0 0 20px var(--text-color);
+            text-shadow: 0 0 20px #ffffff;
         }
-        /* === SHOP COLOR PICKER MENU === */
+        /* === COLOR PICKER MENU === */
         #color-picker-menu {
             position: fixed;
             top: 50%;
@@ -263,7 +300,7 @@
             background: rgba(30, 30, 30, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 30px;
-            border-radius: 16px;
+            border-radius: 5px;
             text-align: center;
             color: white;
             z-index: 300;
@@ -290,7 +327,7 @@
         .color-btn {
             width: 50px;
             height: 50px;
-            border-radius: 12px;
+            border-radius: 5px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: all 0.2s;
@@ -304,9 +341,7 @@
             border-color: #4caf50;
             box-shadow: 0 0 15px #4caf50;
         }
-        .color-btn.default {
-            background: linear-gradient(135deg, #ffffff 50%, #1a1a1a 50%);
-        }
+        .color-btn.default { background: #ffffff; }
         .color-btn.red { background: #ff4444; }
         .color-btn.blue { background: #4444ff; }
         .color-btn.yellow { background: #ffcc00; }
@@ -321,7 +356,7 @@
             background: rgba(30, 30, 30, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 30px;
-            border-radius: 16px;
+            border-radius: 5px;
             text-align: center;
             color: white;
             z-index: 300;
@@ -337,7 +372,7 @@
         #assembler-menu h2 {
             margin: 0 0 20px 0;
             font-size: 1.5rem;
-            color: #4caf50;
+            color: #ff00009a;
         }
         .build-progress {
             width: 100%;
@@ -351,7 +386,7 @@
         .build-progress-bar {
             height: 100%;
             width: 0%;
-            background: #4caf50;
+            background: #ffffff;
             transition: width 0.1s linear;
         }
         /* === UNIVERSAL INTERACT BUTTON === */
@@ -359,11 +394,11 @@
             position: fixed;
             bottom: 500px;
             left: 50px;
-            background: rgba(170, 170, 170, 0.9);
-            border: 1px solid rgba(0, 0, 0, 0.3);
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #ff0;
             padding: 10px 20px;
             border-radius: 5px;
-            color: white;
+            color: #fff;
             font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
@@ -371,25 +406,25 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s, transform 0.2s;
-            box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+            box-shadow: 0 0 20px #ff0;
+            text-shadow: 0 0 5px #fff;
         }
         #interact-btn.visible {
             opacity: 1;
             pointer-events: auto;
-            transform: scale(1);
         }
         #interact-btn:active {
             transform: scale(0.95);
         }
-        /* === SHIP INTERIOR CONTROL PANEL (TOP-LEFT) === */
+        /* === SHIP CONTROL PANEL === */
         #ship-control-panel {
             position: fixed;
-            top: 20px;
+            top: 50px;
             left: 20px;
-            background: rgba(30, 30, 30, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(30, 30, 30, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.2);
             padding: 15px 20px;
-            border-radius: 12px;
+            border-radius: 7px;
             z-index: 250;
             opacity: 0;
             pointer-events: none;
@@ -405,11 +440,11 @@
         #ship-control-panel h3 {
             margin: 0 0 5px 0;
             font-size: 0.9rem;
-            color: #4caf50;
+            color: #ffffff;
             text-align: center;
         }
         #exit-control-btn {
-            background: rgba(255, 68, 68, 0.9);
+            background: rgba(255, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 8px 16px;
             border-radius: 8px;
@@ -422,12 +457,10 @@
         }
         #exit-control-btn:hover {
             background: rgba(255, 68, 68, 1);
-            transform: scale(1.05);
         }
         #exit-control-btn:active {
             transform: scale(0.95);
         }
-        /* === SHIP INTERIOR HINT === */
         #ship-interior-hint {
             position: fixed;
             bottom: 100px;
@@ -445,7 +478,7 @@
 <body>
     <div id="hint">Fly to the Portal</div>
     <div id="shop-hint">Fly to corridor end to Exit</div>
-    <div id="tunnel-hint">Hold to Fly Up • Release to Fall Down</div>
+    <div id="tunnel-hint">Tap left side to fly up, right side to fly down</div>
     <div id="ship-interior-hint">Walk to green zone to exit ship</div>
     <div id="tunnel-score">0</div>
     <div id="tunnel-timer">3</div>
@@ -458,6 +491,10 @@
             <div class="joystick-stick" id="joy-stick"></div>
         </div>
     </div>
+    <!-- ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ (DATA WING) -->
+    <div id="drive-left-zone" class="drive-zone left hidden"></div>
+    <div id="drive-right-zone" class="drive-zone right hidden"></div>
+
     <div id="taskbar">
         <div class="clock-container">
             <div class="clock" id="clock">00:00</div>
@@ -466,7 +503,7 @@
     </div>
     <div id="pause-menu">
         <div class="menu-box">
-            <h2>PAUSED</h2>
+            <h2>PAUSE</h2>
             <button class="menu-btn" id="resume-btn">RESUME</button>
             <button class="menu-btn" id="exit-btn">EXIT</button>
         </div>
@@ -485,7 +522,7 @@
     </div>
     <!-- === ASSEMBLER MENU === -->
     <div id="assembler-menu">
-        <h2>ASSEMBLY</h2>
+        <h2>ASSEMBLY V.164</h2>
         <p id="assembler-status">Ready to Build</p>
         <button class="menu-btn" id="build-btn" style="border-color: #4caf50; color: #4caf50;">BUILD SHIP</button>
         <div class="build-progress" id="build-progress-container">
@@ -493,11 +530,11 @@
         </div>
     </div>
     <!-- === UNIVERSAL INTERACT BUTTON === -->
-    <div id="interact-btn">ENTER SHIP</div>
-    <!-- === SHIP CONTROL PANEL (TOP-LEFT) === -->
+    <div id="interact-btn">ENTER</div>
+    <!-- === SHIP CONTROL PANEL === -->
     <div id="ship-control-panel">
         <h3>SHIP CONTROL</h3>
-        <button id="exit-control-btn">EXIT-CONTROL</button>
+        <button id="exit-control-btn">EXIT</button>
     </div>
     <canvas id="gameCanvas"></canvas>
     <script>
@@ -532,7 +569,7 @@
             active: false, originX: 0, originY: 0, dx: 0, dy: 0, maxRadius: 35
         };
 
-        // Time System
+        // Time System (только для часов и небесных тел)
         const CYCLE_DURATION_SECONDS = 720;
         const HOURS_IN_DAY = 24;
         let gameTimeSeconds = 6 * 3600;
@@ -544,7 +581,7 @@
         let tunnelMoveSpeed = 3.5;
         let tunnelScore = 0;
         let tunnelPlayerY = 0;
-        let tunnelIsClimbing = false;
+        let tunnelDirection = 0;
         let tunnelTrail = [];
         const tunnelTrailMaxLength = 200;
         const playerX = 100;
@@ -568,7 +605,7 @@
         let currentShop = null;
         let activeColorPicker = null;
 
-        // === SHOP WALLS ===
+        // === SHOP WALLS (коллизии) ===
         const shopWalls = [
             { x: -500, y: -500, w: 350, h: 10, type: 'collision' },
             { x: 150, y: -500, w: 350, h: 10, type: 'collision' },
@@ -624,12 +661,12 @@
 
         // === COLORS ===
         const colorValues = {
-            default: { light: '#ffffff', dark: '#1a1a1a' },
-            red: { light: '#ff0000', dark: '#ff0000' },
-            blue: { light: '#4444ff', dark: '#0000cc' },
-            yellow: { light: '#ffff00', dark: '#cc9900' },
-            green: { light: '#ADFF2F', dark: '#2e7d32' },
-            cyan: { light: '#00bcd4', dark: '#00838f' }
+            default: '#ffffff',
+            red: '#ff4444',
+            blue: '#4444ff',
+            yellow: '#ffcc00',
+            green: '#4caf50',
+            cyan: '#00bcd4'
         };
 
         // === HANGAR & SPACESHIP CONFIG ===
@@ -691,45 +728,31 @@
 
         // Ship Interior Walls
         const shipInteriorWalls = [
-            // 1. самая верхняя стена
             { x: -40, y: -250, w: 80, h: 10 },
-            // 2. кабина
-            { x: -40, y: -240, w: 10, h: 160 }, 
-            { x: 30, y: -240, w: 10, h: 160 },
-            // 3. расширение
-            { x: -80, y: -90, w: 40, h: 10 },   // левое плечо
-            { x: 40, y: -90, w: 40, h: 10 },    // правое плечо
-            { x: -80, y: -80, w: 10, h: 70 },  // левый бок
-            { x: 70, y: -80, w: 10, h: 70 },   // правый бок
-            // 4. крылья
-            { x: -140, y: -10, w: 70, h: 10 },   // левый верхний выступ
-            { x: 70, y: -10, w: 70, h: 10 },    // правый верхний выступ
-            { x: -140, y: 0, w: 10, h: 40 },   // крайний левый торец
-            { x: 130, y: 0, w: 10, h: 40 },   // крайний правый торец
-            { x: -140, y: 40, w: 70, h: 10 },   // низ левого крыла
-            { x: 70, y: 40, w: 70, h: 10 },    // низ правого крыла
-            // 5. низ
-            { x: -80, y: 40, w: 10, h: 20 },   // левая ножка
-            { x: 70, y: 40, w: 10, h: 20 },    // правая ножка
-            { x: -80, y: 60, w: 30, h: 10 },   // нижняя грань слева
-            { x: 50, y: 60, w: 30, h: 10 }     // нижняя грань справа
+            { x: -40, y: -240, w: 10, h: 200 },
+            { x: 30, y: -240, w: 10, h: 200},
+            { x: -80, y: -50, w: 40, h: 10 },
+            { x: 40, y: -50, w: 40, h: 10 },
+            { x: -80, y: -40, w: 10, h: 120 },
+            { x: 70, y: -40, w: 10, h: 120 },
+            { x: -80, y: 30, w: 40, h: 10 },
+            { x: 40, y: 30, w: 40, h: 10 },
+            { x: 0, y: 72, w: 70, h: 7 },
         ];
 
-        // Ship Interior Exit Zone (green line at bottom)
         const shipInteriorExitZone = {
-            x: -50,
-            y: 60,
-            w: 100,
-            h: 10,
+            x: -70,
+            y: 72,
+            w: 70,
+            h: 7,
             color: '#4caf50'
         };
 
-        // Ship Interior Cockpit Entry Zone (верхняя половина кабины)
         const shipInteriorCockpitZone = {
             x: -30,
             y: -240,
             w: 60,
-            h: 80,
+            h: 100,
             color: '#4caf50'
         };
 
@@ -771,6 +794,73 @@
         const shipControlPanel = document.getElementById('ship-control-panel');
         const exitControlBtn = document.getElementById('exit-control-btn');
 
+        // === НОВЫЕ ЭЛЕМЕНТЫ: ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ ===
+        const leftZone = document.getElementById('drive-left-zone');
+        const rightZone = document.getElementById('drive-right-zone');
+        let leftPressed = false;
+        let rightPressed = false;
+
+        function setLeftPressed(state) {
+            if (currentState !== MODE.MAP || !inShip) {
+                state = false;
+            }
+            leftPressed = state;
+            leftZone.classList.toggle('pressed', state);
+        }
+        function setRightPressed(state) {
+            if (currentState !== MODE.MAP || !inShip) {
+                state = false;
+            }
+            rightPressed = state;
+            rightZone.classList.toggle('pressed', state);
+        }
+
+        leftZone.addEventListener('mousedown', (e) => { e.preventDefault(); setLeftPressed(true); });
+        leftZone.addEventListener('mouseup', () => setLeftPressed(false));
+        leftZone.addEventListener('mouseleave', () => setLeftPressed(false));
+        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); setLeftPressed(true); }, {passive: false});
+        leftZone.addEventListener('touchend', (e) => { e.preventDefault(); setLeftPressed(false); });
+        leftZone.addEventListener('touchcancel', () => setLeftPressed(false));
+
+        rightZone.addEventListener('mousedown', (e) => { e.preventDefault(); setRightPressed(true); });
+        rightZone.addEventListener('mouseup', () => setRightPressed(false));
+        rightZone.addEventListener('mouseleave', () => setRightPressed(false));
+        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); setRightPressed(true); }, {passive: false});
+        rightZone.addEventListener('touchend', (e) => { e.preventDefault(); setRightPressed(false); });
+        rightZone.addEventListener('touchcancel', () => setRightPressed(false));
+
+        // Сброс нажатий, если мышь отпущена вне зон
+        window.addEventListener('mouseup', () => {
+            setLeftPressed(false);
+            setRightPressed(false);
+        });
+
+        // Функция обновления видимости зон управления и джойстика
+        function updateDriveZonesVisibility() {
+            if (inShip && currentState === MODE.MAP) {
+                leftZone.classList.remove('hidden');
+                rightZone.classList.remove('hidden');
+                joyZone.classList.add('hidden');
+            } else {
+                leftZone.classList.add('hidden');
+                rightZone.classList.add('hidden');
+                if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR) {
+                    joyZone.classList.remove('hidden');
+                } else {
+                    joyZone.classList.add('hidden');
+                }
+            }
+        }
+
+        // === УПРАВЛЕНИЕ ВИДИМОСТЬЮ КНОПКИ ПАУЗЫ ===
+        function updatePauseButtonVisibility() {
+            if (currentState === MODE.TUNNEL || currentState === MODE.PAUSED) {
+                pauseBtn.style.display = 'flex';
+            } else {
+                pauseBtn.style.display = 'none';
+            }
+        }
+
         // === PAUSE BUTTON ===
         function togglePause() {
             if (currentState === MODE.MAP || currentState === MODE.SHIP_INTERIOR) return;
@@ -787,6 +877,8 @@
                 currentState = MODE.PAUSED;
                 pauseMenu.classList.add('active');
             }
+            updatePauseButtonVisibility();
+            updateDriveZonesVisibility(); // скрыть зоны при паузе
         }
         pauseBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -864,18 +956,20 @@
         window.addEventListener('touchend', handleEnd);
 
         // --- TUNNEL INPUT ---
-        function handleTunnelInputStart() {
+        function handleTunnelInputStart(e) {
             if (currentState !== MODE.TUNNEL || currentState === MODE.PAUSED) return;
-            tunnelIsClimbing = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const halfWidth = window.innerWidth / 2;
+            tunnelDirection = clientX < halfWidth ? 1 : -1;
         }
         function handleTunnelInputEnd() {
             if (currentState !== MODE.TUNNEL) return;
-            tunnelIsClimbing = false;
+            tunnelDirection = 0;
         }
         window.addEventListener('touchstart', (e) => {
             if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED) {
                 e.preventDefault();
-                handleTunnelInputStart();
+                handleTunnelInputStart(e);
             }
         }, { passive: false });
         window.addEventListener('touchend', (e) => {
@@ -888,25 +982,11 @@
             if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED &&
                 e.target !== pauseBtn && e.target !== resumeBtn && e.target !== exitBtn &&
                 e.target !== colorPickerMenu && !colorPickerMenu.contains(e.target)) {
-                handleTunnelInputStart();
+                handleTunnelInputStart(e);
             }
         });
         window.addEventListener('mouseup', () => {
             handleTunnelInputEnd();
-        });
-        window.addEventListener('keydown', (e) => {
-            if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED) {
-                if (e.code === 'Space' || e.code === 'ArrowUp') {
-                    tunnelIsClimbing = true;
-                }
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            if (currentState === MODE.TUNNEL) {
-                if (e.code === 'Space' || e.code === 'ArrowUp') {
-                    tunnelIsClimbing = false;
-                }
-            }
         });
 
         function exitTunnel() {
@@ -928,6 +1008,8 @@
             player.y = portal.y + 100;
             player.vx = 0;
             player.vy = 0;
+            updatePauseButtonVisibility();
+            updateDriveZonesVisibility();
         }
 
         function exitShop() {
@@ -946,6 +1028,8 @@
             player.y = shopPortal.y;
             player.vx = 0;
             player.vy = 0;
+            updatePauseButtonVisibility();
+            updateDriveZonesVisibility();
         }
 
         // === SHOP FUNCTIONS ===
@@ -970,6 +1054,8 @@
             shopHint.style.display = 'block';
             timeBarContainer.style.opacity = '0';
             pauseBtn.style.display = 'flex';
+            updatePauseButtonVisibility();
+            updateDriveZonesVisibility();
         }
 
         // === COLLISION DETECTION ===
@@ -981,14 +1067,11 @@
                 const dx = newX - closestX;
                 const dy = newY - closestY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < playerRadius) {
-                    return true;
-                }
+                if (distance < playerRadius) return true;
             }
             return false;
         }
 
-        // === SHIP INTERIOR COLLISION ===
         function checkShipInteriorCollision(newX, newY, radius) {
             for (const wall of shipInteriorWalls) {
                 const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
@@ -996,14 +1079,11 @@
                 const dx = newX - closestX;
                 const dy = newY - closestY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < radius) {
-                    return true;
-                }
+                if (distance < radius) return true;
             }
             return false;
         }
 
-        // === HANGAR COLLISION ===
         function checkHangarCollision(newX, newY, radius) {
             for (const wall of hangarWalls) {
                 const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
@@ -1011,9 +1091,7 @@
                 const dx = newX - closestX;
                 const dy = newY - closestY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < radius) {
-                    return true;
-                }
+                if (distance < radius) return true;
             }
             if (!inShip && !inShipInterior) {
                 for (const wall of assemblerWalls) {
@@ -1022,9 +1100,7 @@
                     const dx = newX - closestX;
                     const dy = newY - closestY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < radius) {
-                        return true;
-                    }
+                    if (distance < radius) return true;
                 }
             }
             return false;
@@ -1073,12 +1149,8 @@
             shopPlayer.vy *= player.friction;
             const newX = shopPlayer.x + shopPlayer.vx;
             const newY = shopPlayer.y + shopPlayer.vy;
-            if (!checkWallCollision(newX, shopPlayer.y)) {
-                shopPlayer.x = newX;
-            }
-            if (!checkWallCollision(shopPlayer.x, newY)) {
-                shopPlayer.y = newY;
-            }
+            if (!checkWallCollision(newX, shopPlayer.y)) shopPlayer.x = newX;
+            if (!checkWallCollision(shopPlayer.x, newY)) shopPlayer.y = newY;
             if (Math.abs(shopPlayer.vx) > 0.1 || Math.abs(shopPlayer.vy) > 0.1) {
                 shopPlayer.angle = Math.atan2(shopPlayer.vy, shopPlayer.vx);
             }
@@ -1092,9 +1164,7 @@
                 const cr = shop.cashRegister;
                 const inZone = shopPlayer.x > cr.x && shopPlayer.x < cr.x + cr.w &&
                     shopPlayer.y > cr.y && shopPlayer.y < cr.y + cr.h;
-                if (!inZone) {
-                    closeColorPicker();
-                }
+                if (!inZone) closeColorPicker();
             } else if (activeColorPicker && !currentShop) {
                 closeColorPicker();
             }
@@ -1102,9 +1172,7 @@
 
         // === COLOR PICKER ===
         function openColorPicker(shopKey) {
-            if (activeColorPicker === shopKey && colorPickerMenu.classList.contains('active')) {
-                return;
-            }
+            if (activeColorPicker === shopKey && colorPickerMenu.classList.contains('active')) return;
             activeColorPicker = shopKey;
             const shop = shopZones[shopKey];
             pickerTitle.innerText = `Select ${shop.name} Color`;
@@ -1112,9 +1180,7 @@
             const currentColor = customization[shop.colorKey];
             colorBtns.forEach(btn => {
                 btn.classList.remove('selected');
-                if (btn.dataset.color === currentColor) {
-                    btn.classList.add('selected');
-                }
+                if (btn.dataset.color === currentColor) btn.classList.add('selected');
             });
         }
 
@@ -1130,9 +1196,7 @@
                 localStorage.setItem(shop.colorKey, color);
                 colorBtns.forEach(btn => {
                     btn.classList.remove('selected');
-                    if (btn.dataset.color === color) {
-                        btn.classList.add('selected');
-                    }
+                    if (btn.dataset.color === color) btn.classList.add('selected');
                 });
             }
         }
@@ -1165,8 +1229,7 @@
                 const dx = player.x - spaceship.x;
                 const dy = player.y - spaceship.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                const enterRadius = 250; // Радиус для появления кнопки
-                if (dist < enterRadius) {
+                if (dist < 250) {
                     interactBtn.innerText = "ENTER";
                     interactBtn.classList.add('visible');
                 } else {
@@ -1206,13 +1269,17 @@
                 hint.style.display = 'none';
                 spaceship.vx = 0;
                 spaceship.vy = 0;
+                // Сброс нажатых зон
+                setLeftPressed(false);
+                setRightPressed(false);
+                updatePauseButtonVisibility();
+                updateDriveZonesVisibility();
             }
         });
 
         // === UNIVERSAL INTERACT BUTTON HANDLER ===
         interactBtn.addEventListener('click', () => {
             if (inShipInterior && inCockpitZone) {
-                // Вход в режим управления кораблем из кабины
                 inShipInterior = false;
                 inShip = true;
                 currentState = MODE.MAP;
@@ -1223,6 +1290,8 @@
                 hint.innerText = "Piloting Ship (Press EXIT-CONTROL to leave seat)";
                 shipControlPanel.classList.add('visible');
                 shipInteriorHint.style.display = 'none';
+                updatePauseButtonVisibility();
+                updateDriveZonesVisibility();
             } else if (inShipInterior) {
                 inShipInterior = false;
                 currentState = MODE.MAP;
@@ -1233,8 +1302,10 @@
                 shipInteriorHint.style.display = 'none';
                 hint.style.display = 'block';
                 hint.innerText = "Fly to the Portal";
+                updatePauseButtonVisibility();
+                updateDriveZonesVisibility();
             } else if (inShip) {
-                // Already handled by exit-control-btn
+                // handled by exit-control-btn
             } else if (spaceship.built) {
                 inShip = true;
                 player.x = spaceship.x;
@@ -1243,6 +1314,8 @@
                 hint.style.display = 'block';
                 hint.innerText = "Piloting Ship (Press EXIT-CONTROL to leave seat)";
                 shipControlPanel.classList.add('visible');
+                updatePauseButtonVisibility();
+                updateDriveZonesVisibility();
             }
         });
 
@@ -1259,6 +1332,8 @@
             hint.style.display = 'none';
             shopHint.style.display = 'none';
             pauseBtn.style.display = 'flex';
+            updatePauseButtonVisibility();
+            updateDriveZonesVisibility();
         }
 
         function resetTunnel() {
@@ -1266,7 +1341,7 @@
             tunnelPoints = [];
             tunnelTrail = [];
             tunnelPlayerY = canvas.height / 2;
-            tunnelIsClimbing = false;
+            tunnelDirection = 0;
             tunnelTimer = TUNNEL_START_DELAY;
             tunnelGap = Math.max(150, Math.floor(canvas.height * 0.25));
             tunnelSpeed = 3.5;
@@ -1308,9 +1383,7 @@
             for (let i = 0; i < tunnelPoints.length - 1; i++) {
                 if (x >= tunnelPoints[i].x && x <= tunnelPoints[i + 1].x) {
                     const t = (x - tunnelPoints[i].x) / (tunnelPoints[i + 1].x - tunnelPoints[i].x);
-                    return {
-                        y: tunnelPoints[i].y + t * (tunnelPoints[i + 1].y - tunnelPoints[i].y)
-                    };
+                    return { y: tunnelPoints[i].y + t * (tunnelPoints[i + 1].y - tunnelPoints[i].y) };
                 }
             }
             return { y: canvas.height / 2 };
@@ -1326,10 +1399,8 @@
                     tunnelTimerEl.innerText = Math.ceil(tunnelTimer);
                 }
             } else {
-                if (tunnelIsClimbing) {
-                    tunnelPlayerY -= tunnelMoveSpeed;
-                } else {
-                    tunnelPlayerY += tunnelMoveSpeed;
+                if (tunnelDirection !== 0) {
+                    tunnelPlayerY -= tunnelDirection * tunnelMoveSpeed;
                 }
             }
             tunnelScore += deltaTime * 15;
@@ -1350,31 +1421,32 @@
             for (let t of tunnelTrail) {
                 t.x -= tunnelSpeed;
             }
-            if (tunnelTrail.length > tunnelTrailMaxLength) {
-                tunnelTrail.shift();
-            }
+            if (tunnelTrail.length > tunnelTrailMaxLength) tunnelTrail.shift();
             const tunnel = getTunnelAt(playerX);
             if (tunnelPlayerY < tunnel.y || tunnelPlayerY > tunnel.y + tunnelGap) {
                 onTunnelCrash();
-                return;
             }
         }
 
         function onTunnelCrash() {
             canvas.style.filter = 'brightness(1.5)';
-            setTimeout(() => {
-                canvas.style.filter = '';
-            }, 100);
+            setTimeout(() => { canvas.style.filter = ''; }, 100);
             resetTunnel();
+        }
+
+        // === ФИКСИРОВАННЫЙ ЦВЕТ ===
+        function getCustomColor(colorKey) {
+            const colorName = customization[colorKey];
+            if (colorName === 'default' || !colorValues[colorName]) return '#ffffff';
+            return colorValues[colorName];
         }
 
         // --- MAP LOGIC ---
         function updateMap(deltaTime) {
             const timeScale = (HOURS_IN_DAY * 3600) / CYCLE_DURATION_SECONDS;
             gameTimeSeconds += deltaTime * timeScale;
-            if (gameTimeSeconds >= HOURS_IN_DAY * 3600) {
-                gameTimeSeconds -= HOURS_IN_DAY * 3600;
-            }
+            if (gameTimeSeconds >= HOURS_IN_DAY * 3600) gameTimeSeconds -= HOURS_IN_DAY * 3600;
+
             if (spaceship.building) {
                 spaceship.buildProgress += deltaTime * 20;
                 if (spaceship.buildProgress >= 100) {
@@ -1392,12 +1464,26 @@
 
             // Control Logic
             if (inShip) {
-                if (joystick.active) {
-                    spaceship.vx += joystick.dx * player.speed * 1.5;
-                    spaceship.vy += joystick.dy * player.speed * 1.5;
+                // Управление через зоны
+                const shipThrust = 0.15;
+                const speed = Math.sqrt(spaceship.vx * spaceship.vx + spaceship.vy * spaceship.vy);
+                const turnSpeed = 70
+
+                if (leftPressed && !rightPressed) {
+                    spaceship.angle -= turnSpeed * deltaTime;
+                    spaceship.vx += Math.cos(spaceship.angle) * shipThrust;
+                    spaceship.vy += Math.sin(spaceship.angle) * shipThrust;
+                } else if (rightPressed && !leftPressed) {
+                    spaceship.angle += turnSpeed * deltaTime;
+                    spaceship.vx += Math.cos(spaceship.angle) * shipThrust;
+                    spaceship.vy += Math.sin(spaceship.angle) * shipThrust;
+                } else if (leftPressed && rightPressed) {
+                    spaceship.vx += Math.cos(spaceship.angle) * shipThrust;
+                    spaceship.vy += Math.sin(spaceship.angle) * shipThrust;
                 }
-                spaceship.vx *= 0.98;
-                spaceship.vy *= 0.98;
+                // трение
+                spaceship.vx *= 0.985;
+                spaceship.vy *= 0.985;
                 spaceship.x += spaceship.vx;
                 spaceship.y += spaceship.vy;
                 if (Math.abs(spaceship.vx) > 0.1 || Math.abs(spaceship.vy) > 0.1) {
@@ -1415,12 +1501,8 @@
                 player.vy *= player.friction;
                 const nextX = player.x + player.vx;
                 const nextY = player.y + player.vy;
-                if (!checkHangarCollision(nextX, player.y, player.size)) {
-                    player.x = nextX;
-                }
-                if (!checkHangarCollision(player.x, nextY, player.size)) {
-                    player.y = nextY;
-                }
+                if (!checkHangarCollision(nextX, player.y, player.size)) player.x = nextX;
+                if (!checkHangarCollision(player.x, nextY, player.size)) player.y = nextY;
                 if (Math.abs(player.vx) > 0.1 || Math.abs(player.vy) > 0.1) {
                     player.angle = Math.atan2(player.vy, player.vx);
                 }
@@ -1432,9 +1514,7 @@
             if (speed > 0.1 && !inShipInterior && !inShip) {
                 mapTrail.push({ x: controlledEntity.x, y: controlledEntity.y, alpha: 1, isShip: inShip });
                 const maxLen = inShip ? mapTrailMaxLength * 2 : mapTrailMaxLength;
-                if (mapTrail.length > maxLen) {
-                    mapTrail.shift();
-                }
+                if (mapTrail.length > maxLen) mapTrail.shift();
             }
             for (let i = 0; i < mapTrail.length; i++) {
                 mapTrail[i].alpha -= 0.01;
@@ -1448,15 +1528,13 @@
             const dx = player.x - portal.x;
             const dy = player.y - portal.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (!inShip && !inShipInterior && dist < portal.radius + player.size) {
-                startTunnel();
-            }
+            if (!inShip && !inShipInterior && dist < portal.radius + player.size) startTunnel();
+
             const shopDx = player.x - shopPortal.x;
             const shopDy = player.y - shopPortal.y;
             const shopDist = Math.sqrt(shopDx * shopDx + shopDy * shopDy);
-            if (!inShip && !inShipInterior && shopDist < shopPortal.radius + player.size) {
-                enterShop();
-            }
+            if (!inShip && !inShipInterior && shopDist < shopPortal.radius + player.size) enterShop();
+
             checkAssembler();
         }
 
@@ -1470,13 +1548,8 @@
             shipInteriorPlayer.vy *= player.friction;
             const newX = shipInteriorPlayer.x + shipInteriorPlayer.vx;
             const newY = shipInteriorPlayer.y + shipInteriorPlayer.vy;
-            if (!checkShipInteriorCollision(newX, shipInteriorPlayer.y, shipInteriorPlayer.size)) {
-                shipInteriorPlayer.x = newX;
-            }
-            if (!checkShipInteriorCollision(shipInteriorPlayer.x, newY, shipInteriorPlayer.size)) {
-                shipInteriorPlayer.y = newY;
-            }
-            // === UPDATE ANGLE FOR TRIANGLE ROTATION ===
+            if (!checkShipInteriorCollision(newX, shipInteriorPlayer.y, shipInteriorPlayer.size)) shipInteriorPlayer.x = newX;
+            if (!checkShipInteriorCollision(shipInteriorPlayer.x, newY, shipInteriorPlayer.size)) shipInteriorPlayer.y = newY;
             if (Math.abs(shipInteriorPlayer.vx) > 0.1 || Math.abs(shipInteriorPlayer.vy) > 0.1) {
                 shipInteriorPlayer.angle = Math.atan2(shipInteriorPlayer.vy, shipInteriorPlayer.vx);
             }
@@ -1491,9 +1564,7 @@
                 interactBtn.classList.add('visible');
             } else {
                 inCockpitZone = false;
-                if (!inShip) {
-                    interactBtn.classList.remove('visible');
-                }
+                if (!inShip) interactBtn.classList.remove('visible');
             }
 
             // Check exit zone
@@ -1510,62 +1581,26 @@
                 shipInteriorHint.style.display = 'none';
                 hint.style.display = 'block';
                 hint.innerText = "Fly to the Portal";
+                updatePauseButtonVisibility();
+                updateDriveZonesVisibility();
             }
         }
 
-        // --- ENVIRONMENT & COLORS ---
+        // --- ENVIRONMENT (только часы и небесные тела) ---
         function updateEnvironment(deltaTime) {
             const timeScale = (HOURS_IN_DAY * 3600) / CYCLE_DURATION_SECONDS;
             gameTimeSeconds += deltaTime * timeScale;
-            if (gameTimeSeconds >= HOURS_IN_DAY * 3600) {
-                gameTimeSeconds -= HOURS_IN_DAY * 3600;
-            }
+            if (gameTimeSeconds >= HOURS_IN_DAY * 3600) gameTimeSeconds -= HOURS_IN_DAY * 3600;
+
             const totalSeconds = Math.floor(gameTimeSeconds);
             const h = Math.floor(totalSeconds / 3600);
             const m = Math.floor((totalSeconds % 3600) / 60);
-            document.getElementById('clock').innerText =
-                `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-            const noon = 12 * 3600;
-            const midnight = 0;
-            let distFromNoon;
-            if (totalSeconds <= 12 * 3600) {
-                distFromNoon = 12 * 3600 - totalSeconds;
-            } else {
-                distFromNoon = totalSeconds - 12 * 3600;
-            }
-            const maxDistFromNoon = 12 * 3600;
-            let dayFactor = 1 - (distFromNoon / maxDistFromNoon);
-            dayFactor = Math.max(0, Math.min(1, dayFactor));
-            const rNight = 20, gNight = 20, bNight = 25;
-            const rDay = 230, gDay = 235, bDay = 240;
-            const r = Math.round(rNight + (rDay - rNight) * dayFactor);
-            const g = Math.round(gNight + (gDay - gNight) * dayFactor);
-            const b = Math.round(bNight + (bDay - bNight) * dayFactor);
-            document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            const textColor = dayFactor > 0.5 ? '#1a1a1a' : '#ffffff';
-            document.documentElement.style.setProperty('--text-color', textColor);
-            document.documentElement.style.setProperty('--ui-bg', 'rgba(255, 255, 255, 0.1)');
-            const isNight = dayFactor <= 0.5;
-            if (isNight) {
-                clockEl.classList.add('night-highlight');
-                scoreDisplayEl.classList.add('night-highlight');
-            } else {
-                clockEl.classList.remove('night-highlight');
-                scoreDisplayEl.classList.remove('night-highlight');
-            }
+            document.getElementById('clock').innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
             const progress = (gameTimeSeconds / (24 * 3600)) * 100;
             document.getElementById('time-bar-fill').style.width = `${progress}%`;
-            return { dayFactor, textColor, isNight };
-        }
 
-        function getCustomColor(colorKey, colors) {
-            const colorName = customization[colorKey];
-            if (colorName === 'default') {
-                return colors.textColor;
-            }
-            return colorValues[colorName] ?
-                (colors.dayFactor > 0.5 ? colorValues[colorName].dark : colorValues[colorName].light)
-                : colors.textColor;
+            return { dayFactor: 1, textColor: '#ffffff', isNight: false };
         }
 
         function getCelestialPosition(gameTimeSeconds) {
@@ -1607,8 +1642,7 @@
             const offsetX = -player.x % gridSize;
             const offsetY = -player.y % gridSize;
             ctx.beginPath();
-            ctx.strokeStyle = colors.dayFactor > 0.5 ?
-                'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
             for (let x = offsetX; x < canvas.width; x += gridSize) {
                 ctx.moveTo(x, 0);
@@ -1621,9 +1655,19 @@
             ctx.stroke();
             ctx.save();
             ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
-            ctx.fillStyle = '#dddddd';
+
+            // === АНГАР ===
+            ctx.fillStyle = 'rgba(128,128,128,0.2)';
             ctx.fillRect(hangar.x, hangar.y, hangar.w, hangar.h);
-            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ffffff';
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            for (const wall of hangarWalls) {
+                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+            }
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             for (let x = hangar.x; x <= hangar.x + hangar.w; x += BLOCK_SIZE) {
@@ -1635,19 +1679,17 @@
                 ctx.lineTo(hangar.x + hangar.w, y);
             }
             ctx.stroke();
-            ctx.fillStyle = '#555555';
-            for (const wall of hangarWalls) {
-                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-            }
-            ctx.fillStyle = '#aaaaaa';
-            ctx.fillRect(assembler.x, assembler.y, assembler.w, assembler.h);
+
             ctx.fillStyle = '#333333';
+            ctx.fillRect(assembler.x, assembler.y, assembler.w, assembler.h);
+            ctx.fillStyle = '#555555';
             for (const wall of assemblerWalls) {
                 ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
             }
             ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
             ctx.fillRect(terminalZone.x, terminalZone.y, terminalZone.w, terminalZone.h);
-            
+
+            // === КОРАБЛЬ ===
             if (spaceship.built || spaceship.building) {
                 ctx.save();
                 ctx.translate(spaceship.x, spaceship.y);
@@ -1655,36 +1697,26 @@
                 ctx.scale(scale, scale);
                 ctx.globalAlpha = spaceship.alpha;
                 ctx.rotate(spaceship.angle + Math.PI / 2);
-                ctx.fillStyle = '#000000';
+                ctx.fillStyle = getCustomColor('playerColor');
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = getCustomColor('playerColor');
                 ctx.beginPath();
-                ctx.moveTo(-15 * scale, -90 * scale);
-                ctx.lineTo(15 * scale, -90 * scale);
-                ctx.lineTo(40 * scale, 50 * scale);
-                ctx.lineTo(95 * scale, 30 * scale);
-                ctx.lineTo(95 * scale, 85 * scale);
-                ctx.lineTo(40 * scale, 120 * scale);
-                ctx.lineTo(25 * scale, 100 * scale);
-                ctx.lineTo(-25 * scale, 100 * scale);
-                ctx.lineTo(-40 * scale, 120 * scale);
-                ctx.lineTo(-95 * scale, 85 * scale);
-                ctx.lineTo(-95 * scale, 30 * scale);
-                ctx.lineTo(-40 * scale, 50 * scale);
+                ctx.moveTo(0, -90); 
+                ctx.lineTo(55, 80);
+                ctx.lineTo(0, 60);
+                ctx.lineTo(-55, 80);
                 ctx.closePath();
                 ctx.fill();
+                ctx.shadowBlur = 0;
                 ctx.restore();
             }
-            
+
             ctx.restore();
-            
-            if (!inShip) {
-                drawPlayerTrail(colors);
-            }
-            
+
+            if (!inShip) drawPlayerTrail(colors);
+
             ctx.save();
-            ctx.translate(
-                canvas.width / 2 + portal.x - player.x,
-                canvas.height / 2 + portal.y - player.y
-            );
+            ctx.translate(canvas.width / 2 + portal.x - player.x, canvas.height / 2 + portal.y - player.y);
             ctx.beginPath();
             ctx.arc(0, 0, portal.radius, 0, Math.PI * 2);
             ctx.strokeStyle = portal.color;
@@ -1695,11 +1727,9 @@
             ctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
             ctx.fill();
             ctx.restore();
+
             ctx.save();
-            ctx.translate(
-                canvas.width / 2 + shopPortal.x - player.x,
-                canvas.height / 2 + shopPortal.y - player.y
-            );
+            ctx.translate(canvas.width / 2 + shopPortal.x - player.x, canvas.height / 2 + shopPortal.y - player.y);
             ctx.beginPath();
             ctx.arc(0, 0, shopPortal.radius, 0, Math.PI * 2);
             ctx.strokeStyle = shopPortal.color;
@@ -1710,7 +1740,7 @@
             ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
             ctx.fill();
             ctx.restore();
-            
+
             if (!inShip && !inShipInterior) {
                 ctx.save();
                 ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -1720,8 +1750,11 @@
                 ctx.lineTo(-player.size, -player.size / 1.5);
                 ctx.lineTo(-player.size, player.size / 1.5);
                 ctx.closePath();
-                ctx.fillStyle = getCustomColor('playerColor', colors);
+                ctx.fillStyle = getCustomColor('playerColor');
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = getCustomColor('playerColor');
                 ctx.fill();
+                ctx.shadowBlur = 0;
                 ctx.restore();
             }
             drawCompass(colors);
@@ -1729,7 +1762,7 @@
 
         function drawPlayerTrail(colors) {
             if (mapTrail.length < 2) return;
-            const trailColor = getCustomColor('trailColor', colors);
+            const trailColor = getCustomColor('trailColor');
             ctx.save();
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.lineCap = 'round';
@@ -1811,8 +1844,7 @@
             ctx.translate(centerX, centerY);
             ctx.beginPath();
             ctx.arc(0, 0, compassRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = colors.dayFactor > 0.5 ?
-                'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
             ctx.lineWidth = 2;
             ctx.stroke();
             ctx.beginPath();
@@ -1827,7 +1859,6 @@
             ctx.arc(0, 0, compassRadius, angleToShop - markerArc / 2, angleToShop + markerArc / 2);
             ctx.strokeStyle = shopPortal.color;
             ctx.lineWidth = markerWidth;
-            ctx.lineCap = 'round';
             ctx.shadowBlur = 10;
             ctx.shadowColor = shopPortal.color;
             ctx.stroke();
@@ -1835,7 +1866,6 @@
             ctx.arc(0, 0, compassRadius, angleToBase - markerArc / 2, angleToBase + markerArc / 2);
             ctx.strokeStyle = '#4caf50';
             ctx.lineWidth = markerWidth;
-            ctx.lineCap = 'round';
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#4caf50';
             ctx.stroke();
@@ -1849,13 +1879,9 @@
             ctx.scale(shopCamera.zoom, shopCamera.zoom);
             ctx.translate(-shopPlayer.x, -shopPlayer.y);
             const halfGrid = (shopConfig.gridCount * shopConfig.gridSize) / 2;
-            ctx.fillStyle = colors.dayFactor > 0.5 ? '#e0e0e0' : '#2a2a2a';
-            ctx.fillRect(
-                -halfGrid, -halfGrid,
-                shopConfig.gridCount * shopConfig.gridSize,
-                shopConfig.gridCount * shopConfig.gridSize
-            );
-            ctx.strokeStyle = colors.dayFactor > 0.5 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+            ctx.fillStyle = 'rgba(128,128,128,0.2)';
+            ctx.fillRect(-halfGrid, -halfGrid, shopConfig.gridCount * shopConfig.gridSize, shopConfig.gridCount * shopConfig.gridSize);
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
             ctx.lineWidth = 1;
             for (let x = -halfGrid; x <= halfGrid; x += shopConfig.gridSize) {
                 ctx.beginPath();
@@ -1875,19 +1901,18 @@
                 const y = shop.y;
                 const w = shop.w;
                 const h = shop.h;
-                ctx.strokeStyle = '#1a1a1a';
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ffffff';
                 ctx.strokeRect(x, y, w, h);
-                if (!isActive) {
-                    ctx.fillStyle = 'rgba(200, 200, 200, 0.7)';
-                    ctx.fillRect(x, y, w, h);
-                }
+                ctx.shadowBlur = 0;
                 if (isActive) {
                     const cr = shop.cashRegister;
                     ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
                     ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
                 }
-                ctx.fillStyle = colors.dayFactor > 0.5 ? '#333' : '#ccc';
+                ctx.fillStyle = '#fff';
                 ctx.font = 'bold 24px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -1901,42 +1926,29 @@
             ctx.lineTo(-shopPlayer.size, -shopPlayer.size / 1.5);
             ctx.lineTo(-shopPlayer.size, shopPlayer.size / 1.5);
             ctx.closePath();
-            ctx.fillStyle = getCustomColor('playerColor', colors);
+            ctx.fillStyle = getCustomColor('playerColor');
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = getCustomColor('playerColor');
             ctx.fill();
+            ctx.shadowBlur = 0;
             ctx.restore();
             ctx.restore();
         }
 
-        // === DRAW SHIP INTERIOR - NOW WITH TRIANGLE PLAYER ===
         function drawShipInterior(colors) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Black background for ship interior
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.translate(canvas.width / 2, canvas.height / 2);
-            // Draw ship interior walls (black areas from image)
             ctx.fillStyle = '#111111';
             for (const wall of shipInteriorWalls) {
                 ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
             }
-            // === ОТРИСОВКА ЗОНЫ КАБИНЫ (зелёная зона для входа) ===
             ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
-            ctx.fillRect(
-                shipInteriorCockpitZone.x,
-                shipInteriorCockpitZone.y,
-                shipInteriorCockpitZone.w,
-                shipInteriorCockpitZone.h
-            );
-            // Draw exit zone (green line)
+            ctx.fillRect(shipInteriorCockpitZone.x, shipInteriorCockpitZone.y, shipInteriorCockpitZone.w, shipInteriorCockpitZone.h);
             ctx.fillStyle = shipInteriorExitZone.color;
-            ctx.fillRect(
-                shipInteriorExitZone.x,
-                shipInteriorExitZone.y,
-                shipInteriorExitZone.w,
-                shipInteriorExitZone.h
-            );
-            // === DRAW PLAYER AS TRIANGLE (like on map) ===
+            ctx.fillRect(shipInteriorExitZone.x, shipInteriorExitZone.y, shipInteriorExitZone.w, shipInteriorExitZone.h);
             ctx.save();
             ctx.translate(shipInteriorPlayer.x, shipInteriorPlayer.y);
             ctx.rotate(shipInteriorPlayer.angle);
@@ -1945,20 +1957,23 @@
             ctx.lineTo(-shipInteriorPlayer.size, -shipInteriorPlayer.size / 1.5);
             ctx.lineTo(-shipInteriorPlayer.size, shipInteriorPlayer.size / 1.5);
             ctx.closePath();
-            ctx.fillStyle = getCustomColor('playerColor', colors);
+            ctx.fillStyle = getCustomColor('playerColor');
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = getCustomColor('playerColor');
             ctx.fill();
+            ctx.shadowBlur = 0;
             ctx.restore();
             ctx.restore();
         }
 
         function drawTunnel(colors) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = document.body.style.backgroundColor;
+            ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
             ctx.shadowBlur = 100;
-            ctx.shadowColor = getCustomColor('tunnelColor', colors);
-            ctx.strokeStyle = getCustomColor('tunnelColor', colors);
+            ctx.shadowColor = getCustomColor('tunnelColor');
+            ctx.strokeStyle = getCustomColor('tunnelColor');
             ctx.lineWidth = 5;
             ctx.lineJoin = 'round';
             ctx.beginPath();
@@ -1975,7 +1990,7 @@
             ctx.stroke();
             if (tunnelTrail.length > 1) {
                 ctx.shadowBlur = 30;
-                ctx.strokeStyle = getCustomColor('trailColor', colors);
+                ctx.strokeStyle = getCustomColor('trailColor');
                 ctx.lineWidth = 5;
                 ctx.beginPath();
                 ctx.moveTo(tunnelTrail[0].x, tunnelTrail[0].y);
@@ -1984,11 +1999,13 @@
             }
             ctx.save();
             ctx.translate(playerX, tunnelPlayerY);
-            const angle = tunnelIsClimbing ? -Math.PI / 4 : Math.PI / 4;
+            let angle = 0;
+            if (tunnelDirection === 1) angle = -Math.PI / 4;
+            else if (tunnelDirection === -1) angle = Math.PI / 4;
             ctx.rotate(angle);
             ctx.shadowBlur = 50;
-            ctx.shadowColor = getCustomColor('playerColor', colors);
-            ctx.fillStyle = getCustomColor('playerColor', colors);
+            ctx.shadowColor = getCustomColor('playerColor');
+            ctx.fillStyle = getCustomColor('playerColor');
             ctx.beginPath();
             ctx.moveTo(22, 0);
             ctx.lineTo(-12, -13);
@@ -2024,7 +2041,9 @@
             }
         }
 
-        // Start
+        // Старт
+        updatePauseButtonVisibility();
+        updateDriveZonesVisibility();
         requestAnimationFrame(loop);
     </script>
 </body>
