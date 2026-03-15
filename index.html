@@ -116,7 +116,7 @@
         #pause-btn:active {
             background: rgba(255,255,255,0.2);
         }
-        /* --- МЕНЮ ПАУЗЫ (БЕЗ ФОНА) --- */
+        /* --- МЕНЮ ПАУЗЫ --- */
         #pause-menu {
             position: fixed;
             top: 0;
@@ -473,6 +473,35 @@
             display: none;
             text-align: center;
         }
+
+        /* === НОВАЯ КНОПКА УСКОРЕНИЯ === */
+        #thrust-container {
+            position: fixed;
+            top: 20px;
+            right: 80px; /* слева от кнопки паузы */
+            width: 120px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 260;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.3s;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+        #thrust-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #thrust-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            box-shadow: 0 0 20px #00ffff;
+            transition: width 0.05s linear;
+        }
     </style>
 </head>
 <body>
@@ -491,9 +520,14 @@
             <div class="joystick-stick" id="joy-stick"></div>
         </div>
     </div>
-    <!-- ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ (DATA WING) -->
+    <!-- ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ (ТОЛЬКО ПОВОРОТ) -->
     <div id="drive-left-zone" class="drive-zone left hidden"></div>
     <div id="drive-right-zone" class="drive-zone right hidden"></div>
+
+    <!-- КНОПКА УСКОРЕНИЯ С ПРОГРЕССОМ -->
+    <div id="thrust-container" class="hidden">
+        <div id="thrust-bar-fill"></div>
+    </div>
 
     <div id="taskbar">
         <div class="clock-container">
@@ -551,9 +585,9 @@
         let currentState = MODE.MAP;
         let lastTime = 0;
 
-        // Player (Map)
+        // Player (Map) — уменьшили скорость пешехода (было 0.5)
         const player = {
-            x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15, speed: 0.5, friction: 0.96
+            x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15, speed: 0.25, friction: 0.96
         };
 
         // === PLAYER TRAIL (MAP) ===
@@ -714,6 +748,7 @@
             x: assembler.x + shipConfig.w / 2,
             y: assembler.y + shipConfig.h / 2,
             vx: 0, vy: 0, angle: 0,
+            angularVelocity: 0,        // угловая скорость (рад/с)
             built: false,
             building: false,
             buildProgress: 0,
@@ -794,11 +829,21 @@
         const shipControlPanel = document.getElementById('ship-control-panel');
         const exitControlBtn = document.getElementById('exit-control-btn');
 
-        // === НОВЫЕ ЭЛЕМЕНТЫ: ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ ===
+        // === НОВЫЕ ЭЛЕМЕНТЫ: ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ (только поворот) ===
         const leftZone = document.getElementById('drive-left-zone');
         const rightZone = document.getElementById('drive-right-zone');
         let leftPressed = false;
         let rightPressed = false;
+
+        // === НОВЫЙ ЭЛЕМЕНТ: КНОПКА УСКОРЕНИЯ ===
+        const thrustContainer = document.getElementById('thrust-container');
+        const thrustBarFill = document.getElementById('thrust-bar-fill');
+        let thrustPower = 0;
+        let thrustIncreasing = false;
+        let thrustDecreasing = false;
+        const maxThrustPower = 1;
+        const thrustRiseRate = 0.3;   // в секунду
+        const thrustFallRate = 0.1;    // в секунду
 
         function setLeftPressed(state) {
             if (currentState !== MODE.MAP || !inShip) {
@@ -835,15 +880,39 @@
             setRightPressed(false);
         });
 
-        // Функция обновления видимости зон управления и джойстика
+        // === ОБРАБОТЧИКИ ДЛЯ КНОПКИ УСКОРЕНИЯ ===
+        function handleThrustStart(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (currentState === MODE.MAP && inShip) {
+                thrustIncreasing = true;
+                thrustDecreasing = false;
+            }
+        }
+        function handleThrustEnd(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            thrustIncreasing = false;
+            thrustDecreasing = true;
+        }
+        thrustContainer.addEventListener('mousedown', handleThrustStart);
+        thrustContainer.addEventListener('mouseup', handleThrustEnd);
+        thrustContainer.addEventListener('mouseleave', handleThrustEnd);
+        thrustContainer.addEventListener('touchstart', handleThrustStart, { passive: false });
+        thrustContainer.addEventListener('touchend', handleThrustEnd, { passive: false });
+        thrustContainer.addEventListener('touchcancel', handleThrustEnd, { passive: false });
+
+        // Функция обновления видимости зон управления, джойстика и кнопки скорости
         function updateDriveZonesVisibility() {
             if (inShip && currentState === MODE.MAP) {
                 leftZone.classList.remove('hidden');
                 rightZone.classList.remove('hidden');
                 joyZone.classList.add('hidden');
+                thrustContainer.classList.remove('hidden');
             } else {
                 leftZone.classList.add('hidden');
                 rightZone.classList.add('hidden');
+                thrustContainer.classList.add('hidden');
                 if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR) {
                     joyZone.classList.remove('hidden');
                 } else {
@@ -1269,6 +1338,11 @@
                 hint.style.display = 'none';
                 spaceship.vx = 0;
                 spaceship.vy = 0;
+                spaceship.angularVelocity = 0; // сброс угловой скорости
+                thrustPower = 0;
+                thrustIncreasing = false;
+                thrustDecreasing = false;
+                thrustBarFill.style.width = '0%';
                 // Сброс нажатых зон
                 setLeftPressed(false);
                 setRightPressed(false);
@@ -1290,6 +1364,12 @@
                 hint.innerText = "Piloting Ship (Press EXIT-CONTROL to leave seat)";
                 shipControlPanel.classList.add('visible');
                 shipInteriorHint.style.display = 'none';
+                // Сбрасываем ускорение и угловую скорость при входе
+                thrustPower = 0;
+                thrustIncreasing = false;
+                thrustDecreasing = false;
+                spaceship.angularVelocity = 0;
+                thrustBarFill.style.width = '0%';
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
             } else if (inShipInterior) {
@@ -1314,6 +1394,12 @@
                 hint.style.display = 'block';
                 hint.innerText = "Piloting Ship (Press EXIT-CONTROL to leave seat)";
                 shipControlPanel.classList.add('visible');
+                // Сбрасываем ускорение и угловую скорость
+                thrustPower = 0;
+                thrustIncreasing = false;
+                thrustDecreasing = false;
+                spaceship.angularVelocity = 0;
+                thrustBarFill.style.width = '0%';
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
             }
@@ -1464,34 +1550,46 @@
 
             // Control Logic
             if (inShip) {
-                // Управление через зоны
-                const shipThrust = 0.15;
-                const speed = Math.sqrt(spaceship.vx * spaceship.vx + spaceship.vy * spaceship.vy);
-                const turnSpeed = 70
+                // === Управление поворотом с инерцией ===
+                const turnAcceleration = 50; // рад/с²
+                const maxTurnSpeed = 70;      // рад/с
+                const angularFriction = 0.99;   // трение
 
                 if (leftPressed && !rightPressed) {
-                    spaceship.angle -= turnSpeed * deltaTime;
-                    spaceship.vx += Math.cos(spaceship.angle) * shipThrust;
-                    spaceship.vy += Math.sin(spaceship.angle) * shipThrust;
+                    spaceship.angularVelocity -= turnAcceleration * deltaTime;
                 } else if (rightPressed && !leftPressed) {
-                    spaceship.angle += turnSpeed * deltaTime;
-                    spaceship.vx += Math.cos(spaceship.angle) * shipThrust;
-                    spaceship.vy += Math.sin(spaceship.angle) * shipThrust;
-                } else if (leftPressed && rightPressed) {
-                    spaceship.vx += Math.cos(spaceship.angle) * shipThrust;
-                    spaceship.vy += Math.sin(spaceship.angle) * shipThrust;
+                    spaceship.angularVelocity += turnAcceleration * deltaTime;
                 }
-                // трение
+                // Ограничиваем максимальную угловую скорость
+                spaceship.angularVelocity = Math.max(-maxTurnSpeed, Math.min(maxTurnSpeed, spaceship.angularVelocity));
+                // Применяем трение
+                spaceship.angularVelocity *= angularFriction;
+                // Обновляем угол
+                spaceship.angle += spaceship.angularVelocity * deltaTime;
+
+                // Управление ускорением (кнопка скорости)
+                if (thrustIncreasing) {
+                    thrustPower = Math.min(maxThrustPower, thrustPower + thrustRiseRate * deltaTime);
+                } else if (thrustDecreasing) {
+                    thrustPower = Math.max(0, thrustPower - thrustFallRate * deltaTime);
+                }
+                // Применяем ускорение
+                const shipThrust = 0.15;
+                spaceship.vx += Math.cos(spaceship.angle) * shipThrust * thrustPower;
+                spaceship.vy += Math.sin(spaceship.angle) * shipThrust * thrustPower;
+
+                // трение линейное
                 spaceship.vx *= 0.985;
                 spaceship.vy *= 0.985;
                 spaceship.x += spaceship.vx;
                 spaceship.y += spaceship.vy;
-                if (Math.abs(spaceship.vx) > 0.1 || Math.abs(spaceship.vy) > 0.1) {
-                    spaceship.angle = Math.atan2(spaceship.vy, spaceship.vx);
-                }
+
                 player.x = spaceship.x;
                 player.y = spaceship.y;
                 player.angle = spaceship.angle;
+
+                // Обновляем прогресс-бар
+                thrustBarFill.style.width = `${thrustPower * 100}%`;
             } else if (!inShipInterior) {
                 if (joystick.active) {
                     player.vx += joystick.dx * player.speed;
@@ -1688,6 +1786,61 @@
             }
             ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
             ctx.fillRect(terminalZone.x, terminalZone.y, terminalZone.w, terminalZone.h);
+
+            if (inShip && thrustPower > 0.01) {
+                const trailColor = getCustomColor('trailColor');
+                const nozzleOffset = 65; 
+
+                const backX = -Math.cos(spaceship.angle);
+                const backY = -Math.sin(spaceship.angle);
+                const sideX = -Math.sin(spaceship.angle);
+                const sideY = Math.cos(spaceship.angle);
+
+                const nozzleX = spaceship.x + backX * nozzleOffset;
+                const nozzleY = spaceship.y + backY * nozzleOffset;
+
+                const flicker = Math.random() * 0.1 + 0.95;
+                const totalLength = 280 * thrustPower * flicker;
+                const widePointDist = totalLength * 0.20; // Точка максимального расширения (30% длины)
+                const maxWidth = 50 * thrustPower;      // Максимальная ширина в "плечах"
+
+                // 1. Точка выхода (узкое сопло)
+                const pStart = { x: nozzleX, y: nozzleY };
+                // 2. Левое "плечо" (расширение)
+                const pLeft = { 
+                    x: nozzleX + backX * widePointDist + sideX * maxWidth, 
+                    y: nozzleY + backY * widePointDist + sideY * maxWidth 
+                };
+                // 3. Правое "плечо" (расширение)
+                const pRight = { 
+                    x: nozzleX + backX * widePointDist - sideX * maxWidth, 
+                    y: nozzleY + backY * widePointDist - sideY * maxWidth 
+                };
+                // 4. Острый кончик (схождение)
+                const pEnd = { 
+                    x: nozzleX + backX * totalLength, 
+                    y: nozzleY + backY * totalLength 
+                };
+
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.7 * thrustPower;
+                ctx.strokeStyle = trailColor;
+                ctx.lineWidth = 5;
+                ctx.shadowBlur = 100 * thrustPower;
+                ctx.shadowColor = trailColor;
+
+                // Рисуем замкнутый ромб (две сплюснутые V, соединенные основаниями)
+                ctx.beginPath();
+                ctx.moveTo(pStart.x, pStart.y);
+                ctx.lineTo(pLeft.x, pLeft.y);
+                ctx.lineTo(pEnd.x, pEnd.y);
+                ctx.lineTo(pRight.x, pRight.y);
+                ctx.closePath();
+                
+                ctx.stroke(); 
+                ctx.restore();
+            }
 
             // === КОРАБЛЬ ===
             if (spaceship.built || spaceship.building) {
