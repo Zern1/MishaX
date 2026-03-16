@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -324,7 +325,7 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        .color-btn {
+        .color-btn, .gradient-btn {
             width: 50px;
             height: 50px;
             border-radius: 5px;
@@ -333,11 +334,11 @@
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
-        .color-btn:hover {
+        .color-btn:hover, .gradient-btn:hover {
             transform: scale(1.15);
             border-color: white;
         }
-        .color-btn.selected {
+        .color-btn.selected, .gradient-btn.selected {
             border-color: #4caf50;
             box-shadow: 0 0 15px #4caf50;
         }
@@ -347,6 +348,16 @@
         .color-btn.yellow { background: #ffcc00; }
         .color-btn.green { background: #4caf50; }
         .color-btn.cyan { background: #00bcd4; }
+        .gradient-btn.yellow-blue {
+            background: linear-gradient(135deg, #ffff00, #00ffff);
+        }
+        .gradient-btn.red-blue {
+            background: linear-gradient(135deg, #ff4444, #aa44ff, #4444ff);
+        }
+        .gradient-btn.black {
+            background: #000000;
+        }
+
         /* === ASSEMBLER & SHIP UI === */
         #assembler-menu {
             position: fixed;
@@ -416,15 +427,18 @@
         #interact-btn:active {
             transform: scale(0.95);
         }
-        /* === SHIP CONTROL PANEL === */
+        /* === НОВАЯ ГОЛОГРАФИЧЕСКАЯ ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ === */
         #ship-control-panel {
             position: fixed;
             top: 50px;
             left: 20px;
-            background: rgba(30, 30, 30, 0.5);
-            border: 3px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
             padding: 15px 20px;
-            border-radius: 7px;
+            border-radius: 0;
             z-index: 250;
             opacity: 0;
             pointer-events: none;
@@ -432,6 +446,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            min-width: 140px;
         }
         #ship-control-panel.visible {
             opacity: 1;
@@ -442,21 +457,50 @@
             font-size: 0.9rem;
             color: #ffffff;
             text-align: center;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        #radarCanvas {
+            display: block;
+            margin: 0 auto 10px auto;
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            box-shadow: 0 0 0px rgba(150, 255, 255, 0.2);
+        }
+        #thrust-panel {
+            width: 98.5%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #thrust-panel-fill {
+            height: 100%;
+            width: 0%;
+            background: #ffffff;
+            box-shadow: 0 0 15px #00ffff;
+            transition: width 0.05s linear;
         }
         #exit-control-btn {
-            background: rgba(255, 0, 0, 0.5);
+            background: rgba(255, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 4px;
             color: white;
             font-size: 0.85rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
+            text-align: center;
         }
         #exit-control-btn:hover {
-            background: rgba(255, 68, 68, 1);
+            background: rgba(255, 68, 68, 0.7);
         }
         #exit-control-btn:active {
             transform: scale(0.95);
@@ -472,35 +516,6 @@
             z-index: 50;
             display: none;
             text-align: center;
-        }
-
-        /* === НОВАЯ КНОПКА УСКОРЕНИЯ === */
-        #thrust-container {
-            position: fixed;
-            top: 20px;
-            right: 80px; /* слева от кнопки паузы */
-            width: 120px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
-            z-index: 260;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            transition: opacity 0.3s;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-        #thrust-container.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #thrust-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: #ffffff;
-            box-shadow: 0 0 20px #00ffff;
-            transition: width 0.05s linear;
         }
     </style>
 </head>
@@ -524,9 +539,14 @@
     <div id="drive-left-zone" class="drive-zone left hidden"></div>
     <div id="drive-right-zone" class="drive-zone right hidden"></div>
 
-    <!-- КНОПКА УСКОРЕНИЯ С ПРОГРЕССОМ -->
-    <div id="thrust-container" class="hidden">
-        <div id="thrust-bar-fill"></div>
+    <!-- НОВАЯ ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ (ГОЛОГРАММА) -->
+    <div id="ship-control-panel">
+        <h3>✧ SHIP CONTROL ✧</h3>
+        <canvas id="radarCanvas" width="100" height="100"></canvas>
+        <div id="thrust-panel">
+            <div id="thrust-panel-fill"></div>
+        </div>
+        <button id="exit-control-btn">EXIT</button>
     </div>
 
     <div id="taskbar">
@@ -542,10 +562,10 @@
             <button class="menu-btn" id="exit-btn">EXIT</button>
         </div>
     </div>
-    <!-- === COLOR PICKER MENU === -->
+    <!-- COLOR PICKER MENU -->
     <div id="color-picker-menu">
         <h2 id="picker-title">Select Color</h2>
-        <div class="color-options">
+        <div class="color-options" id="color-options">
             <div class="color-btn default" data-color="default"></div>
             <div class="color-btn red" data-color="red"></div>
             <div class="color-btn blue" data-color="blue"></div>
@@ -553,8 +573,13 @@
             <div class="color-btn green" data-color="green"></div>
             <div class="color-btn cyan" data-color="cyan"></div>
         </div>
+        <div class="color-options" id="gradient-options" style="display: none;">
+            <div class="gradient-btn yellow-blue" data-gradient="yellow-blue" title="Жёлто-голубой"></div>
+            <div class="gradient-btn red-blue" data-gradient="red-blue" title="Красно-голубой"></div>
+            <div class="gradient-btn black" data-gradient="black" title="Чёрный"></div>
+        </div>
     </div>
-    <!-- === ASSEMBLER MENU === -->
+    <!-- ASSEMBLER MENU -->
     <div id="assembler-menu">
         <h2>ASSEMBLY V.164</h2>
         <p id="assembler-status">Ready to Build</p>
@@ -563,13 +588,8 @@
             <div class="build-progress-bar" id="build-progress-bar"></div>
         </div>
     </div>
-    <!-- === UNIVERSAL INTERACT BUTTON === -->
+    <!-- UNIVERSAL INTERACT BUTTON -->
     <div id="interact-btn">ENTER</div>
-    <!-- === SHIP CONTROL PANEL === -->
-    <div id="ship-control-panel">
-        <h3>SHIP CONTROL</h3>
-        <button id="exit-control-btn">EXIT</button>
-    </div>
     <canvas id="gameCanvas"></canvas>
     <script>
         // --- CONFIG & STATE ---
@@ -585,7 +605,7 @@
         let currentState = MODE.MAP;
         let lastTime = 0;
 
-        // Player (Map) — уменьшили скорость пешехода (было 0.5)
+        // Player (Map)
         const player = {
             x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15, speed: 0.25, friction: 0.96
         };
@@ -603,7 +623,7 @@
             active: false, originX: 0, originY: 0, dx: 0, dy: 0, maxRadius: 35
         };
 
-        // Time System (только для часов и небесных тел)
+        // Time System
         const CYCLE_DURATION_SECONDS = 720;
         const HOURS_IN_DAY = 24;
         let gameTimeSeconds = 6 * 3600;
@@ -671,10 +691,10 @@
                 colorKey: 'tunnelColor',
                 cashRegister: { x: -400, y: 200, w: 200, h: 200, type: 'cash' }
             },
-            shape: {
-                name: 'SHAPE',
+            map: {
+                name: 'MAP',
                 x: 100, y: 100, w: 400, h: 400,
-                colorKey: 'playerShape',
+                colorKey: 'mapGradient',
                 cashRegister: { x: 200, y: 200, w: 200, h: 200, type: 'cash' }
             }
         };
@@ -690,7 +710,7 @@
             playerColor: localStorage.getItem('playerColor') || 'default',
             trailColor: localStorage.getItem('trailColor') || 'default',
             tunnelColor: localStorage.getItem('tunnelColor') || 'default',
-            playerShape: localStorage.getItem('playerShape') || 'triangle'
+            mapGradient: localStorage.getItem('mapGradient') || 'yellow-blue'
         };
 
         // === COLORS ===
@@ -748,7 +768,7 @@
             x: assembler.x + shipConfig.w / 2,
             y: assembler.y + shipConfig.h / 2,
             vx: 0, vy: 0, angle: 0,
-            angularVelocity: 0,        // угловая скорость (рад/с)
+            angularVelocity: 0,
             built: false,
             building: false,
             buildProgress: 0,
@@ -817,7 +837,10 @@
         const tunnelTimerEl = document.getElementById('tunnel-timer');
         const colorPickerMenu = document.getElementById('color-picker-menu');
         const pickerTitle = document.getElementById('picker-title');
+        const colorOptions = document.getElementById('color-options');
+        const gradientOptions = document.getElementById('gradient-options');
         const colorBtns = document.querySelectorAll('.color-btn');
+        const gradientBtns = document.querySelectorAll('.gradient-btn');
         const clockEl = document.getElementById('clock');
         const scoreDisplayEl = document.getElementById('score-display');
         const assemblerMenu = document.getElementById('assembler-menu');
@@ -829,33 +852,33 @@
         const shipControlPanel = document.getElementById('ship-control-panel');
         const exitControlBtn = document.getElementById('exit-control-btn');
 
-        // === НОВЫЕ ЭЛЕМЕНТЫ: ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ (только поворот) ===
+        // === НОВЫЕ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ УСКОРЕНИЕМ И РАДАР ===
+        const thrustPanel = document.getElementById('thrust-panel');
+        const thrustPanelFill = document.getElementById('thrust-panel-fill');
+        const radarCanvas = document.getElementById('radarCanvas');
+        const radarCtx = radarCanvas.getContext('2d');
+
+        // === ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ ===
         const leftZone = document.getElementById('drive-left-zone');
         const rightZone = document.getElementById('drive-right-zone');
         let leftPressed = false;
         let rightPressed = false;
 
-        // === НОВЫЙ ЭЛЕМЕНТ: КНОПКА УСКОРЕНИЯ ===
-        const thrustContainer = document.getElementById('thrust-container');
-        const thrustBarFill = document.getElementById('thrust-bar-fill');
+        // === УСКОРЕНИЕ ===
         let thrustPower = 0;
         let thrustIncreasing = false;
         let thrustDecreasing = false;
         const maxThrustPower = 1;
-        const thrustRiseRate = 0.3;   // в секунду
-        const thrustFallRate = 0.1;    // в секунду
+        const thrustRiseRate = 0.3;
+        const thrustFallRate = 0.1;
 
         function setLeftPressed(state) {
-            if (currentState !== MODE.MAP || !inShip) {
-                state = false;
-            }
+            if (currentState !== MODE.MAP || !inShip) state = false;
             leftPressed = state;
             leftZone.classList.toggle('pressed', state);
         }
         function setRightPressed(state) {
-            if (currentState !== MODE.MAP || !inShip) {
-                state = false;
-            }
+            if (currentState !== MODE.MAP || !inShip) state = false;
             rightPressed = state;
             rightZone.classList.toggle('pressed', state);
         }
@@ -874,13 +897,12 @@
         rightZone.addEventListener('touchend', (e) => { e.preventDefault(); setRightPressed(false); });
         rightZone.addEventListener('touchcancel', () => setRightPressed(false));
 
-        // Сброс нажатий, если мышь отпущена вне зон
         window.addEventListener('mouseup', () => {
             setLeftPressed(false);
             setRightPressed(false);
         });
 
-        // === ОБРАБОТЧИКИ ДЛЯ КНОПКИ УСКОРЕНИЯ ===
+        // === ОБРАБОТЧИКИ УСКОРЕНИЯ (НОВЫЙ ЭЛЕМЕНТ) ===
         function handleThrustStart(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -895,24 +917,22 @@
             thrustIncreasing = false;
             thrustDecreasing = true;
         }
-        thrustContainer.addEventListener('mousedown', handleThrustStart);
-        thrustContainer.addEventListener('mouseup', handleThrustEnd);
-        thrustContainer.addEventListener('mouseleave', handleThrustEnd);
-        thrustContainer.addEventListener('touchstart', handleThrustStart, { passive: false });
-        thrustContainer.addEventListener('touchend', handleThrustEnd, { passive: false });
-        thrustContainer.addEventListener('touchcancel', handleThrustEnd, { passive: false });
+        thrustPanel.addEventListener('mousedown', handleThrustStart);
+        thrustPanel.addEventListener('mouseup', handleThrustEnd);
+        thrustPanel.addEventListener('mouseleave', handleThrustEnd);
+        thrustPanel.addEventListener('touchstart', handleThrustStart, { passive: false });
+        thrustPanel.addEventListener('touchend', handleThrustEnd, { passive: false });
+        thrustPanel.addEventListener('touchcancel', handleThrustEnd, { passive: false });
 
-        // Функция обновления видимости зон управления, джойстика и кнопки скорости
+        // === УПРАВЛЕНИЕ ВИДИМОСТЬЮ ЗОН И ДЖОЙСТИКА ===
         function updateDriveZonesVisibility() {
             if (inShip && currentState === MODE.MAP) {
                 leftZone.classList.remove('hidden');
                 rightZone.classList.remove('hidden');
                 joyZone.classList.add('hidden');
-                thrustContainer.classList.remove('hidden');
             } else {
                 leftZone.classList.add('hidden');
                 rightZone.classList.add('hidden');
-                thrustContainer.classList.add('hidden');
                 if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR) {
                     joyZone.classList.remove('hidden');
                 } else {
@@ -921,7 +941,6 @@
             }
         }
 
-        // === УПРАВЛЕНИЕ ВИДИМОСТЬЮ КНОПКИ ПАУЗЫ ===
         function updatePauseButtonVisibility() {
             if (currentState === MODE.TUNNEL || currentState === MODE.PAUSED) {
                 pauseBtn.style.display = 'flex';
@@ -947,7 +966,7 @@
                 pauseMenu.classList.add('active');
             }
             updatePauseButtonVisibility();
-            updateDriveZonesVisibility(); // скрыть зоны при паузе
+            updateDriveZonesVisibility();
         }
         pauseBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1225,9 +1244,7 @@
             }
             shopCamera.zoom += (shopCamera.targetZoom - shopCamera.zoom) * 5 * deltaTime;
             checkShopEntry();
-            if (currentShop && shopZones[currentShop].colorKey !== 'playerShape') {
-                checkCashRegister();
-            }
+            checkCashRegister();
             if (activeColorPicker && currentShop) {
                 const shop = shopZones[currentShop];
                 const cr = shop.cashRegister;
@@ -1244,13 +1261,27 @@
             if (activeColorPicker === shopKey && colorPickerMenu.classList.contains('active')) return;
             activeColorPicker = shopKey;
             const shop = shopZones[shopKey];
-            pickerTitle.innerText = `Select ${shop.name} Color`;
+            
+            if (shopKey === 'map') {
+                pickerTitle.innerText = 'Select Map Gradient';
+                colorOptions.style.display = 'none';
+                gradientOptions.style.display = 'flex';
+                const currentGrad = customization.mapGradient;
+                gradientBtns.forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (btn.dataset.gradient === currentGrad) btn.classList.add('selected');
+                });
+            } else {
+                pickerTitle.innerText = `Select ${shop.name} Color`;
+                colorOptions.style.display = 'flex';
+                gradientOptions.style.display = 'none';
+                const currentColor = customization[shop.colorKey];
+                colorBtns.forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (btn.dataset.color === currentColor) btn.classList.add('selected');
+                });
+            }
             colorPickerMenu.classList.add('active');
-            const currentColor = customization[shop.colorKey];
-            colorBtns.forEach(btn => {
-                btn.classList.remove('selected');
-                if (btn.dataset.color === currentColor) btn.classList.add('selected');
-            });
         }
 
         function closeColorPicker() {
@@ -1269,11 +1300,31 @@
                 });
             }
         }
+
+        function selectGradient(gradient) {
+            if (activeColorPicker === 'map') {
+                customization.mapGradient = gradient;
+                localStorage.setItem('mapGradient', gradient);
+                gradientBtns.forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (btn.dataset.gradient === gradient) btn.classList.add('selected');
+                });
+            }
+        }
+
         colorBtns.forEach(btn => {
             btn.addEventListener('click', () => selectColor(btn.dataset.color));
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 selectColor(btn.dataset.color);
+            }, { passive: false });
+        });
+
+        gradientBtns.forEach(btn => {
+            btn.addEventListener('click', () => selectGradient(btn.dataset.gradient));
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                selectGradient(btn.dataset.gradient);
             }, { passive: false });
         });
 
@@ -1338,12 +1389,11 @@
                 hint.style.display = 'none';
                 spaceship.vx = 0;
                 spaceship.vy = 0;
-                spaceship.angularVelocity = 0; // сброс угловой скорости
+                spaceship.angularVelocity = 0;
                 thrustPower = 0;
                 thrustIncreasing = false;
                 thrustDecreasing = false;
-                thrustBarFill.style.width = '0%';
-                // Сброс нажатых зон
+                thrustPanelFill.style.width = '0%';
                 setLeftPressed(false);
                 setRightPressed(false);
                 updatePauseButtonVisibility();
@@ -1364,12 +1414,11 @@
                 hint.innerText = "Piloting Ship (Press EXIT-CONTROL to leave seat)";
                 shipControlPanel.classList.add('visible');
                 shipInteriorHint.style.display = 'none';
-                // Сбрасываем ускорение и угловую скорость при входе
                 thrustPower = 0;
                 thrustIncreasing = false;
                 thrustDecreasing = false;
                 spaceship.angularVelocity = 0;
-                thrustBarFill.style.width = '0%';
+                thrustPanelFill.style.width = '0%';
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
             } else if (inShipInterior) {
@@ -1384,8 +1433,6 @@
                 hint.innerText = "Fly to the Portal";
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
-            } else if (inShip) {
-                // handled by exit-control-btn
             } else if (spaceship.built) {
                 inShip = true;
                 player.x = spaceship.x;
@@ -1394,12 +1441,11 @@
                 hint.style.display = 'block';
                 hint.innerText = "Piloting Ship (Press EXIT-CONTROL to leave seat)";
                 shipControlPanel.classList.add('visible');
-                // Сбрасываем ускорение и угловую скорость
                 thrustPower = 0;
                 thrustIncreasing = false;
                 thrustDecreasing = false;
                 spaceship.angularVelocity = 0;
-                thrustBarFill.style.width = '0%';
+                thrustPanelFill.style.width = '0%';
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
             }
@@ -1520,11 +1566,38 @@
             resetTunnel();
         }
 
-        // === ФИКСИРОВАННЫЙ ЦВЕТ ===
+        // === ЦВЕТА ===
         function getCustomColor(colorKey) {
             const colorName = customization[colorKey];
             if (colorName === 'default' || !colorValues[colorName]) return '#ffffff';
             return colorValues[colorName];
+        }
+
+        // === ФОН ===
+        function applyBackground() {
+            const gradType = customization.mapGradient;
+            if (gradType === 'black') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                let gradient;
+                if (gradType === 'yellow-blue') {
+                    gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#ffff00');
+                    gradient.addColorStop(1, '#00ffff');
+                } else if (gradType === 'red-blue') {
+                    gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#ff4444');
+                    gradient.addColorStop(0.5, '#aa44ff');
+                    gradient.addColorStop(1, '#4444ff');
+                } else {
+                    gradient = '#000000';
+                }
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = 0.3;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.globalAlpha = 1;
+            }
         }
 
         // --- MAP LOGIC ---
@@ -1550,35 +1623,28 @@
 
             // Control Logic
             if (inShip) {
-                // === Управление поворотом с инерцией ===
-                const turnAcceleration = 50; // рад/с²
-                const maxTurnSpeed = 70;      // рад/с
-                const angularFriction = 0.99;   // трение
+                const turnAcceleration = 40;
+                const maxTurnSpeed = 60;
+                const angularFriction = 0.99;
 
                 if (leftPressed && !rightPressed) {
                     spaceship.angularVelocity -= turnAcceleration * deltaTime;
                 } else if (rightPressed && !leftPressed) {
                     spaceship.angularVelocity += turnAcceleration * deltaTime;
                 }
-                // Ограничиваем максимальную угловую скорость
                 spaceship.angularVelocity = Math.max(-maxTurnSpeed, Math.min(maxTurnSpeed, spaceship.angularVelocity));
-                // Применяем трение
                 spaceship.angularVelocity *= angularFriction;
-                // Обновляем угол
                 spaceship.angle += spaceship.angularVelocity * deltaTime;
 
-                // Управление ускорением (кнопка скорости)
                 if (thrustIncreasing) {
                     thrustPower = Math.min(maxThrustPower, thrustPower + thrustRiseRate * deltaTime);
                 } else if (thrustDecreasing) {
                     thrustPower = Math.max(0, thrustPower - thrustFallRate * deltaTime);
                 }
-                // Применяем ускорение
                 const shipThrust = 0.15;
                 spaceship.vx += Math.cos(spaceship.angle) * shipThrust * thrustPower;
                 spaceship.vy += Math.sin(spaceship.angle) * shipThrust * thrustPower;
 
-                // трение линейное
                 spaceship.vx *= 0.985;
                 spaceship.vy *= 0.985;
                 spaceship.x += spaceship.vx;
@@ -1588,8 +1654,7 @@
                 player.y = spaceship.y;
                 player.angle = spaceship.angle;
 
-                // Обновляем прогресс-бар
-                thrustBarFill.style.width = `${thrustPower * 100}%`;
+                thrustPanelFill.style.width = `${thrustPower * 100}%`;
             } else if (!inShipInterior) {
                 if (joystick.active) {
                     player.vx += joystick.dx * player.speed;
@@ -1652,7 +1717,6 @@
                 shipInteriorPlayer.angle = Math.atan2(shipInteriorPlayer.vy, shipInteriorPlayer.vx);
             }
 
-            // === ПРОВЕРКА ЗОНЫ КАБИНЫ ===
             if (shipInteriorPlayer.x > shipInteriorCockpitZone.x &&
                 shipInteriorPlayer.x < shipInteriorCockpitZone.x + shipInteriorCockpitZone.w &&
                 shipInteriorPlayer.y > shipInteriorCockpitZone.y &&
@@ -1665,7 +1729,6 @@
                 if (!inShip) interactBtn.classList.remove('visible');
             }
 
-            // Check exit zone
             if (shipInteriorPlayer.x > shipInteriorExitZone.x &&
                 shipInteriorPlayer.x < shipInteriorExitZone.x + shipInteriorExitZone.w &&
                 shipInteriorPlayer.y > shipInteriorExitZone.y &&
@@ -1684,7 +1747,63 @@
             }
         }
 
-        // --- ENVIRONMENT (только часы и небесные тела) ---
+        // === РАДАР ===
+        function drawRadar() {
+            if (!inShip || !radarCanvas) return;
+            const w = radarCanvas.width;
+            const h = radarCanvas.height;
+            radarCtx.clearRect(0, 0, w, h);
+
+            // Внешняя окружность
+            radarCtx.beginPath();
+            radarCtx.arc(w/2, h/2, w/2 - 2, 0, Math.PI*2);
+            radarCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+            radarCtx.lineWidth = 1;
+            radarCtx.stroke();
+
+            const cx = w/2;
+            const cy = h/2;
+            const radius = w/2 - 6;
+
+            // Маркеры направлений
+            function drawMarker(angle, color) {
+                const x = cx + Math.cos(angle) * radius;
+                const y = cy + Math.sin(angle) * radius;
+                radarCtx.beginPath();
+                radarCtx.arc(x, y, 4, 0, Math.PI*2);
+                radarCtx.fillStyle = color;
+                radarCtx.shadowBlur = 8;
+                radarCtx.shadowColor = color;
+                radarCtx.fill();
+                radarCtx.shadowBlur = 0;
+            }
+
+            const angleToPortal = Math.atan2(portal.y - spaceship.y, portal.x - spaceship.x);
+            const angleToShop = Math.atan2(shopPortal.y - spaceship.y, shopPortal.x - spaceship.x);
+            const angleToBase = Math.atan2((hangar.y + hangar.h/2) - spaceship.y, (hangar.x + hangar.w/2) - spaceship.x);
+
+            drawMarker(angleToPortal, portal.color);
+            drawMarker(angleToShop, shopPortal.color);
+            drawMarker(angleToBase, '#4caf50');
+
+            // Кораблик в центре (направление)
+            radarCtx.save();
+            radarCtx.translate(cx, cy);
+            radarCtx.rotate(spaceship.angle);
+            radarCtx.beginPath();
+            radarCtx.moveTo(10, 0);
+            radarCtx.lineTo(-6, -6);
+            radarCtx.lineTo(-6, 6);
+            radarCtx.closePath();
+            radarCtx.fillStyle = getCustomColor('playerColor');
+            radarCtx.shadowBlur = 10;
+            radarCtx.shadowColor = getCustomColor('playerColor');
+            radarCtx.fill();
+            radarCtx.shadowBlur = 0;
+            radarCtx.restore();
+        }
+
+        // --- ENVIRONMENT ---
         function updateEnvironment(deltaTime) {
             const timeScale = (HOURS_IN_DAY * 3600) / CYCLE_DURATION_SECONDS;
             gameTimeSeconds += deltaTime * timeScale;
@@ -1735,6 +1854,7 @@
         // --- DRAWING ---
         function drawMap(colors) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            applyBackground();
             drawCelestialBodies(colors);
             const gridSize = 100;
             const offsetX = -player.x % gridSize;
@@ -1801,22 +1921,18 @@
 
                 const flicker = Math.random() * 0.1 + 0.95;
                 const totalLength = 280 * thrustPower * flicker;
-                const widePointDist = totalLength * 0.20; // Точка максимального расширения (30% длины)
-                const maxWidth = 50 * thrustPower;      // Максимальная ширина в "плечах"
+                const widePointDist = totalLength * 0.20;
+                const maxWidth = 50 * thrustPower;
 
-                // 1. Точка выхода (узкое сопло)
                 const pStart = { x: nozzleX, y: nozzleY };
-                // 2. Левое "плечо" (расширение)
                 const pLeft = { 
                     x: nozzleX + backX * widePointDist + sideX * maxWidth, 
                     y: nozzleY + backY * widePointDist + sideY * maxWidth 
                 };
-                // 3. Правое "плечо" (расширение)
                 const pRight = { 
                     x: nozzleX + backX * widePointDist - sideX * maxWidth, 
                     y: nozzleY + backY * widePointDist - sideY * maxWidth 
                 };
-                // 4. Острый кончик (схождение)
                 const pEnd = { 
                     x: nozzleX + backX * totalLength, 
                     y: nozzleY + backY * totalLength 
@@ -1830,7 +1946,6 @@
                 ctx.shadowBlur = 100 * thrustPower;
                 ctx.shadowColor = trailColor;
 
-                // Рисуем замкнутый ромб (две сплюснутые V, соединенные основаниями)
                 ctx.beginPath();
                 ctx.moveTo(pStart.x, pStart.y);
                 ctx.lineTo(pLeft.x, pLeft.y);
@@ -1910,7 +2025,11 @@
                 ctx.shadowBlur = 0;
                 ctx.restore();
             }
-            drawCompass(colors);
+
+            // Рисуем компас только если игрок НЕ в корабле
+            if (!inShip) {
+                drawCompass(colors);
+            }
         }
 
         function drawPlayerTrail(colors) {
@@ -2027,6 +2146,7 @@
 
         function drawShop(colors) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            applyBackground();
             ctx.save();
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.scale(shopCamera.zoom, shopCamera.zoom);
@@ -2121,8 +2241,7 @@
 
         function drawTunnel(colors) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            applyBackground();
             ctx.save();
             ctx.shadowBlur = 100;
             ctx.shadowColor = getCustomColor('tunnelColor');
@@ -2179,6 +2298,7 @@
             if (currentState === MODE.MAP) {
                 updateMap(deltaTime);
                 drawMap(colors);
+                if (inShip) drawRadar();
             } else if (currentState === MODE.TUNNEL) {
                 updateTunnel(deltaTime);
                 drawTunnel(colors);
