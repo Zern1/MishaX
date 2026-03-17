@@ -72,26 +72,6 @@
             margin-top: 2px;
             color: #ffffff;
         }
-        #time-bar-container {
-            position: fixed;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 600px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            z-index: 99;
-            transition: opacity 0.5s;
-        }
-        #time-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: #ffffff;
-            transition: width 1s linear;
-        }
         /* --- КНОПКА ПАУЗЫ --- */
         #pause-btn {
             position: fixed;
@@ -527,8 +507,6 @@
     <div id="tunnel-score">0</div>
     <div id="tunnel-timer">3</div>
     <div id="pause-btn">❚❚</div>
-    <div id="time-bar-container">
-        <div id="time-bar-fill"></div>
     </div>
     <div id="joystick-zone">
         <div class="joystick-base" id="joy-base">
@@ -622,11 +600,6 @@
         const joystick = {
             active: false, originX: 0, originY: 0, dx: 0, dy: 0, maxRadius: 35
         };
-
-        // Time System
-        const CYCLE_DURATION_SECONDS = 720;
-        const HOURS_IN_DAY = 24;
-        let gameTimeSeconds = 6 * 3600;
 
         // Tunnel Game State
         let tunnelPoints = [];
@@ -831,7 +804,6 @@
         const hint = document.getElementById('hint');
         const shopHint = document.getElementById('shop-hint');
         const shipInteriorHint = document.getElementById('ship-interior-hint');
-        const timeBarContainer = document.getElementById('time-bar-container');
         const tunnelScoreEl = document.getElementById('tunnel-score');
         const tunnelHint = document.getElementById('tunnel-hint');
         const tunnelTimerEl = document.getElementById('tunnel-timer');
@@ -1088,7 +1060,6 @@
             tunnelTimerEl.style.display = 'none';
             taskbar.classList.remove('hidden');
             joyZone.classList.remove('hidden');
-            timeBarContainer.style.opacity = '1';
             hint.style.display = 'block';
             shopHint.style.display = 'none';
             pauseBtn.style.display = 'flex';
@@ -1110,7 +1081,6 @@
             joyZone.classList.remove('hidden');
             hint.style.display = 'block';
             shopHint.style.display = 'none';
-            timeBarContainer.style.opacity = '1';
             pauseBtn.style.display = 'flex';
             player.x = shopPortal.x + 150;
             player.y = shopPortal.y;
@@ -1140,7 +1110,6 @@
             joyZone.classList.remove('hidden');
             hint.style.display = 'none';
             shopHint.style.display = 'block';
-            timeBarContainer.style.opacity = '0';
             pauseBtn.style.display = 'flex';
             updatePauseButtonVisibility();
             updateDriveZonesVisibility();
@@ -1460,7 +1429,6 @@
             tunnelTimerEl.style.display = 'block';
             taskbar.classList.add('hidden');
             joyZone.classList.add('hidden');
-            timeBarContainer.style.opacity = '0';
             hint.style.display = 'none';
             shopHint.style.display = 'none';
             pauseBtn.style.display = 'flex';
@@ -1602,9 +1570,7 @@
 
         // --- MAP LOGIC ---
         function updateMap(deltaTime) {
-            const timeScale = (HOURS_IN_DAY * 3600) / CYCLE_DURATION_SECONDS;
-            gameTimeSeconds += deltaTime * timeScale;
-            if (gameTimeSeconds >= HOURS_IN_DAY * 3600) gameTimeSeconds -= HOURS_IN_DAY * 3600;
+            // Удалён блок обновления игрового времени
 
             if (spaceship.building) {
                 spaceship.buildProgress += deltaTime * 20;
@@ -1623,9 +1589,9 @@
 
             // Control Logic
             if (inShip) {
-                const turnAcceleration = 40;
+                const turnAcceleration = 30;
                 const maxTurnSpeed = 60;
-                const angularFriction = 0.99;
+                const angularFriction = 0.98;
 
                 if (leftPressed && !rightPressed) {
                     spaceship.angularVelocity -= turnAcceleration * deltaTime;
@@ -1641,7 +1607,7 @@
                 } else if (thrustDecreasing) {
                     thrustPower = Math.max(0, thrustPower - thrustFallRate * deltaTime);
                 }
-                const shipThrust = 0.15;
+                const shipThrust = 0.30;
                 spaceship.vx += Math.cos(spaceship.angle) * shipThrust * thrustPower;
                 spaceship.vy += Math.sin(spaceship.angle) * shipThrust * thrustPower;
 
@@ -1803,59 +1769,20 @@
             radarCtx.restore();
         }
 
-        // --- ENVIRONMENT ---
-        function updateEnvironment(deltaTime) {
-            const timeScale = (HOURS_IN_DAY * 3600) / CYCLE_DURATION_SECONDS;
-            gameTimeSeconds += deltaTime * timeScale;
-            if (gameTimeSeconds >= HOURS_IN_DAY * 3600) gameTimeSeconds -= HOURS_IN_DAY * 3600;
-
-            const totalSeconds = Math.floor(gameTimeSeconds);
-            const h = Math.floor(totalSeconds / 3600);
-            const m = Math.floor((totalSeconds % 3600) / 60);
-            document.getElementById('clock').innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-
-            const progress = (gameTimeSeconds / (24 * 3600)) * 100;
-            document.getElementById('time-bar-fill').style.width = `${progress}%`;
-
-            return { dayFactor: 1, textColor: '#ffffff', isNight: false };
+        // === НОВАЯ ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ РЕАЛЬНОГО ВРЕМЕНИ ===
+        function updateRealTimeClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            clockEl.innerText = `${hours}:${minutes}`;
         }
-
-        function getCelestialPosition(gameTimeSeconds) {
-            const totalSeconds = 24 * 3600;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const diagonalLength = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) * 1.5;
-            const angle = Math.atan2(canvas.height, canvas.width);
-            const sunrise = 6 * 3600;
-            const sunset = 18 * 3600;
-            let celestialType = 'sun';
-            let bodyProgress = 0;
-            let isVisible = false;
-            if (gameTimeSeconds >= sunrise && gameTimeSeconds < sunset) {
-                celestialType = 'sun';
-                bodyProgress = (gameTimeSeconds - sunrise) / (sunset - sunrise);
-                isVisible = true;
-            } else {
-                celestialType = 'moon';
-                if (gameTimeSeconds >= sunset) {
-                    bodyProgress = (gameTimeSeconds - sunset) / (12 * 3600);
-                } else {
-                    bodyProgress = 0.5 + (gameTimeSeconds / (12 * 3600));
-                }
-                isVisible = true;
-            }
-            const distanceAlongLine = (bodyProgress - 0.5) * diagonalLength;
-            const x = centerX + Math.cos(angle) * distanceAlongLine;
-            const y = centerY + Math.sin(angle) * distanceAlongLine;
-            const z = Math.sin(bodyProgress * Math.PI) * 400 - 100;
-            return { x, y, z, bodyProgress, celestialType, isVisible };
-        }
+        setInterval(updateRealTimeClock, 1000);
+        updateRealTimeClock(); // установить сразу
 
         // --- DRAWING ---
-        function drawMap(colors) {
+        function drawMap() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             applyBackground();
-            drawCelestialBodies(colors);
             const gridSize = 100;
             const offsetX = -player.x % gridSize;
             const offsetY = -player.y % gridSize;
@@ -1907,9 +1834,10 @@
             ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
             ctx.fillRect(terminalZone.x, terminalZone.y, terminalZone.w, terminalZone.h);
 
+            // Реактивная струя
             if (inShip && thrustPower > 0.01) {
                 const trailColor = getCustomColor('trailColor');
-                const nozzleOffset = 65; 
+                const nozzleOffset = 65;
 
                 const backX = -Math.cos(spaceship.angle);
                 const backY = -Math.sin(spaceship.angle);
@@ -1924,36 +1852,72 @@
                 const widePointDist = totalLength * 0.20;
                 const maxWidth = 50 * thrustPower;
 
+                // Точки внешней струи
                 const pStart = { x: nozzleX, y: nozzleY };
-                const pLeft = { 
-                    x: nozzleX + backX * widePointDist + sideX * maxWidth, 
-                    y: nozzleY + backY * widePointDist + sideY * maxWidth 
+                const pLeft = {
+                    x: nozzleX + backX * widePointDist + sideX * maxWidth,
+                    y: nozzleY + backY * widePointDist + sideY * maxWidth
                 };
-                const pRight = { 
-                    x: nozzleX + backX * widePointDist - sideX * maxWidth, 
-                    y: nozzleY + backY * widePointDist - sideY * maxWidth 
+                const pRight = {
+                    x: nozzleX + backX * widePointDist - sideX * maxWidth,
+                    y: nozzleY + backY * widePointDist - sideY * maxWidth
                 };
-                const pEnd = { 
-                    x: nozzleX + backX * totalLength, 
-                    y: nozzleY + backY * totalLength 
+                const pEnd = {
+                    x: nozzleX + backX * totalLength,
+                    y: nozzleY + backY * totalLength
                 };
 
                 ctx.save();
                 ctx.globalCompositeOperation = 'lighter';
                 ctx.globalAlpha = 0.7 * thrustPower;
-                ctx.strokeStyle = trailColor;
-                ctx.lineWidth = 5;
                 ctx.shadowBlur = 100 * thrustPower;
-                ctx.shadowColor = trailColor;
 
+                // Внешняя струя
+                ctx.strokeStyle = trailColor;
+                ctx.shadowColor = trailColor;
+                ctx.lineWidth = 5;
                 ctx.beginPath();
                 ctx.moveTo(pStart.x, pStart.y);
                 ctx.lineTo(pLeft.x, pLeft.y);
                 ctx.lineTo(pEnd.x, pEnd.y);
                 ctx.lineTo(pRight.x, pRight.y);
                 ctx.closePath();
-                
-                ctx.stroke(); 
+                ctx.stroke();
+
+                // Внутренняя струя
+                const innerScale = 0.5;
+                const innerTotalLength = totalLength * innerScale;
+                const innerMaxWidth = maxWidth * innerScale;
+                const innerWidePointDist = innerTotalLength * 0.20;
+
+                // Сдвиг старта
+                const startOffset = (totalLength - innerTotalLength) / 4;
+
+                const innerStartX = nozzleX + backX * startOffset;
+                const innerStartY = nozzleY + backY * startOffset;
+
+                const innerWideX = innerStartX + backX * innerWidePointDist;
+                const innerWideY = innerStartY + backY * innerWidePointDist;
+
+                const innerLeftX = innerWideX + sideX * innerMaxWidth;
+                const innerLeftY = innerWideY + sideY * innerMaxWidth;
+                const innerRightX = innerWideX - sideX * innerMaxWidth;
+                const innerRightY = innerWideY - sideY * innerMaxWidth;
+
+                const innerEndX = innerStartX + backX * innerTotalLength;
+                const innerEndY = innerStartY + backY * innerTotalLength;
+
+                ctx.strokeStyle = '#ff0000';
+                ctx.shadowColor = '#ff0000';
+                ctx.lineWidth = 5 * innerScale; // ≈ 2.5
+                ctx.beginPath();
+                ctx.moveTo(innerStartX, innerStartY);
+                ctx.lineTo(innerLeftX, innerLeftY);
+                ctx.lineTo(innerEndX, innerEndY);
+                ctx.lineTo(innerRightX, innerRightY);
+                ctx.closePath();
+                ctx.stroke();
+
                 ctx.restore();
             }
 
@@ -1981,7 +1945,7 @@
 
             ctx.restore();
 
-            if (!inShip) drawPlayerTrail(colors);
+            if (!inShip) drawPlayerTrail();
 
             ctx.save();
             ctx.translate(canvas.width / 2 + portal.x - player.x, canvas.height / 2 + portal.y - player.y);
@@ -2028,11 +1992,11 @@
 
             // Рисуем компас только если игрок НЕ в корабле
             if (!inShip) {
-                drawCompass(colors);
+                drawCompass();
             }
         }
 
-        function drawPlayerTrail(colors) {
+        function drawPlayerTrail() {
             if (mapTrail.length < 2) return;
             const trailColor = getCustomColor('trailColor');
             ctx.save();
@@ -2058,46 +2022,7 @@
             ctx.restore();
         }
 
-        function drawCelestialBodies(colors) {
-            const celestial = getCelestialPosition(gameTimeSeconds);
-            if (!celestial.isVisible) return;
-            const baseSize = celestial.celestialType === 'sun' ? 25 : 22;
-            const scale = Math.max(0.3, 1 + celestial.z / 600);
-            const size = baseSize * scale;
-            const alpha = Math.max(0, Math.min(1, 0.4 + celestial.z / 400));
-            if (celestial.z < -300) return;
-            ctx.save();
-            if (celestial.celestialType === 'sun') {
-                ctx.shadowBlur = 300 * scale;
-                ctx.fillStyle = '#F0E68C';
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(celestial.x, celestial.y, size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 200 * scale;
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(celestial.x, celestial.y, size * 0.6, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                ctx.shadowBlur = 180 * scale;
-                ctx.shadowColor = '#aaccff';
-                ctx.fillStyle = '#f5f8ff';
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(celestial.x, celestial.y, size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 80 * scale;
-                ctx.fillStyle = '#e8f0ff';
-                ctx.beginPath();
-                ctx.arc(celestial.x, celestial.y, size * 0.6, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-            ctx.restore();
-        }
-
-        function drawCompass(colors) {
+        function drawCompass() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const compassRadius = 50;
@@ -2144,7 +2069,7 @@
             ctx.restore();
         }
 
-        function drawShop(colors) {
+        function drawShop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             applyBackground();
             ctx.save();
@@ -2208,7 +2133,7 @@
             ctx.restore();
         }
 
-        function drawShipInterior(colors) {
+        function drawShipInterior() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2239,7 +2164,7 @@
             ctx.restore();
         }
 
-        function drawTunnel(colors) {
+        function drawTunnel() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             applyBackground();
             ctx.save();
@@ -2293,21 +2218,20 @@
             if (!lastTime) lastTime = timestamp;
             const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
             lastTime = timestamp;
-            const timeDelta = deltaTime * (currentState === MODE.SHOP ? 2 : 1);
-            const colors = updateEnvironment(timeDelta);
+
             if (currentState === MODE.MAP) {
                 updateMap(deltaTime);
-                drawMap(colors);
+                drawMap();
                 if (inShip) drawRadar();
             } else if (currentState === MODE.TUNNEL) {
                 updateTunnel(deltaTime);
-                drawTunnel(colors);
+                drawTunnel();
             } else if (currentState === MODE.SHOP) {
                 updateShop(deltaTime);
-                drawShop(colors);
+                drawShop();
             } else if (currentState === MODE.SHIP_INTERIOR) {
                 updateShipInterior(deltaTime);
-                drawShipInterior(colors);
+                drawShipInterior();
             }
             if (currentState !== MODE.PAUSED) {
                 requestAnimationFrame(loop);
