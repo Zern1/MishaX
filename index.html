@@ -27,66 +27,42 @@
         canvas {
             display: block;
         }
-        /* --- UI ELEMENTS --- */
-        #taskbar {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 600px;
-            height: 50px;
-            background: var(--ui-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--ui-border);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            color: var(--text-color);
-            z-index: 100;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        #taskbar.hidden {
-            transform: translateX(-50%) translateY(100px);
-        }
-        .clock-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-        .clock {
-            font-size: 1.2rem;
-            font-weight: 300;
-            letter-spacing: 1px;
-            color: #ffffff;
-        }
-        .score-display {
-            font-size: 0.8rem;
-            opacity: 0.7;
-            margin-top: 2px;
-            color: #ffffff;
-        }
-        /* --- КНОПКА ПАУЗЫ --- */
-        #pause-btn {
+        /* --- НОВЫЙ БЛОК ВРЕМЕНИ И РЕКОРДА (ВЕРХНИЙ ПРАВЫЙ УГОЛ) --- */
+        #top-right-info {
             position: fixed;
             top: 20px;
+            right: 80px; /* чтобы не налезать на кнопку паузы */
+            z-index: 200;
+            color: white;
+            text-align: right;
+            font-family: var(--font-family);
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            pointer-events: none; /* чтобы не мешать кликам по кнопке паузы */
+        }
+        #clock {
+            font-size: 2rem;
+            font-weight: 300;
+            line-height: 1.2;
+        }
+        #score-display {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        /* --- КНОПКА ПАУЗЫ (ОСТАЁТСЯ НА МЕСТЕ) --- */
+        #pause-btn {
+            position: fixed;
+            top: 25px;
             right: 20px;
             width: 40px;
-            height: 40px;
-            background: rgba(0,0,0,0.5);
+            height: 50px;
+            background: rgba(0, 0, 0, 0.3);
             border: 2px solid rgb(180, 255, 255);
-            border-radius: 8px;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 110;
+            z-index: 210;
             color: #fff;
             font-size: 20px;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
@@ -380,11 +356,12 @@
             background: #ffffff;
             transition: width 0.1s linear;
         }
-        /* === UNIVERSAL INTERACT BUTTON === */
+        /* === УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ (ФИКСИРОВАННАЯ) === */
         #interact-btn {
             position: fixed;
-            bottom: 500px;
-            left: 50px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
             background: rgba(0,0,0,0.5);
             border: 2px solid #ff0;
             padding: 10px 20px;
@@ -405,7 +382,7 @@
             pointer-events: auto;
         }
         #interact-btn:active {
-            transform: scale(0.95);
+            transform: translateX(-50%) scale(0.95);
         }
         /* === НОВАЯ ГОЛОГРАФИЧЕСКАЯ ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ === */
         #ship-control-panel {
@@ -500,6 +477,12 @@
     </style>
 </head>
 <body>
+    <!-- НОВЫЙ БЛОК ВРЕМЕНИ И РЕКОРДА -->
+    <div id="top-right-info">
+        <div id="clock">00:00</div>
+        <div id="score-display">Best: 0</div>
+    </div>
+
     <div id="hint">Fly to the Portal</div>
     <div id="shop-hint">Fly to corridor end to Exit</div>
     <div id="tunnel-hint">Tap left side to fly up, right side to fly down</div>
@@ -507,7 +490,7 @@
     <div id="tunnel-score">0</div>
     <div id="tunnel-timer">3</div>
     <div id="pause-btn">❚❚</div>
-    </div>
+
     <div id="joystick-zone">
         <div class="joystick-base" id="joy-base">
             <div class="joystick-stick" id="joy-stick"></div>
@@ -519,7 +502,7 @@
 
     <!-- НОВАЯ ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ (ГОЛОГРАММА) -->
     <div id="ship-control-panel">
-        <h3>✧ SHIP CONTROL ✧</h3>
+        <h3>SHIP CONTROL</h3>
         <canvas id="radarCanvas" width="100" height="100"></canvas>
         <div id="thrust-panel">
             <div id="thrust-panel-fill"></div>
@@ -527,12 +510,6 @@
         <button id="exit-control-btn">EXIT</button>
     </div>
 
-    <div id="taskbar">
-        <div class="clock-container">
-            <div class="clock" id="clock">00:00</div>
-            <div class="score-display" id="score-display">Best: 0</div>
-        </div>
-    </div>
     <div id="pause-menu">
         <div class="menu-box">
             <h2>PAUSE</h2>
@@ -566,7 +543,7 @@
             <div class="build-progress-bar" id="build-progress-bar"></div>
         </div>
     </div>
-    <!-- UNIVERSAL INTERACT BUTTON -->
+    <!-- УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ -->
     <div id="interact-btn">ENTER</div>
     <canvas id="gameCanvas"></canvas>
     <script>
@@ -799,7 +776,6 @@
         const resumeBtn = document.getElementById('resume-btn');
         const exitBtn = document.getElementById('exit-btn');
         const pauseMenu = document.getElementById('pause-menu');
-        const taskbar = document.getElementById('taskbar');
         const joyZone = document.getElementById('joystick-zone');
         const hint = document.getElementById('hint');
         const shopHint = document.getElementById('shop-hint');
@@ -1058,7 +1034,7 @@
             tunnelScoreEl.style.display = 'none';
             tunnelHint.style.display = 'none';
             tunnelTimerEl.style.display = 'none';
-            taskbar.classList.remove('hidden');
+            // нижняя панель удалена, поэтому убираем вызовы taskbar
             joyZone.classList.remove('hidden');
             hint.style.display = 'block';
             shopHint.style.display = 'none';
@@ -1077,7 +1053,7 @@
             shopCamera.zoom = 1;
             shopCamera.targetZoom = 1;
             closeColorPicker();
-            taskbar.classList.remove('hidden');
+            // нижняя панель удалена
             joyZone.classList.remove('hidden');
             hint.style.display = 'block';
             shopHint.style.display = 'none';
@@ -1106,7 +1082,7 @@
             tunnelScoreEl.style.display = 'none';
             tunnelHint.style.display = 'none';
             tunnelTimerEl.style.display = 'none';
-            taskbar.classList.add('hidden');
+            // нижняя панель удалена
             joyZone.classList.remove('hidden');
             hint.style.display = 'none';
             shopHint.style.display = 'block';
@@ -1427,7 +1403,7 @@
             tunnelScoreEl.style.display = 'block';
             tunnelHint.style.display = 'block';
             tunnelTimerEl.style.display = 'block';
-            taskbar.classList.add('hidden');
+            // нижняя панель удалена
             joyZone.classList.add('hidden');
             hint.style.display = 'none';
             shopHint.style.display = 'none';
@@ -1570,8 +1546,6 @@
 
         // --- MAP LOGIC ---
         function updateMap(deltaTime) {
-            // Удалён блок обновления игрового времени
-
             if (spaceship.building) {
                 spaceship.buildProgress += deltaTime * 20;
                 if (spaceship.buildProgress >= 100) {
@@ -2025,8 +1999,8 @@
         function drawCompass() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const compassRadius = 50;
-            const markerWidth = 8;
+            const compassRadius = 60;
+            const markerWidth = 3;
             const markerArc = Math.PI / 6;
             const dx1 = portal.x - player.x;
             const dy1 = portal.y - player.y;
@@ -2061,10 +2035,10 @@
             ctx.stroke();
             ctx.beginPath();
             ctx.arc(0, 0, compassRadius, angleToBase - markerArc / 2, angleToBase + markerArc / 2);
-            ctx.strokeStyle = '#4caf50';
+            ctx.strokeStyle = '#00FF00';
             ctx.lineWidth = markerWidth;
             ctx.shadowBlur = 10;
-            ctx.shadowColor = '#4caf50';
+            ctx.shadowColor = '#00FF00';
             ctx.stroke();
             ctx.restore();
         }
