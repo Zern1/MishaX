@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NeonWaveINSPACEE</title>
+    <title>NeonWaveINSPACEE(SPACE)</title>
     <style>
         :root {
             --ui-bg: rgba(255, 255, 255, 0.1);
@@ -31,13 +31,13 @@
         #top-right-info {
             position: fixed;
             top: 20px;
-            right: 80px;
+            right: 80px; /* чтобы не налезать на кнопку паузы */
             z-index: 200;
             color: white;
             text-align: right;
             font-family: var(--font-family);
             text-shadow: 0 0 10px rgba(255,255,255,0.5);
-            pointer-events: none;
+            pointer-events: none; /* чтобы не мешать кликам по кнопке паузы */
         }
         #clock {
             font-size: 2rem;
@@ -126,11 +126,6 @@
             transition: all 0.2s;
             width: 100%;
             -webkit-tap-highlight-color: transparent;
-        }
-        .menu-btn.disabled {
-            opacity: 0.3;
-            pointer-events: none;
-            border-color: #888;
         }
         .menu-btn:hover {
             background: rgba(255,255,255,0.2);
@@ -361,7 +356,7 @@
             background: #ffffff;
             transition: width 0.1s linear;
         }
-        /* === УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ === */
+        /* === УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ (ФИКСИРОВАННАЯ) === */
         #interact-btn {
             position: fixed;
             bottom: 30px;
@@ -395,6 +390,7 @@
             top: 50px;
             left: 20px;
             width: 30%;
+            height: 25%;
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -409,32 +405,35 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-width: 200px;
         }
         #ship-control-panel.visible {
             opacity: 1;
             pointer-events: auto;
         }
+        /* Новый контейнер для верхнего ряда (радар + кнопка) */
         .panel-row {
             display: flex;
             gap: 10px;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
+            height: 70%;
         }
         #radarCanvas {
-            flex: 1;
-            width: 100%;
-            height: auto;
+            flex: 0 1 auto;
+            width: auto;
+            max-width: 100%;
             aspect-ratio: 1/1;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 50%;
             box-shadow: 0 0 10px rgba(150, 255, 255, 0.5);
+            height: 100%;
         }
+        /* Кнопка навигации N.S.*/
         .nav-button {
             flex: 1;
             width: 100%;
-            height: auto;
-            aspect-ratio: 1/1;
+            height: 100%;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
@@ -444,7 +443,7 @@
             color: #fff;
             font-size: 1.2rem;
             font-weight: bold;
-            text-shadow: 0 0 10px cyan;
+            text-shadow: 0 0 10px rgb(170, 255, 255);
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
             -webkit-tap-highlight-color: transparent;
@@ -456,7 +455,7 @@
         }
         #thrust-panel {
             width: 100%;
-            height: 30px;
+            height: 20%;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
             overflow: hidden;
@@ -491,7 +490,7 @@
             height: 100%;
             background: transparent;
             backdrop-filter: blur(7px);
-            z-index: 260;
+            z-index: 260; /* выше pause-menu (200) */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -509,7 +508,7 @@
         #nav-menu h2, #nav-menu h3 {
             margin: 0 0 10px 0;
             color: #fff;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            text-shadow: 0 0 10px rgba(170, 255, 255, 0.3);
         }
         #nav-menu h3 {
             font-size: 1.2rem;
@@ -532,19 +531,27 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .planet-item:last-child {
-            border-bottom: none;
-        }
         .planet-item:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.2);
         }
         .planet-item.selected {
             background: rgba(76, 175, 80, 0.3);
-            color: #fff;
-            text-shadow: 0 0 5px #4caf50;
+            border-left: 3px solid #00FF00;
         }
+        .planet-item:last-child {
+            border-bottom: none;
+        }
+        /* Кнопка LIFT/LAND в меню */
         #nav-lift-land {
+            border-color: rgb(180, 255, 255);
+            color: rgb(180, 255, 255);
             margin-top: 10px;
+        }
+        #nav-lift-land.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+            border-color: gray;
+            color: gray;
         }
     </style>
 </head>
@@ -571,23 +578,25 @@
     <div id="drive-left-zone" class="drive-zone left hidden"></div>
     <div id="drive-right-zone" class="drive-zone right hidden"></div>
 
-    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ -->
+    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ (с новым верхним рядом) -->
     <div id="ship-control-panel">
         <div class="panel-row">
-            <canvas id="radarCanvas" width="100" height="100"></canvas>
-            <div id="nav-btn" class="nav-button">N.S. 12</div>
+            <canvas id="radarCanvas" width="170" height="170"></canvas>
+            <div id="nav-btn" class="nav-button">N.S.</div>
         </div>
         <div id="thrust-panel">
             <div id="thrust-panel-fill"></div>
         </div>
     </div>
 
-    <!-- НАВИГАЦИОННОЕ МЕНЮ -->
+    <!-- НАВИГАЦИОННОЕ МЕНЮ (стилизовано под меню паузы) -->
     <div id="nav-menu">
         <div class="menu-box">
-            <h2 id="nav-position">Position: Planet</h2>
-            <div class="planets-list" id="planets-container">
-                <!-- будут вставлены планеты -->
+            <h2 id="nav-position">Planet</h2>
+            <div class="planets-list">
+                <h3>Planets:</h3>
+                <div class="planet-item" id="planet-home">Home</div>
+                <!-- Здесь позже появятся другие планеты -->
             </div>
             <button class="menu-btn" id="nav-lift-land">LIFT</button>
         </div>
@@ -639,9 +648,10 @@
             SHOP: 'SHOP',
             PAUSED: 'PAUSED',
             SHIP_INTERIOR: 'SHIP_INTERIOR',
-            SPACE: 'SPACE' // новый режим
+            SPACE: 'SPACE'          // Новый режим космоса
         };
         let currentState = MODE.MAP;
+        let shipPreviousMode = MODE.MAP; // запоминает, в каком режиме находится корабль (карта или космос)
         let lastTime = 0;
 
         // Player (Map)
@@ -693,7 +703,7 @@
         let currentShop = null;
         let activeColorPicker = null;
 
-        // === SHOP WALLS ===
+        // === SHOP WALLS (коллизии) ===
         const shopWalls = [
             { x: -500, y: -500, w: 350, h: 10, type: 'collision' },
             { x: 150, y: -500, w: 350, h: 10, type: 'collision' },
@@ -882,25 +892,20 @@
         const buildProgressBar = document.getElementById('build-progress-bar');
         const interactBtn = document.getElementById('interact-btn');
         const shipControlPanel = document.getElementById('ship-control-panel');
+        // Новые элементы
         const navBtn = document.getElementById('nav-btn');
         const navMenu = document.getElementById('nav-menu');
         const navPosition = document.getElementById('nav-position');
         const navLiftLand = document.getElementById('nav-lift-land');
-        const planetsContainer = document.getElementById('planets-container');
+        const planetHome = document.getElementById('planet-home');
 
-        // === НАВИГАЦИЯ: ПЛАНЕТЫ ===
-        const planets = [
-            { name: 'Home Planet', x: 0, y: 0 }
-        ];
-        let selectedPlanet = -1; // индекс выбранной планеты
-
-        // === НОВЫЕ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ ===
+        // === НОВЫЕ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ УСКОРЕНИЕМ И РАДАР ===
         const thrustPanel = document.getElementById('thrust-panel');
         const thrustPanelFill = document.getElementById('thrust-panel-fill');
         const radarCanvas = document.getElementById('radarCanvas');
         const radarCtx = radarCanvas.getContext('2d');
 
-        // === ЗОНЫ УПРАВЛЕНИЯ ===
+        // === ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ ===
         const leftZone = document.getElementById('drive-left-zone');
         const rightZone = document.getElementById('drive-right-zone');
         let leftPressed = false;
@@ -914,16 +919,17 @@
         const thrustRiseRate = 0.3;
         const thrustFallRate = 0.1;
 
-        // === НАВИГАЦИОННОЕ МЕНЮ (ОТКРЫТО/ЗАКРЫТО) ===
+        // === НОВЫЙ ФЛАГ ДЛЯ НАВИГАЦИОННОГО МЕНЮ И ВЫБРАННАЯ ПЛАНЕТА ===
         let navMenuOpen = false;
+        let selectedPlanet = null; // null или 'home'
 
         function setLeftPressed(state) {
-            if (currentState !== MODE.MAP && currentState !== MODE.SPACE || !inShip) state = false;
+            if ((currentState !== MODE.MAP && currentState !== MODE.SPACE) || !inShip) state = false;
             leftPressed = state;
             leftZone.classList.toggle('pressed', state);
         }
         function setRightPressed(state) {
-            if (currentState !== MODE.MAP && currentState !== MODE.SPACE || !inShip) state = false;
+            if ((currentState !== MODE.MAP && currentState !== MODE.SPACE) || !inShip) state = false;
             rightPressed = state;
             rightZone.classList.toggle('pressed', state);
         }
@@ -947,7 +953,7 @@
             setRightPressed(false);
         });
 
-        // === ОБРАБОТЧИКИ УСКОРЕНИЯ ===
+        // === ОБРАБОТЧИКИ УСКОРЕНИЯ (НОВЫЙ ЭЛЕМЕНТ) ===
         function handleThrustStart(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -978,7 +984,7 @@
             } else {
                 leftZone.classList.add('hidden');
                 rightZone.classList.add('hidden');
-                if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR) {
+                if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR || currentState === MODE.SPACE) {
                     joyZone.classList.remove('hidden');
                 } else {
                     joyZone.classList.add('hidden');
@@ -1370,8 +1376,7 @@
         // === ASSEMBLER LOGIC ===
         let assemblerActive = false;
         function checkAssembler() {
-            if (currentState !== MODE.MAP) return;
-
+            // Assembler menu logic (only when not in ship/interior)
             if (!inShip && !inShipInterior) {
                 const inTerminal = player.x > terminalZone.x && player.x < terminalZone.x + terminalZone.w &&
                     player.y > terminalZone.y && player.y < terminalZone.y + terminalZone.h;
@@ -1388,12 +1393,13 @@
                 }
             }
 
+            // Interact button logic
             if (inShip) {
                 interactBtn.innerText = "EXIT";
                 interactBtn.classList.add('visible');
             } else if (inShipInterior) {
                 // handled by updateShipInterior
-            } else if (spaceship.built) {
+            } else if (spaceship.built && currentState === MODE.MAP) {
                 const dx = player.x - spaceship.x;
                 const dy = player.y - spaceship.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1422,9 +1428,10 @@
         // === УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ ===
         interactBtn.addEventListener('click', () => {
             if (inShipInterior && inCockpitZone) {
+                // Выход из интерьера в кабину (всегда возможно)
                 inShipInterior = false;
                 inShip = true;
-                currentState = MODE.MAP;
+                currentState = shipPreviousMode; // сохраняем режим
                 player.x = spaceship.x;
                 player.y = spaceship.y;
                 interactBtn.classList.remove('visible');
@@ -1440,19 +1447,10 @@
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
             } else if (inShipInterior) {
-                inShipInterior = false;
-                currentState = MODE.MAP;
-                player.x = spaceship.x;
-                player.y = spaceship.y + shipConfig.h / 2 + 50;
-                player.vx = 0;
-                player.vy = 0;
-                shipInteriorHint.style.display = 'none';
-                hint.style.display = 'block';
-                hint.innerText = "Fly to the Portal";
-                updatePauseButtonVisibility();
-                updateDriveZonesVisibility();
+                // Если в интерьере вне кабины - ничего не делаем
             } else if (inShip) {
-                // Выход из режима пилотирования в интерьер
+                // Вход в интерьер из кабины
+                shipPreviousMode = currentState;
                 inShip = false;
                 inShipInterior = true;
                 currentState = MODE.SHIP_INTERIOR;
@@ -1475,7 +1473,8 @@
                 setRightPressed(false);
                 updatePauseButtonVisibility();
                 updateDriveZonesVisibility();
-            } else if (spaceship.built) {
+            } else if (spaceship.built && currentState === MODE.MAP) {
+                // Вход в корабль снаружи (только на карте)
                 inShip = true;
                 player.x = spaceship.x;
                 player.y = spaceship.y;
@@ -1648,155 +1647,9 @@
             clockEl.innerText = `${hours}:${minutes}`;
         }
         setInterval(updateRealTimeClock, 1000);
-        updateRealTimeClock();
+        updateRealTimeClock(); // установить сразу
 
-        // === ОБНОВЛЕНИЕ НАВИГАЦИОННОГО МЕНЮ ===
-        function updateNavMenu() {
-            // Обновить позицию
-            if (currentState === MODE.MAP) {
-                navPosition.innerText = 'Position: Planet';
-            } else if (currentState === MODE.SPACE) {
-                navPosition.innerText = 'Position: KOCMOC';
-            }
-
-            // Обновить список планет
-            planetsContainer.innerHTML = '';
-            planets.forEach((planet, index) => {
-                const div = document.createElement('div');
-                div.className = 'planet-item' + (index === selectedPlanet ? ' selected' : '');
-                div.textContent = planet.name;
-                div.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    // Снять выделение со всех
-                    document.querySelectorAll('.planet-item').forEach(el => el.classList.remove('selected'));
-                    div.classList.add('selected');
-                    selectedPlanet = index;
-                    // Обновить состояние кнопки LAND
-                    updateNavButtonState();
-                });
-                planetsContainer.appendChild(div);
-            });
-
-            // Обновить текст и состояние кнопки
-            updateNavButtonState();
-        }
-
-        function updateNavButtonState() {
-            if (currentState === MODE.MAP) {
-                navLiftLand.textContent = 'LIFT';
-                navLiftLand.classList.remove('disabled');
-            } else if (currentState === MODE.SPACE) {
-                navLiftLand.textContent = 'LAND';
-                if (selectedPlanet === -1) {
-                    navLiftLand.classList.add('disabled');
-                } else {
-                    navLiftLand.classList.remove('disabled');
-                }
-            }
-        }
-
-        // === ФУНКЦИИ ВЗЛЁТА И ПОСАДКИ ===
-        function liftOff() {
-            if (currentState !== MODE.MAP || !inShip) return;
-            currentState = MODE.SPACE;
-            navMenuOpen = false;
-            navMenu.classList.remove('active');
-            selectedPlanet = -1; // сброс выбора
-            hint.innerText = 'You are in space. Use nav panel to land.';
-            updateDriveZonesVisibility();
-        }
-
-        function landOnPlanet() {
-            if (currentState !== MODE.SPACE || selectedPlanet === -1) return;
-            const planet = planets[selectedPlanet];
-            spaceship.x = planet.x;
-            spaceship.y = planet.y;
-            player.x = planet.x;
-            player.y = planet.y;
-            currentState = MODE.MAP;
-            navMenuOpen = false;
-            navMenu.classList.remove('active');
-            selectedPlanet = -1;
-            hint.innerText = 'Fly to the Portal';
-            updateDriveZonesVisibility();
-        }
-
-        // === НАВИГАЦИОННОЕ МЕНЮ (ОТКРЫТИЕ/ЗАКРЫТИЕ) ===
-        function toggleNavMenu() {
-            if (!inShip || (currentState !== MODE.MAP && currentState !== MODE.SPACE)) return;
-            navMenuOpen = !navMenuOpen;
-            if (navMenuOpen) {
-                updateNavMenu();
-                navMenu.classList.add('active');
-            } else {
-                navMenu.classList.remove('active');
-                // при закрытии сбрасывать выбранную планету? оставим как есть
-            }
-        }
-
-        navBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleNavMenu();
-        });
-        navBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleNavMenu();
-        }, { passive: false });
-
-        navMenu.addEventListener('click', (e) => {
-            if (e.target === navMenu) {
-                toggleNavMenu();
-            }
-        });
-
-        navLiftLand.addEventListener('click', () => {
-            if (currentState === MODE.MAP) {
-                liftOff();
-            } else if (currentState === MODE.SPACE && selectedPlanet !== -1) {
-                landOnPlanet();
-            }
-        });
-
-        // === MAP LOGIC (выделим движение корабля в отдельную функцию) ===
-        function updateShip(deltaTime) {
-            if (!inShip) return;
-
-            const turnAcceleration = 30;
-            const maxTurnSpeed = 60;
-            const angularFriction = 0.98;
-
-            if (leftPressed && !rightPressed) {
-                spaceship.angularVelocity -= turnAcceleration * deltaTime;
-            } else if (rightPressed && !leftPressed) {
-                spaceship.angularVelocity += turnAcceleration * deltaTime;
-            }
-            spaceship.angularVelocity = Math.max(-maxTurnSpeed, Math.min(maxTurnSpeed, spaceship.angularVelocity));
-            spaceship.angularVelocity *= angularFriction;
-            spaceship.angle += spaceship.angularVelocity * deltaTime;
-
-            if (thrustIncreasing) {
-                thrustPower = Math.min(maxThrustPower, thrustPower + thrustRiseRate * deltaTime);
-            } else if (thrustDecreasing) {
-                thrustPower = Math.max(0, thrustPower - thrustFallRate * deltaTime);
-            }
-            const shipThrust = 0.30;
-            spaceship.vx += Math.cos(spaceship.angle) * shipThrust * thrustPower;
-            spaceship.vy += Math.sin(spaceship.angle) * shipThrust * thrustPower;
-
-            spaceship.vx *= 0.985;
-            spaceship.vy *= 0.985;
-            spaceship.x += spaceship.vx;
-            spaceship.y += spaceship.vy;
-
-            player.x = spaceship.x;
-            player.y = spaceship.y;
-            player.angle = spaceship.angle;
-
-            thrustPanelFill.style.width = `${thrustPower * 100}%`;
-        }
-
+        // === MAP LOGIC ===
         function updateMap(deltaTime) {
             if (spaceship.building) {
                 spaceship.buildProgress += deltaTime * 20;
@@ -1813,11 +1666,41 @@
                 }
             }
 
-            // Движение корабля (если в корабле)
+            // Control Logic
             if (inShip && !navMenuOpen) {
-                updateShip(deltaTime);
-            } else if (!inShipInterior && !navMenuOpen) {
-                // Движение пешком
+                const turnAcceleration = 30;
+                const maxTurnSpeed = 60;
+                const angularFriction = 0.98;
+
+                if (leftPressed && !rightPressed) {
+                    spaceship.angularVelocity -= turnAcceleration * deltaTime;
+                } else if (rightPressed && !leftPressed) {
+                    spaceship.angularVelocity += turnAcceleration * deltaTime;
+                }
+                spaceship.angularVelocity = Math.max(-maxTurnSpeed, Math.min(maxTurnSpeed, spaceship.angularVelocity));
+                spaceship.angularVelocity *= angularFriction;
+                spaceship.angle += spaceship.angularVelocity * deltaTime;
+
+                if (thrustIncreasing) {
+                    thrustPower = Math.min(maxThrustPower, thrustPower + thrustRiseRate * deltaTime);
+                } else if (thrustDecreasing) {
+                    thrustPower = Math.max(0, thrustPower - thrustFallRate * deltaTime);
+                }
+                const shipThrust = 0.30;
+                spaceship.vx += Math.cos(spaceship.angle) * shipThrust * thrustPower;
+                spaceship.vy += Math.sin(spaceship.angle) * shipThrust * thrustPower;
+
+                spaceship.vx *= 0.985;
+                spaceship.vy *= 0.985;
+                spaceship.x += spaceship.vx;
+                spaceship.y += spaceship.vy;
+
+                player.x = spaceship.x;
+                player.y = spaceship.y;
+                player.angle = spaceship.angle;
+
+                thrustPanelFill.style.width = `${thrustPower * 100}%`;
+            } else if (!inShipInterior && !navMenuOpen && currentState === MODE.MAP) { // только на карте можно ходить пешком
                 if (joystick.active) {
                     player.vx += joystick.dx * player.speed;
                     player.vy += joystick.dy * player.speed;
@@ -1834,41 +1717,35 @@
             }
 
             // === UPDATE PLAYER TRAIL ===
-            const controlledEntity = inShip ? spaceship : player;
-            const speed = Math.sqrt(controlledEntity.vx * controlledEntity.vx + controlledEntity.vy * controlledEntity.vy);
-            if (speed > 0.1 && !inShipInterior && !inShip) {
-                mapTrail.push({ x: controlledEntity.x, y: controlledEntity.y, alpha: 1, isShip: inShip });
-                const maxLen = inShip ? mapTrailMaxLength * 2 : mapTrailMaxLength;
-                if (mapTrail.length > maxLen) mapTrail.shift();
-            }
-            for (let i = 0; i < mapTrail.length; i++) {
-                mapTrail[i].alpha -= 0.01;
-                if (mapTrail[i].alpha <= 0) {
-                    mapTrail.splice(i, 1);
-                    i--;
+            if (currentState === MODE.MAP && !inShip && !inShipInterior) {
+                const speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
+                if (speed > 0.1) {
+                    mapTrail.push({ x: player.x, y: player.y, alpha: 1, isShip: false });
+                    if (mapTrail.length > mapTrailMaxLength) mapTrail.shift();
+                }
+                for (let i = 0; i < mapTrail.length; i++) {
+                    mapTrail[i].alpha -= 0.01;
+                    if (mapTrail[i].alpha <= 0) {
+                        mapTrail.splice(i, 1);
+                        i--;
+                    }
                 }
             }
 
-            // === PORTAL COLLISION ===
-            const dx = player.x - portal.x;
-            const dy = player.y - portal.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (!inShip && !inShipInterior && dist < portal.radius + player.size) startTunnel();
+            // === PORTAL COLLISION (только на карте) ===
+            if (currentState === MODE.MAP && !inShip && !inShipInterior) {
+                const dx = player.x - portal.x;
+                const dy = player.y - portal.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < portal.radius + player.size) startTunnel();
 
-            const shopDx = player.x - shopPortal.x;
-            const shopDy = player.y - shopPortal.y;
-            const shopDist = Math.sqrt(shopDx * shopDx + shopDy * shopDy);
-            if (!inShip && !inShipInterior && shopDist < shopPortal.radius + player.size) enterShop();
+                const shopDx = player.x - shopPortal.x;
+                const shopDy = player.y - shopPortal.y;
+                const shopDist = Math.sqrt(shopDx * shopDx + shopDy * shopDy);
+                if (shopDist < shopPortal.radius + player.size) enterShop();
+            }
 
             checkAssembler();
-        }
-
-        function updateSpace(deltaTime) {
-            // В космосе всегда в корабле, движение без коллизий
-            if (inShip && !navMenuOpen) {
-                updateShip(deltaTime);
-            }
-            // Трейл в космосе не нужен, но можно оставить (пока нет)
         }
 
         // === SHIP INTERIOR UPDATE ===
@@ -1887,6 +1764,7 @@
                 shipInteriorPlayer.angle = Math.atan2(shipInteriorPlayer.vy, shipInteriorPlayer.vx);
             }
 
+            // Кабина
             if (shipInteriorPlayer.x > shipInteriorCockpitZone.x &&
                 shipInteriorPlayer.x < shipInteriorCockpitZone.x + shipInteriorCockpitZone.w &&
                 shipInteriorPlayer.y > shipInteriorCockpitZone.y &&
@@ -1896,24 +1774,33 @@
                 interactBtn.classList.add('visible');
             } else {
                 inCockpitZone = false;
-                if (!inShip) interactBtn.classList.remove('visible');
+                interactBtn.classList.remove('visible');
             }
 
+            // Выход наружу (зелёная зона) - в космосе неактивна
             if (shipInteriorPlayer.x > shipInteriorExitZone.x &&
                 shipInteriorPlayer.x < shipInteriorExitZone.x + shipInteriorExitZone.w &&
                 shipInteriorPlayer.y > shipInteriorExitZone.y &&
                 shipInteriorPlayer.y < shipInteriorExitZone.y + shipInteriorExitZone.h) {
-                inShipInterior = false;
-                currentState = MODE.MAP;
-                player.x = spaceship.x;
-                player.y = spaceship.y + shipConfig.h / 2 + 50;
-                player.vx = 0;
-                player.vy = 0;
-                shipInteriorHint.style.display = 'none';
-                hint.style.display = 'block';
-                hint.innerText = "Fly to the Portal";
-                updatePauseButtonVisibility();
-                updateDriveZonesVisibility();
+                
+                // Разрешаем выход наружу только если корабль на карте
+                if (shipPreviousMode === MODE.MAP) {
+                    // Выход на карту
+                    inShipInterior = false;
+                    currentState = MODE.MAP;
+                    player.x = spaceship.x;
+                    player.y = spaceship.y + shipConfig.h / 2 + 50;
+                    player.vx = 0;
+                    player.vy = 0;
+                    shipInteriorHint.style.display = 'none';
+                    hint.style.display = 'block';
+                    hint.innerText = "Fly to the Portal";
+                    updatePauseButtonVisibility();
+                    updateDriveZonesVisibility();
+                } else {
+                    // В космосе выйти наружу нельзя (можно добавить звук или сообщение)
+                    console.log("Cannot exit in space");
+                }
             }
         }
 
@@ -1924,6 +1811,7 @@
             const h = radarCanvas.height;
             radarCtx.clearRect(0, 0, w, h);
 
+            // Внешняя окружность
             radarCtx.beginPath();
             radarCtx.arc(w/2, h/2, w/2 - 2, 0, Math.PI*2);
             radarCtx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -1934,32 +1822,30 @@
             const cy = h/2;
             const radius = w/2 - 6;
 
-            function drawMarker(angle, color) {
-                const x = cx + Math.cos(angle) * radius;
-                const y = cy + Math.sin(angle) * radius;
-                radarCtx.beginPath();
-                radarCtx.arc(x, y, 4, 0, Math.PI*2);
-                radarCtx.fillStyle = color;
-                radarCtx.shadowBlur = 8;
-                radarCtx.shadowColor = color;
-                radarCtx.fill();
-                radarCtx.shadowBlur = 0;
-            }
-
             if (currentState === MODE.MAP) {
+                // Маркеры направлений только на карте
+                function drawMarker(angle, color) {
+                    const x = cx + Math.cos(angle) * radius;
+                    const y = cy + Math.sin(angle) * radius;
+                    radarCtx.beginPath();
+                    radarCtx.arc(x, y, 4, 0, Math.PI*2);
+                    radarCtx.fillStyle = color;
+                    radarCtx.shadowBlur = 8;
+                    radarCtx.shadowColor = color;
+                    radarCtx.fill();
+                    radarCtx.shadowBlur = 0;
+                }
+
                 const angleToPortal = Math.atan2(portal.y - spaceship.y, portal.x - spaceship.x);
                 const angleToShop = Math.atan2(shopPortal.y - spaceship.y, shopPortal.x - spaceship.x);
                 const angleToBase = Math.atan2((hangar.y + hangar.h/2) - spaceship.y, (hangar.x + hangar.w/2) - spaceship.x);
+
                 drawMarker(angleToPortal, portal.color);
                 drawMarker(angleToShop, shopPortal.color);
-                drawMarker(angleToBase, '#4caf50');
-            } else if (currentState === MODE.SPACE) {
-                // В космосе метка на домашнюю планету (0,0)
-                const angleToHome = Math.atan2(0 - spaceship.y, 0 - spaceship.x);
-                drawMarker(angleToHome, '#4caf50');
-            }
+                drawMarker(angleToBase, '#00FF00');
+            } // в космосе пока нет маркеров
 
-            // Кораблик в центре
+            // Кораблик в центре (направление)
             radarCtx.save();
             radarCtx.translate(cx, cy);
             radarCtx.rotate(spaceship.angle);
@@ -1976,76 +1862,223 @@
             radarCtx.restore();
         }
 
-        // --- ОТРИСОВКА ---
+        // === НАВИГАЦИОННОЕ МЕНЮ ===
+        function toggleNavMenu() {
+            if (!inShip || (currentState !== MODE.MAP && currentState !== MODE.SPACE)) return; // только в корабле на карте или в космосе
+            navMenuOpen = !navMenuOpen;
+            if (navMenuOpen) {
+                navMenu.classList.add('active');
+                // Устанавливаем текущую позицию
+                if (currentState === MODE.MAP) {
+                    navPosition.innerText = 'Planet';
+                    navLiftLand.innerText = 'LIFT';
+                } else {
+                    navPosition.innerText = 'KOCMOC';
+                    navLiftLand.innerText = 'LAND';
+                }
+                // Сбрасываем выбранную планету при открытии (для LAND)
+                if (currentState === MODE.SPACE) {
+                    selectedPlanet = null;
+                    planetHome.classList.remove('selected');
+                    navLiftLand.classList.add('disabled');
+                } else {
+                    // На карте LIFT не зависит от выбора
+                    navLiftLand.classList.remove('disabled');
+                }
+            } else {
+                navMenu.classList.remove('active');
+            }
+        }
+
+        navBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleNavMenu();
+        });
+        navBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleNavMenu();
+        }, { passive: false });
+
+        // Закрытие меню при клике на фон
+        navMenu.addEventListener('click', (e) => {
+            if (e.target === navMenu) {
+                toggleNavMenu();
+            }
+        });
+
+        // Выбор планеты Home
+        planetHome.addEventListener('click', () => {
+            if (currentState !== MODE.SPACE) return; // только в космосе можно выбирать
+            selectedPlanet = 'home';
+            planetHome.classList.add('selected');
+            navLiftLand.classList.remove('disabled');
+        });
+
+        // Кнопка LIFT/LAND
+        navLiftLand.addEventListener('click', () => {
+            if (currentState === MODE.MAP) {
+                // LIFT: переходим в космос
+                if (inShip) {
+                    currentState = MODE.SPACE;
+                    shipPreviousMode = MODE.SPACE;
+                    spaceship.x = 0;
+                    spaceship.y = 0;
+                    spaceship.vx = 0;
+                    spaceship.vy = 0;
+                    player.x = spaceship.x;
+                    player.y = spaceship.y;
+                    hint.innerText = "You are in space";
+                    toggleNavMenu(); // закрыть меню
+                } else {
+                    alert("You must be in the ship to lift off");
+                }
+            } else if (currentState === MODE.SPACE) {
+                // LAND: если выбрана планета
+                if (selectedPlanet === 'home') {
+                    currentState = MODE.MAP;
+                    shipPreviousMode = MODE.MAP;
+                    spaceship.x = 0;
+                    spaceship.y = 0;
+                    spaceship.vx = 0;
+                    spaceship.vy = 0;
+                    player.x = spaceship.x;
+                    player.y = spaceship.y;
+                    hint.innerText = "Fly to the Portal";
+                    toggleNavMenu(); // закрыть меню
+                }
+            }
+        });
+
+        // --- DRAWING ---
         function drawMap() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             applyBackground();
+
+            // Затемнение для космоса
+            if (currentState === MODE.SPACE) {
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+            }
+
             const gridSize = 100;
             const offsetX = -player.x % gridSize;
             const offsetY = -player.y % gridSize;
+
+            // Рисуем сетку
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(255,255,255,0.05)';
             ctx.lineWidth = 1;
-            for (let x = offsetX; x < canvas.width; x += gridSize) {
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-            }
-            for (let y = offsetY; y < canvas.height; y += gridSize) {
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
+
+            if (currentState === MODE.SPACE) {
+                // Треугольная сетка для космоса
+                const halfGrid = gridSize / 2;
+                // Горизонтальные линии с шагом halfGrid
+                for (let y = offsetY; y < canvas.height; y += halfGrid) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                }
+
+                // Линии под 45° (y = x + b)
+                let b0 = offsetY - offsetX;
+                let minB = -canvas.width;
+                let maxB = canvas.height + canvas.width;
+                for (let b = b0 - Math.floor((b0 - minB) / gridSize) * gridSize; b < maxB; b += gridSize) {
+                    let x1 = 0, y1 = b;
+                    let x2 = canvas.width, y2 = b + canvas.width;
+                    if (y1 < 0) { x1 = -b; y1 = 0; }
+                    if (y2 > canvas.height) { x2 = canvas.height - b; y2 = canvas.height; }
+                    if (x1 >= 0 && x1 <= canvas.width && y1 >= 0 && y1 <= canvas.height &&
+                        x2 >= 0 && x2 <= canvas.width && y2 >= 0 && y2 <= canvas.height) {
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                    }
+                }
+
+                // Линии под -45° (y = -x + b)
+                b0 = offsetY + offsetX;
+                for (let b = b0 - Math.floor((b0 - minB) / gridSize) * gridSize; b < maxB; b += gridSize) {
+                    let x1 = 0, y1 = b;
+                    let x2 = canvas.width, y2 = b - canvas.width;
+                    if (y1 > canvas.height) { x1 = b - canvas.height; y1 = canvas.height; }
+                    if (y2 < 0) { x2 = b; y2 = 0; }
+                    if (x1 >= 0 && x1 <= canvas.width && y1 >= 0 && y1 <= canvas.height &&
+                        x2 >= 0 && x2 <= canvas.width && y2 >= 0 && y2 <= canvas.height) {
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                    }
+                }
+            } else {
+                // Обычная квадратная сетка для карты
+                for (let x = offsetX; x < canvas.width; x += gridSize) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                }
+                for (let y = offsetY; y < canvas.height; y += gridSize) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                }
             }
             ctx.stroke();
+
             ctx.save();
             ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
 
-            // Ангар
-            ctx.fillStyle = 'rgba(128,128,128,0.2)';
-            ctx.fillRect(hangar.x, hangar.y, hangar.w, hangar.h);
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ffffff';
-            ctx.fillStyle = 'rgba(255,255,255,0.8)';
-            for (const wall of hangarWalls) {
-                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-            }
-            ctx.shadowBlur = 0;
-            ctx.shadowColor = 'transparent';
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for (let x = hangar.x; x <= hangar.x + hangar.w; x += BLOCK_SIZE) {
-                ctx.moveTo(x, hangar.y);
-                ctx.lineTo(x, hangar.y + hangar.h);
-            }
-            for (let y = hangar.y; y <= hangar.y + hangar.h; y += BLOCK_SIZE) {
-                ctx.moveTo(hangar.x, y);
-                ctx.lineTo(hangar.x + hangar.w, y);
-            }
-            ctx.stroke();
+            // === АНГАР (только на карте) ===
+            if (currentState === MODE.MAP) {
+                ctx.fillStyle = 'rgba(128,128,128,0.2)';
+                ctx.fillRect(hangar.x, hangar.y, hangar.w, hangar.h);
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                for (const wall of hangarWalls) {
+                    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+                }
+                ctx.shadowBlur = 0;
+                ctx.shadowColor = 'transparent';
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let x = hangar.x; x <= hangar.x + hangar.w; x += BLOCK_SIZE) {
+                    ctx.moveTo(x, hangar.y);
+                    ctx.lineTo(x, hangar.y + hangar.h);
+                }
+                for (let y = hangar.y; y <= hangar.y + hangar.h; y += BLOCK_SIZE) {
+                    ctx.moveTo(hangar.x, y);
+                    ctx.lineTo(hangar.x + hangar.w, y);
+                }
+                ctx.stroke();
 
-            ctx.fillStyle = '#333333';
-            ctx.fillRect(assembler.x, assembler.y, assembler.w, assembler.h);
-            ctx.fillStyle = '#555555';
-            for (const wall of assemblerWalls) {
-                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+                ctx.fillStyle = '#333333';
+                ctx.fillRect(assembler.x, assembler.y, assembler.w, assembler.h);
+                ctx.fillStyle = '#555555';
+                for (const wall of assemblerWalls) {
+                    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+                }
+                ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
+                ctx.fillRect(terminalZone.x, terminalZone.y, terminalZone.w, terminalZone.h);
             }
-            ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
-            ctx.fillRect(terminalZone.x, terminalZone.y, terminalZone.w, terminalZone.h);
 
-            // Реактивная струя (как в оригинале)
+            // Реактивная струя
             if (inShip && thrustPower > 0.01) {
                 const trailColor = getCustomColor('trailColor');
                 const nozzleOffset = 65;
+
                 const backX = -Math.cos(spaceship.angle);
                 const backY = -Math.sin(spaceship.angle);
                 const sideX = -Math.sin(spaceship.angle);
                 const sideY = Math.cos(spaceship.angle);
+
                 const nozzleX = spaceship.x + backX * nozzleOffset;
                 const nozzleY = spaceship.y + backY * nozzleOffset;
+
                 const flicker = Math.random() * 0.1 + 0.95;
                 const totalLength = 280 * thrustPower * flicker;
                 const widePointDist = totalLength * 0.20;
                 const maxWidth = 50 * thrustPower;
 
+                // Точки внешней струи
                 const pStart = { x: nozzleX, y: nozzleY };
                 const pLeft = {
                     x: nozzleX + backX * widePointDist + sideX * maxWidth,
@@ -2065,6 +2098,7 @@
                 ctx.globalAlpha = 0.7 * thrustPower;
                 ctx.shadowBlur = 100 * thrustPower;
 
+                // Внешняя струя
                 ctx.strokeStyle = trailColor;
                 ctx.shadowColor = trailColor;
                 ctx.lineWidth = 5;
@@ -2081,21 +2115,27 @@
                 const innerTotalLength = totalLength * innerScale;
                 const innerMaxWidth = maxWidth * innerScale;
                 const innerWidePointDist = innerTotalLength * 0.20;
+
+                // Сдвиг старта
                 const startOffset = (totalLength - innerTotalLength) / 4;
+
                 const innerStartX = nozzleX + backX * startOffset;
                 const innerStartY = nozzleY + backY * startOffset;
+
                 const innerWideX = innerStartX + backX * innerWidePointDist;
                 const innerWideY = innerStartY + backY * innerWidePointDist;
+
                 const innerLeftX = innerWideX + sideX * innerMaxWidth;
                 const innerLeftY = innerWideY + sideY * innerMaxWidth;
                 const innerRightX = innerWideX - sideX * innerMaxWidth;
                 const innerRightY = innerWideY - sideY * innerMaxWidth;
+
                 const innerEndX = innerStartX + backX * innerTotalLength;
                 const innerEndY = innerStartY + backY * innerTotalLength;
 
                 ctx.strokeStyle = '#ff0000';
                 ctx.shadowColor = '#ff0000';
-                ctx.lineWidth = 5 * innerScale;
+                ctx.lineWidth = 5 * innerScale; // ≈ 2.5
                 ctx.beginPath();
                 ctx.moveTo(innerStartX, innerStartY);
                 ctx.lineTo(innerLeftX, innerLeftY);
@@ -2107,7 +2147,7 @@
                 ctx.restore();
             }
 
-            // Корабль
+            // === КОРАБЛЬ ===
             if (spaceship.built || spaceship.building) {
                 ctx.save();
                 ctx.translate(spaceship.x, spaceship.y);
@@ -2131,37 +2171,39 @@
 
             ctx.restore();
 
-            if (!inShip) drawPlayerTrail();
+            if (!inShip && currentState === MODE.MAP) drawPlayerTrail();
 
-            // Порталы
-            ctx.save();
-            ctx.translate(canvas.width / 2 + portal.x - player.x, canvas.height / 2 + portal.y - player.y);
-            ctx.beginPath();
-            ctx.arc(0, 0, portal.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = portal.color;
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = portal.color;
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
-            ctx.fill();
-            ctx.restore();
+            // Портал и магазин только на карте
+            if (currentState === MODE.MAP) {
+                ctx.save();
+                ctx.translate(canvas.width / 2 + portal.x - player.x, canvas.height / 2 + portal.y - player.y);
+                ctx.beginPath();
+                ctx.arc(0, 0, portal.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = portal.color;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = portal.color;
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
+                ctx.fill();
+                ctx.restore();
 
-            ctx.save();
-            ctx.translate(canvas.width / 2 + shopPortal.x - player.x, canvas.height / 2 + shopPortal.y - player.y);
-            ctx.beginPath();
-            ctx.arc(0, 0, shopPortal.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = shopPortal.color;
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = shopPortal.color;
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
-            ctx.fill();
-            ctx.restore();
+                ctx.save();
+                ctx.translate(canvas.width / 2 + shopPortal.x - player.x, canvas.height / 2 + shopPortal.y - player.y);
+                ctx.beginPath();
+                ctx.arc(0, 0, shopPortal.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = shopPortal.color;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = shopPortal.color;
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+                ctx.fill();
+                ctx.restore();
+            }
 
-            // Игрок (пешком)
-            if (!inShip && !inShipInterior) {
+            // Игрок (пешком) только на карте
+            if (!inShip && !inShipInterior && currentState === MODE.MAP) {
                 ctx.save();
                 ctx.translate(canvas.width / 2, canvas.height / 2);
                 ctx.rotate(player.angle);
@@ -2178,145 +2220,10 @@
                 ctx.restore();
             }
 
-            if (!inShip) {
+            // Компас рисуется только на карте и при ходьбе
+            if (!inShip && currentState === MODE.MAP) {
                 drawCompass();
             }
-        }
-
-        function drawSpace() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            applyBackground(); // тот же фон, что на карте
-            ctx.save();
-            ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
-
-            // Реактивная струя (как в MAP)
-            if (inShip && thrustPower > 0.01) {
-                const trailColor = getCustomColor('trailColor');
-                const nozzleOffset = 65;
-                const backX = -Math.cos(spaceship.angle);
-                const backY = -Math.sin(spaceship.angle);
-                const sideX = -Math.sin(spaceship.angle);
-                const sideY = Math.cos(spaceship.angle);
-                const nozzleX = spaceship.x + backX * nozzleOffset;
-                const nozzleY = spaceship.y + backY * nozzleOffset;
-                const flicker = Math.random() * 0.1 + 0.95;
-                const totalLength = 280 * thrustPower * flicker;
-                const widePointDist = totalLength * 0.20;
-                const maxWidth = 50 * thrustPower;
-
-                const pStart = { x: nozzleX, y: nozzleY };
-                const pLeft = {
-                    x: nozzleX + backX * widePointDist + sideX * maxWidth,
-                    y: nozzleY + backY * widePointDist + sideY * maxWidth
-                };
-                const pRight = {
-                    x: nozzleX + backX * widePointDist - sideX * maxWidth,
-                    y: nozzleY + backY * widePointDist - sideY * maxWidth
-                };
-                const pEnd = {
-                    x: nozzleX + backX * totalLength,
-                    y: nozzleY + backY * totalLength
-                };
-
-                ctx.save();
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = 0.7 * thrustPower;
-                ctx.shadowBlur = 100 * thrustPower;
-
-                ctx.strokeStyle = trailColor;
-                ctx.shadowColor = trailColor;
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(pStart.x, pStart.y);
-                ctx.lineTo(pLeft.x, pLeft.y);
-                ctx.lineTo(pEnd.x, pEnd.y);
-                ctx.lineTo(pRight.x, pRight.y);
-                ctx.closePath();
-                ctx.stroke();
-
-                const innerScale = 0.5;
-                const innerTotalLength = totalLength * innerScale;
-                const innerMaxWidth = maxWidth * innerScale;
-                const innerWidePointDist = innerTotalLength * 0.20;
-                const startOffset = (totalLength - innerTotalLength) / 4;
-                const innerStartX = nozzleX + backX * startOffset;
-                const innerStartY = nozzleY + backY * startOffset;
-                const innerWideX = innerStartX + backX * innerWidePointDist;
-                const innerWideY = innerStartY + backY * innerWidePointDist;
-                const innerLeftX = innerWideX + sideX * innerMaxWidth;
-                const innerLeftY = innerWideY + sideY * innerMaxWidth;
-                const innerRightX = innerWideX - sideX * innerMaxWidth;
-                const innerRightY = innerWideY - sideY * innerMaxWidth;
-                const innerEndX = innerStartX + backX * innerTotalLength;
-                const innerEndY = innerStartY + backY * innerTotalLength;
-
-                ctx.strokeStyle = '#ff0000';
-                ctx.shadowColor = '#ff0000';
-                ctx.lineWidth = 5 * innerScale;
-                ctx.beginPath();
-                ctx.moveTo(innerStartX, innerStartY);
-                ctx.lineTo(innerLeftX, innerLeftY);
-                ctx.lineTo(innerEndX, innerEndY);
-                ctx.lineTo(innerRightX, innerRightY);
-                ctx.closePath();
-                ctx.stroke();
-
-                ctx.restore();
-            }
-
-            // Корабль
-            if (spaceship.built || spaceship.building) {
-                ctx.save();
-                ctx.translate(spaceship.x, spaceship.y);
-                const scale = spaceship.building ? (0.5 + 0.5 * spaceship.alpha) : 1;
-                ctx.scale(scale, scale);
-                ctx.globalAlpha = spaceship.alpha;
-                ctx.rotate(spaceship.angle + Math.PI / 2);
-                ctx.fillStyle = getCustomColor('playerColor');
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = getCustomColor('playerColor');
-                ctx.beginPath();
-                ctx.moveTo(0, -90); 
-                ctx.lineTo(55, 80);
-                ctx.lineTo(0, 60);
-                ctx.lineTo(-55, 80);
-                ctx.closePath();
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.restore();
-            }
-
-            ctx.restore();
-
-            // В космосе рисуем компас (пока просто копия, но с направлением на дом)
-            drawSpaceCompass();
-        }
-
-        function drawSpaceCompass() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const compassRadius = 60;
-            const markerWidth = 3;
-            const markerArc = Math.PI / 6;
-            const dx = 0 - player.x;
-            const dy = 0 - player.y;
-            const angleToHome = Math.atan2(dy, dx);
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.beginPath();
-            ctx.arc(0, 0, compassRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(0, 0, compassRadius, angleToHome - markerArc / 2, angleToHome + markerArc / 2);
-            ctx.strokeStyle = '#4caf50';
-            ctx.lineWidth = markerWidth;
-            ctx.lineCap = 'round';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#4caf50';
-            ctx.stroke();
-            ctx.restore();
         }
 
         function drawPlayerTrail() {
@@ -2330,13 +2237,12 @@
                 const point = mapTrail[i];
                 const prevPoint = mapTrail[i - 1];
                 const alpha = point.alpha * 0.6;
-                const widthMultiplier = point.isShip ? 2 : 1;
                 ctx.beginPath();
                 ctx.moveTo(prevPoint.x - player.x, prevPoint.y - player.y);
                 ctx.lineTo(point.x - player.x, point.y - player.y);
                 ctx.strokeStyle = trailColor;
                 ctx.globalAlpha = alpha;
-                ctx.lineWidth = (3 + (i / mapTrail.length) * 4) * widthMultiplier;
+                ctx.lineWidth = 3 + (i / mapTrail.length) * 4;
                 ctx.shadowBlur = 10 * alpha;
                 ctx.shadowColor = trailColor;
                 ctx.stroke();
@@ -2542,13 +2448,9 @@
             const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
             lastTime = timestamp;
 
-            if (currentState === MODE.MAP) {
+            if (currentState === MODE.MAP || currentState === MODE.SPACE) {
                 updateMap(deltaTime);
                 drawMap();
-                if (inShip) drawRadar();
-            } else if (currentState === MODE.SPACE) {
-                updateSpace(deltaTime);
-                drawSpace();
                 if (inShip) drawRadar();
             } else if (currentState === MODE.TUNNEL) {
                 updateTunnel(deltaTime);
