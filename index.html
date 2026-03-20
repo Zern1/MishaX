@@ -117,7 +117,7 @@
             background: rgba(0,0,0,0.1);
             border: 2px solid rgb(200, 255, 255);
             color: #fff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0);
             text-shadow: 0 0 5px #fff;
             padding: 10px 20px;
             border-radius: 8px;
@@ -130,7 +130,7 @@
         .menu-btn:hover {
             background: rgba(255,255,255,0.2);
             border-color: #fff;
-            box-shadow: 0 0 25px #0ff;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0);
         }
         #joystick-zone {
             position: absolute;
@@ -390,7 +390,7 @@
             top: 50px;
             left: 20px;
             width: 30%;
-            height: 25%;
+            height: 30%;
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -553,6 +553,25 @@
             border-color: gray;
             color: gray;
         }
+
+        @media (orientation: portrait) {
+            #ship-control-panel .panel-row {
+                flex-direction: column;
+                height: auto;
+                gap: 10px;
+            }
+            #radarCanvas {
+                width: auto;
+                max-width: 100%;
+                height: 100%;
+                aspect-ratio: 1 / 1;
+            }
+            .nav-button {
+                width: 100%;
+                height: 100%;
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -581,7 +600,7 @@
     <!-- ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ (с новым верхним рядом) -->
     <div id="ship-control-panel">
         <div class="panel-row">
-            <canvas id="radarCanvas" width="170" height="170"></canvas>
+            <canvas id="radarCanvas" width="400" height="400"></canvas>
             <div id="nav-btn" class="nav-button">N.S.</div>
         </div>
         <div id="thrust-panel">
@@ -1815,7 +1834,7 @@
             radarCtx.beginPath();
             radarCtx.arc(w/2, h/2, w/2 - 2, 0, Math.PI*2);
             radarCtx.strokeStyle = 'rgba(255,255,255,0.3)';
-            radarCtx.lineWidth = 1;
+            radarCtx.lineWidth = 3;
             radarCtx.stroke();
 
             const cx = w/2;
@@ -1828,7 +1847,7 @@
                     const x = cx + Math.cos(angle) * radius;
                     const y = cy + Math.sin(angle) * radius;
                     radarCtx.beginPath();
-                    radarCtx.arc(x, y, 4, 0, Math.PI*2);
+                    radarCtx.arc(x, y, 10, 0, Math.PI*2);
                     radarCtx.fillStyle = color;
                     radarCtx.shadowBlur = 8;
                     radarCtx.shadowColor = color;
@@ -1850,9 +1869,9 @@
             radarCtx.translate(cx, cy);
             radarCtx.rotate(spaceship.angle);
             radarCtx.beginPath();
-            radarCtx.moveTo(10, 0);
-            radarCtx.lineTo(-6, -6);
-            radarCtx.lineTo(-6, 6);
+            radarCtx.moveTo(25, 0);
+            radarCtx.lineTo(-20, -15);
+            radarCtx.lineTo(-20, 15);
             radarCtx.closePath();
             radarCtx.fillStyle = getCustomColor('playerColor');
             radarCtx.shadowBlur = 10;
@@ -1958,7 +1977,7 @@
 
             // Затемнение для космоса
             if (currentState === MODE.SPACE) {
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
             }
 
