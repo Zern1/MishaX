@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NeonWaveINSPACEE(SPACE)</title>
+    <title>NeonWaveINSPACEE</title>
     <style>
         :root {
             --ui-bg: rgba(255, 255, 255, 0.1);
@@ -27,17 +27,16 @@
         canvas {
             display: block;
         }
-        /* --- НОВЫЙ БЛОК ВРЕМЕНИ И РЕКОРДА (ВЕРХНИЙ ПРАВЫЙ УГОЛ) --- */
         #top-right-info {
             position: fixed;
             top: 20px;
-            right: 80px; /* чтобы не налезать на кнопку паузы */
+            right: 80px;
             z-index: 200;
             color: white;
             text-align: right;
             font-family: var(--font-family);
             text-shadow: 0 0 10px rgba(255,255,255,0.5);
-            pointer-events: none; /* чтобы не мешать кликам по кнопке паузы */
+            pointer-events: none;
         }
         #clock {
             font-size: 2rem;
@@ -48,7 +47,6 @@
             font-size: 1rem;
             opacity: 0.8;
         }
-        /* --- КНОПКА ПАУЗЫ --- */
         #pause-btn {
             position: fixed;
             top: 25px;
@@ -70,16 +68,10 @@
             transition: background 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
-        #pause-btn:active {
-            background: rgba(255,255,255,0.2);
-        }
-        /* --- МЕНЮ ПАУЗЫ --- */
+        #pause-btn:active { background: rgba(255,255,255,0.2); }
         #pause-menu {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: transparent;
             backdrop-filter: blur(7px);
             z-index: 200;
@@ -90,10 +82,7 @@
             pointer-events: none;
             transition: opacity 0.3s;
         }
-        #pause-menu.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        #pause-menu.active { opacity: 1; pointer-events: auto; }
         .menu-box {
             background: transparent;
             border: none;
@@ -127,11 +116,7 @@
             width: 100%;
             -webkit-tap-highlight-color: transparent;
         }
-        .menu-btn:hover {
-            background: rgba(255,255,255,0.2);
-            border-color: #fff;
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0);
-        }
+        .menu-btn:hover { background: rgba(255,255,255,0.2); border-color: #fff; box-shadow: 0 0 25px rgba(0, 255, 255, 0); }
         #joystick-zone {
             position: absolute;
             bottom: 80px;
@@ -141,13 +126,9 @@
             z-index: 90;
             transition: opacity 0.3s;
         }
-        #joystick-zone.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+        #joystick-zone.hidden { opacity: 0; pointer-events: none; }
         .joystick-base {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -156,13 +137,11 @@
             -webkit-tap-highlight-color: transparent;
         }
         .joystick-stick {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
             transition: transform 0.05s;
@@ -179,23 +158,13 @@
             transition: background 0.1s;
             -webkit-tap-highlight-color: transparent;
         }
-        .drive-zone.left {
-            left: 0;
-        }
-        .drive-zone.right {
-            right: 0;
-        }
-        .drive-zone.pressed {
-            background: rgba(255, 255, 255, 0.4);
-        }
-        .drive-zone.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+        .drive-zone.left { left: 0; }
+        .drive-zone.right { right: 0; }
+        .drive-zone.pressed { background: rgba(255, 255, 255, 0.4); }
+        .drive-zone.hidden { opacity: 0; pointer-events: none; }
         #hint {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 20px; left: 20px;
             color: rgba(255, 255, 255, 0.5);
             font-size: 0.8rem;
             pointer-events: none;
@@ -203,8 +172,7 @@
         }
         #shop-hint {
             position: absolute;
-            top: 20px;
-            left: 50%;
+            top: 20px; left: 50%;
             transform: translateX(-50%);
             color: rgba(255, 255, 255, 0.6);
             font-size: 0.9rem;
@@ -214,8 +182,7 @@
         }
         #tunnel-score {
             position: absolute;
-            top: 20px;
-            left: 50%;
+            top: 20px; left: 10%;
             transform: translateX(-50%);
             color: #ffffff;
             font-size: 2rem;
@@ -224,22 +191,9 @@
             z-index: 50;
             display: none;
         }
-        #tunnel-hint {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-            pointer-events: none;
-            z-index: 50;
-            display: none;
-            text-align: center;
-        }
         #tunnel-timer {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             color: #ffffff;
             font-size: 4rem;
@@ -248,11 +202,9 @@
             display: none;
             text-shadow: 0 0 20px #ffffff;
         }
-        /* === COLOR PICKER MENU === */
         #color-picker-menu {
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(30, 30, 30, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -266,14 +218,8 @@
             transition: opacity 0.3s;
             min-width: 280px;
         }
-        #color-picker-menu.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #color-picker-menu h2 {
-            margin: 0 0 20px 0;
-            font-size: 1.5rem;
-        }
+        #color-picker-menu.active { opacity: 1; pointer-events: auto; }
+        #color-picker-menu h2 { margin: 0 0 20px 0; font-size: 1.5rem; }
         .color-options {
             display: flex;
             gap: 12px;
@@ -282,43 +228,27 @@
             flex-wrap: wrap;
         }
         .color-btn, .gradient-btn {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             border-radius: 5px;
             border: 2px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: all 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
-        .color-btn:hover, .gradient-btn:hover {
-            transform: scale(1.15);
-            border-color: white;
-        }
-        .color-btn.selected, .gradient-btn.selected {
-            border-color: #4caf50;
-            box-shadow: 0 0 15px #4caf50;
-        }
+        .color-btn:hover, .gradient-btn:hover { transform: scale(1.15); border-color: white; }
+        .color-btn.selected, .gradient-btn.selected { border-color: #4caf50; box-shadow: 0 0 15px #4caf50; }
         .color-btn.default { background: #ffffff; }
         .color-btn.red { background: #ff4444; }
         .color-btn.blue { background: #4444ff; }
         .color-btn.yellow { background: #ffcc00; }
         .color-btn.green { background: #4caf50; }
         .color-btn.cyan { background: #00bcd4; }
-        .gradient-btn.yellow-blue {
-            background: linear-gradient(135deg, #ffff00, #00ffff);
-        }
-        .gradient-btn.red-blue {
-            background: linear-gradient(135deg, #ff4444, #aa44ff, #4444ff);
-        }
-        .gradient-btn.black {
-            background: #000000;
-        }
-
-        /* === ASSEMBLER & SHIP UI === */
+        .gradient-btn.yellow-blue { background: linear-gradient(135deg, #ffff00, #00ffff); }
+        .gradient-btn.red-blue { background: linear-gradient(135deg, #ff4444, #aa44ff, #4444ff); }
+        .gradient-btn.black { background: #000000; }
         #assembler-menu {
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(30, 30, 30, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -332,35 +262,20 @@
             transition: opacity 0.3s;
             min-width: 280px;
         }
-        #assembler-menu.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #assembler-menu h2 {
-            margin: 0 0 20px 0;
-            font-size: 1.5rem;
-            color: #ff00009a;
-        }
+        #assembler-menu.active { opacity: 1; pointer-events: auto; }
+        #assembler-menu h2 { margin: 0 0 20px 0; font-size: 1.5rem; color: #ff00009a; }
         .build-progress {
-            width: 100%;
-            height: 10px;
+            width: 100%; height: 10px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             margin-top: 15px;
             overflow: hidden;
             display: none;
         }
-        .build-progress-bar {
-            height: 100%;
-            width: 0%;
-            background: #ffffff;
-            transition: width 0.1s linear;
-        }
-        /* === УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ (ФИКСИРОВАННАЯ) === */
+        .build-progress-bar { height: 100%; width: 0%; background: #ffffff; transition: width 0.1s linear; }
         #interact-btn {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
+            bottom: 30px; left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.5);
             border: 2px solid #ff0;
@@ -377,20 +292,12 @@
             box-shadow: 0 0 20px #ff0;
             text-shadow: 0 0 5px #fff;
         }
-        #interact-btn.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #interact-btn:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-        /* === НОВАЯ ГОЛОГРАФИЧЕСКАЯ ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ === */
+        #interact-btn.visible { opacity: 1; pointer-events: auto; }
+        #interact-btn:active { transform: translateX(-50%) scale(0.95); }
         #ship-control-panel {
             position: fixed;
-            top: 50px;
-            left: 20px;
-            width: 30%;
-            height: 30%;
+            top: 50px; left: 20px;
+            width: 30%; height: 30%;
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -406,11 +313,7 @@
             flex-direction: column;
             gap: 10px;
         }
-        #ship-control-panel.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        /* Новый контейнер для верхнего ряда (радар + кнопка) */
+        #ship-control-panel.visible { opacity: 1; pointer-events: auto; }
         .panel-row {
             display: flex;
             gap: 10px;
@@ -429,11 +332,9 @@
             box-shadow: 0 0 10px rgba(150, 255, 255, 0.5);
             height: 100%;
         }
-        /* Кнопка навигации N.S.*/
         .nav-button {
             flex: 1;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
@@ -449,13 +350,9 @@
             -webkit-tap-highlight-color: transparent;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
         }
-        .nav-button:active {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(0.95);
-        }
+        .nav-button:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
         #thrust-panel {
-            width: 100%;
-            height: 20%;
+            width: 100%; height: 20%;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
             overflow: hidden;
@@ -463,16 +360,14 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
         #thrust-panel-fill {
-            height: 100%;
-            width: 0%;
+            height: 100%; width: 0%;
             background: #ffffff;
             box-shadow: 0 0 15px #00ffff;
             transition: width 0.05s linear;
         }
         #ship-interior-hint {
             position: fixed;
-            bottom: 100px;
-            left: 50%;
+            bottom: 100px; left: 50%;
             transform: translateX(-50%);
             color: rgba(255, 255, 255, 0.7);
             font-size: 0.9rem;
@@ -481,16 +376,12 @@
             display: none;
             text-align: center;
         }
-        /* === НОВОЕ НАВИГАЦИОННОЕ МЕНЮ === */
         #nav-menu {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: transparent;
             backdrop-filter: blur(7px);
-            z-index: 260; /* выше pause-menu (200) */
+            z-index: 260;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -498,23 +389,10 @@
             pointer-events: none;
             transition: opacity 0.3s;
         }
-        #nav-menu.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #nav-menu .menu-box {
-            min-width: 280px;
-        }
-        #nav-menu h2, #nav-menu h3 {
-            margin: 0 0 10px 0;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(170, 255, 255, 0.3);
-        }
-        #nav-menu h3 {
-            font-size: 1.2rem;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 5px;
-        }
+        #nav-menu.active { opacity: 1; pointer-events: auto; }
+        #nav-menu .menu-box { min-width: 280px; }
+        #nav-menu h2, #nav-menu h3 { margin: 0 0 10px 0; color: #fff; text-shadow: 0 0 10px rgba(170, 255, 255, 0.3); }
+        #nav-menu h3 { font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
         .planets-list {
             width: 100%;
             background: rgba(0,0,0,0.2);
@@ -531,59 +409,29 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .planet-item:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        .planet-item.selected {
-            background: rgba(76, 175, 80, 0.3);
-            border-left: 3px solid #00FF00;
-        }
-        .planet-item:last-child {
-            border-bottom: none;
-        }
-        /* Кнопка LIFT/LAND в меню */
+        .planet-item:hover { background: rgba(255,255,255,0.2); }
+        .planet-item.selected { background: rgba(76, 175, 80, 0.3); border-left: 3px solid #00FF00; }
+        .planet-item:last-child { border-bottom: none; }
         #nav-lift-land {
             border-color: rgb(180, 255, 255);
             color: rgb(180, 255, 255);
             margin-top: 10px;
         }
-        #nav-lift-land.disabled {
-            opacity: 0.3;
-            pointer-events: none;
-            border-color: gray;
-            color: gray;
-        }
-
+        #nav-lift-land.disabled { opacity: 0.3; pointer-events: none; border-color: gray; color: gray; }
         @media (orientation: portrait) {
-            #ship-control-panel .panel-row {
-                flex-direction: column;
-                height: auto;
-                gap: 10px;
-            }
-            #radarCanvas {
-                width: auto;
-                max-width: 100%;
-                height: 100%;
-                aspect-ratio: 1 / 1;
-            }
-            .nav-button {
-                width: 100%;
-                height: 100%;
-                font-size: 1.5rem;
-            }
+            #ship-control-panel .panel-row { flex-direction: column; height: auto; gap: 10px; }
+            #radarCanvas { width: auto; max-width: 100%; height: 100%; aspect-ratio: 1 / 1; }
+            .nav-button { width: 100%; height: 100%; font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <!-- НОВЫЙ БЛОК ВРЕМЕНИ И РЕКОРДА -->
     <div id="top-right-info">
         <div id="clock">00:00</div>
         <div id="score-display">Best: 0</div>
     </div>
-
     <div id="hint">Fly to the Portal</div>
     <div id="shop-hint">Fly to corridor end to Exit</div>
-    <div id="tunnel-hint">Tap left side to fly up, right side to fly down</div>
     <div id="ship-interior-hint">Walk to green zone to exit ship</div>
     <div id="tunnel-score">0</div>
     <div id="tunnel-timer">3</div>
@@ -597,7 +445,6 @@
     <div id="drive-left-zone" class="drive-zone left hidden"></div>
     <div id="drive-right-zone" class="drive-zone right hidden"></div>
 
-    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ КОРАБЛЁМ (с новым верхним рядом) -->
     <div id="ship-control-panel">
         <div class="panel-row">
             <canvas id="radarCanvas" width="400" height="400"></canvas>
@@ -608,14 +455,12 @@
         </div>
     </div>
 
-    <!-- НАВИГАЦИОННОЕ МЕНЮ (стилизовано под меню паузы) -->
     <div id="nav-menu">
         <div class="menu-box">
             <h2 id="nav-position">Planet</h2>
             <div class="planets-list">
                 <h3>Planets:</h3>
                 <div class="planet-item" id="planet-home">Home</div>
-                <!-- Здесь позже появятся другие планеты -->
             </div>
             <button class="menu-btn" id="nav-lift-land">LIFT</button>
         </div>
@@ -628,7 +473,7 @@
             <button class="menu-btn" id="exit-btn">EXIT</button>
         </div>
     </div>
-    <!-- COLOR PICKER MENU -->
+
     <div id="color-picker-menu">
         <h2 id="picker-title">Select Color</h2>
         <div class="color-options" id="color-options">
@@ -640,12 +485,12 @@
             <div class="color-btn cyan" data-color="cyan"></div>
         </div>
         <div class="color-options" id="gradient-options" style="display: none;">
-            <div class="gradient-btn yellow-blue" data-gradient="yellow-blue" title="Жёлто-голубой"></div>
-            <div class="gradient-btn red-blue" data-gradient="red-blue" title="Красно-голубой"></div>
-            <div class="gradient-btn black" data-gradient="black" title="Чёрный"></div>
+            <div class="gradient-btn yellow-blue" data-gradient="yellow-blue"></div>
+            <div class="gradient-btn red-blue" data-gradient="red-blue"></div>
+            <div class="gradient-btn black" data-gradient="black"></div>
         </div>
     </div>
-    <!-- ASSEMBLER MENU -->
+
     <div id="assembler-menu">
         <h2>ASSEMBLY V.164</h2>
         <p id="assembler-status">Ready to Build</p>
@@ -654,1842 +499,771 @@
             <div class="build-progress-bar" id="build-progress-bar"></div>
         </div>
     </div>
-    <!-- УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ -->
+
     <div id="interact-btn">ENTER</div>
     <canvas id="gameCanvas"></canvas>
+
     <script>
-        // --- CONFIG & STATE ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const MODE = {
-            MAP: 'MAP',
-            TUNNEL: 'TUNNEL',
-            SHOP: 'SHOP',
-            PAUSED: 'PAUSED',
-            SHIP_INTERIOR: 'SHIP_INTERIOR',
-            SPACE: 'SPACE'          // Новый режим космоса
-        };
-        let currentState = MODE.MAP;
-        let shipPreviousMode = MODE.MAP; // запоминает, в каком режиме находится корабль (карта или космос)
-        let lastTime = 0;
+        (function(){
+            "use strict";
 
-        // Player (Map)
-        const player = {
-            x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15, speed: 0.25, friction: 0.96
-        };
+            // === CONFIG & STATE ===
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+            const MODE = {
+                MAP: 'MAP',
+                TUNNEL: 'TUNNEL',
+                SHOP: 'SHOP',
+                PAUSED: 'PAUSED',
+                SHIP_INTERIOR: 'SHIP_INTERIOR',
+                SPACE: 'SPACE'
+            };
+            let currentState = MODE.MAP;
+            let shipPreviousMode = MODE.MAP;
+            let lastTime = 0;
 
-        // === PLAYER TRAIL (MAP) ===
-        const mapTrail = [];
-        const mapTrailMaxLength = 100;
+            // Player (Map)
+            const player = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15, speed: 0.25, friction: 0.96 };
 
-        // Portals
-        const portal = { x: 500, y: -500, radius: 40, active: true, color: '#00f2ff' };
-        const shopPortal = { x: -600, y: 0, radius: 40, active: true, color: '#ff4444' };
+            // === PLAYER TRAIL (MAP)
+            const mapTrail = [];
+            const mapTrailMaxLength = 50;
+            const TRAIL_FADE_SPEED = 0.1;
+            let trailAddTimer = 0;
+            let trailAccumulator = 0;
+            const TRAIL_RECORD_INTERVAL = 0.1;
+            const TRAIL_ADD_INTERVAL = 1;
 
-        // Joystick
-        const joystick = {
-            active: false, originX: 0, originY: 0, dx: 0, dy: 0, maxRadius: 35
-        };
+            // Portals
+            const portal = { x: -2500, y: -500, radius: 40, active: true, color: '#00f2ff' };
+            const shopPortal = { x: -2500, y: -400, radius: 40, active: true, color: '#ff4444' };
 
-        // Tunnel Game State
-        let tunnelPoints = [];
-        let tunnelGap = 100;
-        let tunnelSpeed = 3.5;
-        let tunnelMoveSpeed = 3.5;
-        let tunnelScore = 0;
-        let tunnelPlayerY = 0;
-        let tunnelDirection = 0;
-        let tunnelTrail = [];
-        const tunnelTrailMaxLength = 200;
-        const playerX = 100;
-        let tunnelTimer = 0;
-        const TUNNEL_START_DELAY = 1.0;
+            // Joystick
+            const joystick = {
+                active: false, originX: 0, originY: 0, dx: 0, dy: 0, maxRadius: 35
+            };
 
-        // High Score
-        let highScore = parseInt(localStorage.getItem('tunnelHighScore')) || 0;
-        document.getElementById('score-display').innerText = `Best: ${highScore}`;
+            // Tunnel
+            let tunnelPoints = [];
+            let tunnelGap = 100;
+            let tunnelSpeed = 3.5;
+            let tunnelMoveSpeed = 3.5;
+            let tunnelScore = 0;
+            let tunnelPlayerY = 0;
+            let tunnelDirection = -1;
+            let tunnelTrail = [];
+            const tunnelTrailMaxLength = 200;
+            const playerX = 100;
+            let tunnelTimer = 0;
+            const TUNNEL_START_DELAY = 1.0;
 
-        // === SHOP STATE ===
-        const shopConfig = {
-            gridSize: 100,
-            gridCount: 10,
-            corridorWidth: 200,
-            shopSize: 400,
-            wallThickness: 10
-        };
-        let shopPlayer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15 };
-        let shopCamera = { x: 0, y: 0, zoom: 1, targetZoom: 1 };
-        let currentShop = null;
-        let activeColorPicker = null;
+            let highScore = parseInt(localStorage.getItem('tunnelHighScore')) || 0;
+            document.getElementById('score-display').innerText = `Best: ${highScore}`;
 
-        // === SHOP WALLS (коллизии) ===
-        const shopWalls = [
-            { x: -500, y: -500, w: 350, h: 10, type: 'collision' },
-            { x: 150, y: -500, w: 350, h: 10, type: 'collision' },
-            { x: -500, y: 490, w: 350, h: 10, type: 'collision' },
-            { x: 150, y: 490, w: 350, h: 10, type: 'collision' },
-            { x: -500, y: -500, w: 10, h: 350, type: 'collision' },
-            { x: -500, y: 150, w: 10, h: 350, type: 'collision' },
-            { x: 490, y: -500, w: 10, h: 350, type: 'collision' },
-            { x: 490, y: 150, w: 10, h: 350, type: 'collision' }
-        ];
+            // Shop
+            const shopConfig = { gridSize: 100, gridCount: 10, corridorWidth: 200, shopSize: 400, wallThickness: 10 };
+            let shopPlayer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15 };
+            let shopCamera = { x: 0, y: 0, zoom: 1, targetZoom: 1 };
+            let currentShop = null;
+            let activeColorPicker = null;
 
-        // === SHOP ZONES ===
-        const shopZones = {
-            trail: {
-                name: 'TRAIL',
-                x: -500, y: -500, w: 400, h: 400,
-                colorKey: 'trailColor',
-                cashRegister: { x: -400, y: -400, w: 200, h: 200, type: 'cash' }
-            },
-            player: {
-                name: 'PLAYER',
-                x: 100, y: -500, w: 400, h: 400,
-                colorKey: 'playerColor',
-                cashRegister: { x: 200, y: -400, w: 200, h: 200, type: 'cash' }
-            },
-            tunnel: {
-                name: 'TUNNEL',
-                x: -500, y: 100, w: 400, h: 400,
-                colorKey: 'tunnelColor',
-                cashRegister: { x: -400, y: 200, w: 200, h: 200, type: 'cash' }
-            },
-            map: {
-                name: 'MAP',
-                x: 100, y: 100, w: 400, h: 400,
-                colorKey: 'mapGradient',
-                cashRegister: { x: 200, y: 200, w: 200, h: 200, type: 'cash' }
+            const shopWalls = [
+                { x: -500, y: -500, w: 350, h: 10 }, { x: 150, y: -500, w: 350, h: 10 },
+                { x: -500, y: 490, w: 350, h: 10 }, { x: 150, y: 490, w: 350, h: 10 },
+                { x: -500, y: -500, w: 10, h: 350 }, { x: -500, y: 150, w: 10, h: 350 },
+                { x: 490, y: -500, w: 10, h: 350 }, { x: 490, y: 150, w: 10, h: 350 }
+            ];
+
+            const shopZones = {
+                trail: { name: 'TRAIL', x: -500, y: -500, w: 400, h: 400, colorKey: 'trailColor', cashRegister: { x: -400, y: -400, w: 200, h: 200 } },
+                player: { name: 'PLAYER', x: 100, y: -500, w: 400, h: 400, colorKey: 'playerColor', cashRegister: { x: 200, y: -400, w: 200, h: 200 } },
+                tunnel: { name: 'TUNNEL', x: -500, y: 100, w: 400, h: 400, colorKey: 'tunnelColor', cashRegister: { x: -400, y: 200, w: 200, h: 200 } },
+                map: { name: 'MAP', x: 100, y: 100, w: 400, h: 400, colorKey: 'mapGradient', cashRegister: { x: 200, y: 200, w: 200, h: 200 } }
+            };
+            const exitZones = [
+                { x: -75, y: -500, w: 150, h: 20 }, { x: -75, y: 480, w: 150, h: 20 },
+                { x: -500, y: -75, w: 20, h: 150 }, { x: 480, y: -75, w: 20, h: 150 }
+            ];
+
+            let customization = {
+                playerColor: localStorage.getItem('playerColor') || 'default',
+                trailColor: localStorage.getItem('trailColor') || 'default',
+                tunnelColor: localStorage.getItem('tunnelColor') || 'default',
+                mapGradient: localStorage.getItem('mapGradient') || 'yellow-blue'
+            };
+
+            const colorValues = {
+                default: '#ffffff', red: '#ff4444', blue: '#4444ff', yellow: '#ffcc00', green: '#4caf50', cyan: '#00bcd4'
+            };
+
+            // Hangar & Spaceship
+            const BLOCK_SIZE = 50;
+            const hangar = { x: -2600, y: -1200, w: 15 * BLOCK_SIZE, h: 25 * BLOCK_SIZE, color: '#cccccc' };
+            const hangarWalls = [
+                { x: hangar.x, y: hangar.y, w: 10, h: hangar.h },
+                { x: hangar.x + hangar.w - 10, y: hangar.y, w: 10, h: hangar.h },
+                { x: hangar.x, y: hangar.y, w: hangar.w, h: 10 }
+            ];
+
+            const assembler = { x: hangar.x + hangar.w / 2 - 125, y: hangar.y + 100, w: 5 * BLOCK_SIZE, h: 5 * BLOCK_SIZE };
+            const assemblerWalls = [
+                { x: assembler.x, y: assembler.y, w: 10, h: assembler.h },
+                { x: assembler.x + assembler.w - 10, y: assembler.y, w: 10, h: assembler.h },
+                { x: assembler.x, y: assembler.y, w: assembler.w, h: 10 },
+                { x: assembler.x, y: assembler.y + 250, w: assembler.w, h: 10 }
+            ];
+            const terminalZone = { x: assembler.x, y: assembler.y + assembler.h + 10, w: assembler.w, h: 40 };
+
+            const shipConfig = { w: 5 * BLOCK_SIZE, h: 5 * BLOCK_SIZE, size: 120 };
+            let spaceship = { x: assembler.x + shipConfig.w / 2, y: assembler.y + shipConfig.h / 2, vx: 0, vy: 0, angle: 0,
+                angularVelocity: 0, built: false, building: false, buildProgress: 0, alpha: 0 };
+
+            let inShip = false;
+            let inShipInterior = false;
+            let inCockpitZone = false;
+            let shipInteriorPlayer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15 };
+
+            const shipInteriorWalls = [
+                { x: -40, y: -250, w: 80, h: 10 }, { x: -40, y: -240, w: 10, h: 200 }, { x: 30, y: -240, w: 10, h: 200 },
+                { x: -80, y: -50, w: 40, h: 10 }, { x: 40, y: -50, w: 40, h: 10 }, { x: -80, y: -40, w: 10, h: 120 },
+                { x: 70, y: -40, w: 10, h: 120 }, { x: -80, y: 30, w: 40, h: 10 }, { x: 40, y: 30, w: 40, h: 10 },
+                { x: 0, y: 72, w: 70, h: 7 }
+            ];
+            const shipInteriorExitZone = { x: -70, y: 72, w: 70, h: 7, color: '#4caf50' };
+            const shipInteriorCockpitZone = { x: -30, y: -240, w: 60, h: 100, color: '#4caf50' };
+
+            // UI Elements
+            const joyBase = document.getElementById('joy-base');
+            const joyStick = document.getElementById('joy-stick');
+            const pauseBtn = document.getElementById('pause-btn');
+            const resumeBtn = document.getElementById('resume-btn');
+            const exitBtn = document.getElementById('exit-btn');
+            const pauseMenu = document.getElementById('pause-menu');
+            const joyZone = document.getElementById('joystick-zone');
+            const hint = document.getElementById('hint');
+            const shopHint = document.getElementById('shop-hint');
+            const shipInteriorHint = document.getElementById('ship-interior-hint');
+            const tunnelScoreEl = document.getElementById('tunnel-score');
+            const tunnelTimerEl = document.getElementById('tunnel-timer');
+            const colorPickerMenu = document.getElementById('color-picker-menu');
+            const pickerTitle = document.getElementById('picker-title');
+            const colorOptions = document.getElementById('color-options');
+            const gradientOptions = document.getElementById('gradient-options');
+            const colorBtns = document.querySelectorAll('.color-btn');
+            const gradientBtns = document.querySelectorAll('.gradient-btn');
+            const clockEl = document.getElementById('clock');
+            const scoreDisplayEl = document.getElementById('score-display');
+            const assemblerMenu = document.getElementById('assembler-menu');
+            const buildBtn = document.getElementById('build-btn');
+            const assemblerStatus = document.getElementById('assembler-status');
+            const buildProgressContainer = document.getElementById('build-progress-container');
+            const buildProgressBar = document.getElementById('build-progress-bar');
+            const interactBtn = document.getElementById('interact-btn');
+            const shipControlPanel = document.getElementById('ship-control-panel');
+            const navBtn = document.getElementById('nav-btn');
+            const navMenu = document.getElementById('nav-menu');
+            const navPosition = document.getElementById('nav-position');
+            const navLiftLand = document.getElementById('nav-lift-land');
+            const planetHome = document.getElementById('planet-home');
+            const thrustPanel = document.getElementById('thrust-panel');
+            const thrustPanelFill = document.getElementById('thrust-panel-fill');
+            const radarCanvas = document.getElementById('radarCanvas');
+            const radarCtx = radarCanvas.getContext('2d');
+            const leftZone = document.getElementById('drive-left-zone');
+            const rightZone = document.getElementById('drive-right-zone');
+
+            let leftPressed = false, rightPressed = false;
+            let thrustPower = 0, thrustIncreasing = false, thrustDecreasing = false;
+            const maxThrustPower = 1, thrustRiseRate = 0.3, thrustFallRate = 0.1;
+            let navMenuOpen = false;
+            let selectedPlanet = null;
+
+            // === Вспомогательные функции ===
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize);
+            resize();
+
+            function updatePauseButtonVisibility() {
+                pauseBtn.style.display = (currentState === MODE.TUNNEL || currentState === MODE.PAUSED) ? 'flex' : 'none';
             }
-        };
-        const exitZones = [
-            { x: -75, y: -500, w: 150, h: 20, name: 'exit' },
-            { x: -75, y: 480, w: 150, h: 20, name: 'exit' },
-            { x: -500, y: -75, w: 20, h: 150, name: 'exit' },
-            { x: 480, y: -75, w: 20, h: 150, name: 'exit' }
-        ];
-
-        // === CUSTOMIZATION STATE ===
-        let customization = {
-            playerColor: localStorage.getItem('playerColor') || 'default',
-            trailColor: localStorage.getItem('trailColor') || 'default',
-            tunnelColor: localStorage.getItem('tunnelColor') || 'default',
-            mapGradient: localStorage.getItem('mapGradient') || 'yellow-blue'
-        };
-
-        // === COLORS ===
-        const colorValues = {
-            default: '#ffffff',
-            red: '#ff4444',
-            blue: '#4444ff',
-            yellow: '#ffcc00',
-            green: '#4caf50',
-            cyan: '#00bcd4'
-        };
-
-        // === HANGAR & SPACESHIP CONFIG ===
-        const BLOCK_SIZE = 50;
-        const hangar = {
-            x: -2600,
-            y: -1200,
-            w: 15 * BLOCK_SIZE,
-            h: 25 * BLOCK_SIZE,
-            color: '#cccccc'
-        };
-        const hangarWalls = [
-            { x: hangar.x, y: hangar.y, w: 10, h: hangar.h },
-            { x: hangar.x + hangar.w - 10, y: hangar.y, w: 10, h: hangar.h },
-            { x: hangar.x, y: hangar.y, w: hangar.w, h: 10 }
-        ];
-
-        // === ASSEMBLER ===
-        const assembler = {
-            x: hangar.x + hangar.w / 2 - 125,
-            y: hangar.y + 100,
-            w: 5 * BLOCK_SIZE,
-            h: 5 * BLOCK_SIZE
-        };
-        const assemblerWalls = [
-            { x: assembler.x, y: assembler.y, w: 10, h: assembler.h},
-            { x: assembler.x + assembler.w - 10, y: assembler.y, w: 10, h: assembler.h},
-            { x: assembler.x, y: assembler.y, w: assembler.w, h: 10 },
-            { x: assembler.x, y: assembler.y + 250, w: assembler.w, h: 10 }
-        ];
-        const terminalZone = {
-            x: assembler.x,
-            y: assembler.y + assembler.h + 10,
-            w: assembler.w,
-            h: 40
-        };
-
-        // Spaceship Config
-        const shipConfig = {
-            w: 5 * BLOCK_SIZE,
-            h: 5 * BLOCK_SIZE,
-            size: 120
-        };
-        let spaceship = {
-            x: assembler.x + shipConfig.w / 2,
-            y: assembler.y + shipConfig.h / 2,
-            vx: 0, vy: 0, angle: 0,
-            angularVelocity: 0,
-            built: false,
-            building: false,
-            buildProgress: 0,
-            alpha: 0
-        };
-
-        // === SHIP INTERIOR STATE ===
-        let inShip = false;
-        let inShipInterior = false;
-        let inCockpitZone = false;
-        let shipInteriorPlayer = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, size: 15 };
-
-        // Ship Interior Walls
-        const shipInteriorWalls = [
-            { x: -40, y: -250, w: 80, h: 10 },
-            { x: -40, y: -240, w: 10, h: 200 },
-            { x: 30, y: -240, w: 10, h: 200},
-            { x: -80, y: -50, w: 40, h: 10 },
-            { x: 40, y: -50, w: 40, h: 10 },
-            { x: -80, y: -40, w: 10, h: 120 },
-            { x: 70, y: -40, w: 10, h: 120 },
-            { x: -80, y: 30, w: 40, h: 10 },
-            { x: 40, y: 30, w: 40, h: 10 },
-            { x: 0, y: 72, w: 70, h: 7 },
-        ];
-
-        const shipInteriorExitZone = {
-            x: -70,
-            y: 72,
-            w: 70,
-            h: 7,
-            color: '#4caf50'
-        };
-
-        const shipInteriorCockpitZone = {
-            x: -30,
-            y: -240,
-            w: 60,
-            h: 100,
-            color: '#4caf50'
-        };
-
-        // --- RESIZE ---
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        // --- UI ELEMENTS ---
-        const joyBase = document.getElementById('joy-base');
-        const joyStick = document.getElementById('joy-stick');
-        const pauseBtn = document.getElementById('pause-btn');
-        const resumeBtn = document.getElementById('resume-btn');
-        const exitBtn = document.getElementById('exit-btn');
-        const pauseMenu = document.getElementById('pause-menu');
-        const joyZone = document.getElementById('joystick-zone');
-        const hint = document.getElementById('hint');
-        const shopHint = document.getElementById('shop-hint');
-        const shipInteriorHint = document.getElementById('ship-interior-hint');
-        const tunnelScoreEl = document.getElementById('tunnel-score');
-        const tunnelHint = document.getElementById('tunnel-hint');
-        const tunnelTimerEl = document.getElementById('tunnel-timer');
-        const colorPickerMenu = document.getElementById('color-picker-menu');
-        const pickerTitle = document.getElementById('picker-title');
-        const colorOptions = document.getElementById('color-options');
-        const gradientOptions = document.getElementById('gradient-options');
-        const colorBtns = document.querySelectorAll('.color-btn');
-        const gradientBtns = document.querySelectorAll('.gradient-btn');
-        const clockEl = document.getElementById('clock');
-        const scoreDisplayEl = document.getElementById('score-display');
-        const assemblerMenu = document.getElementById('assembler-menu');
-        const buildBtn = document.getElementById('build-btn');
-        const assemblerStatus = document.getElementById('assembler-status');
-        const buildProgressContainer = document.getElementById('build-progress-container');
-        const buildProgressBar = document.getElementById('build-progress-bar');
-        const interactBtn = document.getElementById('interact-btn');
-        const shipControlPanel = document.getElementById('ship-control-panel');
-        // Новые элементы
-        const navBtn = document.getElementById('nav-btn');
-        const navMenu = document.getElementById('nav-menu');
-        const navPosition = document.getElementById('nav-position');
-        const navLiftLand = document.getElementById('nav-lift-land');
-        const planetHome = document.getElementById('planet-home');
-
-        // === НОВЫЕ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ УСКОРЕНИЕМ И РАДАР ===
-        const thrustPanel = document.getElementById('thrust-panel');
-        const thrustPanelFill = document.getElementById('thrust-panel-fill');
-        const radarCanvas = document.getElementById('radarCanvas');
-        const radarCtx = radarCanvas.getContext('2d');
-
-        // === ЗОНЫ УПРАВЛЕНИЯ КОРАБЛЁМ ===
-        const leftZone = document.getElementById('drive-left-zone');
-        const rightZone = document.getElementById('drive-right-zone');
-        let leftPressed = false;
-        let rightPressed = false;
-
-        // === УСКОРЕНИЕ ===
-        let thrustPower = 0;
-        let thrustIncreasing = false;
-        let thrustDecreasing = false;
-        const maxThrustPower = 1;
-        const thrustRiseRate = 0.3;
-        const thrustFallRate = 0.1;
-
-        // === НОВЫЙ ФЛАГ ДЛЯ НАВИГАЦИОННОГО МЕНЮ И ВЫБРАННАЯ ПЛАНЕТА ===
-        let navMenuOpen = false;
-        let selectedPlanet = null; // null или 'home'
-
-        function setLeftPressed(state) {
-            if ((currentState !== MODE.MAP && currentState !== MODE.SPACE) || !inShip) state = false;
-            leftPressed = state;
-            leftZone.classList.toggle('pressed', state);
-        }
-        function setRightPressed(state) {
-            if ((currentState !== MODE.MAP && currentState !== MODE.SPACE) || !inShip) state = false;
-            rightPressed = state;
-            rightZone.classList.toggle('pressed', state);
-        }
-
-        leftZone.addEventListener('mousedown', (e) => { e.preventDefault(); setLeftPressed(true); });
-        leftZone.addEventListener('mouseup', () => setLeftPressed(false));
-        leftZone.addEventListener('mouseleave', () => setLeftPressed(false));
-        leftZone.addEventListener('touchstart', (e) => { e.preventDefault(); setLeftPressed(true); }, {passive: false});
-        leftZone.addEventListener('touchend', (e) => { e.preventDefault(); setLeftPressed(false); });
-        leftZone.addEventListener('touchcancel', () => setLeftPressed(false));
-
-        rightZone.addEventListener('mousedown', (e) => { e.preventDefault(); setRightPressed(true); });
-        rightZone.addEventListener('mouseup', () => setRightPressed(false));
-        rightZone.addEventListener('mouseleave', () => setRightPressed(false));
-        rightZone.addEventListener('touchstart', (e) => { e.preventDefault(); setRightPressed(true); }, {passive: false});
-        rightZone.addEventListener('touchend', (e) => { e.preventDefault(); setRightPressed(false); });
-        rightZone.addEventListener('touchcancel', () => setRightPressed(false));
-
-        window.addEventListener('mouseup', () => {
-            setLeftPressed(false);
-            setRightPressed(false);
-        });
-
-        // === ОБРАБОТЧИКИ УСКОРЕНИЯ (НОВЫЙ ЭЛЕМЕНТ) ===
-        function handleThrustStart(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if ((currentState === MODE.MAP || currentState === MODE.SPACE) && inShip && !navMenuOpen) {
-                thrustIncreasing = true;
-                thrustDecreasing = false;
-            }
-        }
-        function handleThrustEnd(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            thrustIncreasing = false;
-            thrustDecreasing = true;
-        }
-        thrustPanel.addEventListener('mousedown', handleThrustStart);
-        thrustPanel.addEventListener('mouseup', handleThrustEnd);
-        thrustPanel.addEventListener('mouseleave', handleThrustEnd);
-        thrustPanel.addEventListener('touchstart', handleThrustStart, { passive: false });
-        thrustPanel.addEventListener('touchend', handleThrustEnd, { passive: false });
-        thrustPanel.addEventListener('touchcancel', handleThrustEnd, { passive: false });
-
-        // === УПРАВЛЕНИЕ ВИДИМОСТЬЮ ЗОН И ДЖОЙСТИКА ===
-        function updateDriveZonesVisibility() {
-            if (inShip && (currentState === MODE.MAP || currentState === MODE.SPACE)) {
-                leftZone.classList.remove('hidden');
-                rightZone.classList.remove('hidden');
-                joyZone.classList.add('hidden');
-            } else {
-                leftZone.classList.add('hidden');
-                rightZone.classList.add('hidden');
-                if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR || currentState === MODE.SPACE) {
-                    joyZone.classList.remove('hidden');
+            function updateDriveZonesVisibility() {
+                if (inShip && (currentState === MODE.MAP || currentState === MODE.SPACE)) {
+                    leftZone.classList.remove('hidden'); rightZone.classList.remove('hidden'); joyZone.classList.add('hidden');
                 } else {
-                    joyZone.classList.add('hidden');
+                    leftZone.classList.add('hidden'); rightZone.classList.add('hidden');
+                    if (currentState === MODE.MAP || currentState === MODE.SHOP || currentState === MODE.SHIP_INTERIOR || currentState === MODE.SPACE)
+                        joyZone.classList.remove('hidden'); else joyZone.classList.add('hidden');
                 }
             }
-        }
 
-        function updatePauseButtonVisibility() {
-            if (currentState === MODE.TUNNEL || currentState === MODE.PAUSED) {
-                pauseBtn.style.display = 'flex';
-            } else {
-                pauseBtn.style.display = 'none';
+            function setLeftPressed(state) {
+                if ((currentState !== MODE.MAP && currentState !== MODE.SPACE) || !inShip) state = false;
+                leftPressed = state; leftZone.classList.toggle('pressed', state);
             }
-        }
+            function setRightPressed(state) {
+                if ((currentState !== MODE.MAP && currentState !== MODE.SPACE) || !inShip) state = false;
+                rightPressed = state; rightZone.classList.toggle('pressed', state);
+            }
 
-        // === PAUSE BUTTON ===
-        function togglePause() {
-            if (currentState === MODE.MAP || currentState === MODE.SHIP_INTERIOR || currentState === MODE.SPACE) return;
-            if (currentState === MODE.PAUSED) {
-                if (currentShop) {
-                    currentState = MODE.SHOP;
+            // Event listeners для drive zones
+            leftZone.addEventListener('mousedown', e => { e.preventDefault(); setLeftPressed(true); });
+            leftZone.addEventListener('mouseup', () => setLeftPressed(false));
+            leftZone.addEventListener('mouseleave', () => setLeftPressed(false));
+            leftZone.addEventListener('touchstart', e => { e.preventDefault(); setLeftPressed(true); }, {passive: false});
+            leftZone.addEventListener('touchend', e => { e.preventDefault(); setLeftPressed(false); });
+            leftZone.addEventListener('touchcancel', () => setLeftPressed(false));
+            rightZone.addEventListener('mousedown', e => { e.preventDefault(); setRightPressed(true); });
+            rightZone.addEventListener('mouseup', () => setRightPressed(false));
+            rightZone.addEventListener('mouseleave', () => setRightPressed(false));
+            rightZone.addEventListener('touchstart', e => { e.preventDefault(); setRightPressed(true); }, {passive: false});
+            rightZone.addEventListener('touchend', e => { e.preventDefault(); setRightPressed(false); });
+            rightZone.addEventListener('touchcancel', () => setRightPressed(false));
+            window.addEventListener('mouseup', () => { setLeftPressed(false); setRightPressed(false); });
+
+            // Thrust
+            function handleThrustStart(e) { e.preventDefault(); if ((currentState === MODE.MAP||currentState===MODE.SPACE) && inShip && !navMenuOpen) { thrustIncreasing = true; thrustDecreasing = false; } }
+            function handleThrustEnd(e) { e.preventDefault(); thrustIncreasing = false; thrustDecreasing = true; }
+            thrustPanel.addEventListener('mousedown', handleThrustStart);
+            thrustPanel.addEventListener('mouseup', handleThrustEnd);
+            thrustPanel.addEventListener('mouseleave', handleThrustEnd);
+            thrustPanel.addEventListener('touchstart', handleThrustStart, {passive: false});
+            thrustPanel.addEventListener('touchend', handleThrustEnd, {passive: false});
+
+            // Pause
+            function togglePause() {
+                if (currentState === MODE.MAP || currentState === MODE.SHIP_INTERIOR || currentState === MODE.SPACE) return;
+                if (currentState === MODE.PAUSED) {
+                    currentState = currentShop ? MODE.SHOP : MODE.TUNNEL;
+                    pauseMenu.classList.remove('active');
+                    lastTime = performance.now();
+                    requestAnimationFrame(loop);
                 } else {
-                    currentState = MODE.TUNNEL;
+                    currentState = MODE.PAUSED;
+                    pauseMenu.classList.add('active');
                 }
-                pauseMenu.classList.remove('active');
-                lastTime = performance.now();
-                requestAnimationFrame(loop);
-            } else {
-                currentState = MODE.PAUSED;
-                pauseMenu.classList.add('active');
+                updatePauseButtonVisibility(); updateDriveZonesVisibility();
             }
-            updatePauseButtonVisibility();
-            updateDriveZonesVisibility();
-        }
-        pauseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            togglePause();
-        });
-        pauseBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            togglePause();
-        }, { passive: false });
-        resumeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            togglePause();
-        });
-        resumeBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            togglePause();
-        }, { passive: false });
-        exitBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            togglePause();
-            if (currentState === MODE.SHOP) {
-                exitShop();
-            } else if (currentState === MODE.TUNNEL) {
-                exitTunnel();
-            }
-        });
-        exitBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            togglePause();
-            if (currentState === MODE.SHOP) {
-                exitShop();
-            } else if (currentState === MODE.TUNNEL) {
-                exitTunnel();
-            }
-        }, { passive: false });
+            pauseBtn.addEventListener('click', e => { e.preventDefault(); togglePause(); });
+            pauseBtn.addEventListener('touchstart', e => { e.preventDefault(); togglePause(); }, {passive: false});
+            resumeBtn.addEventListener('click', e => { e.preventDefault(); togglePause(); });
+            exitBtn.addEventListener('click', e => { e.preventDefault(); togglePause(); if(currentState===MODE.SHOP) exitShop(); else if(currentState===MODE.TUNNEL) exitTunnel(); });
 
-        // --- JOYSTICK INPUT ---
-        function handleStart(e) {
-            if (currentState !== MODE.MAP && currentState !== MODE.SHOP && currentState !== MODE.SHIP_INTERIOR && currentState !== MODE.SPACE) return;
-            joystick.active = true;
-            const rect = joyBase.getBoundingClientRect();
-            joystick.originX = rect.left + rect.width / 2;
-            joystick.originY = rect.top + rect.height / 2;
-            handleMove(e);
-        }
-        function handleMove(e) {
-            if (!joystick.active) return;
-            e.preventDefault();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const deltaX = clientX - joystick.originX;
-            const deltaY = clientY - joystick.originY;
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            const angle = Math.atan2(deltaY, deltaX);
-            const clampedDist = Math.min(distance, joystick.maxRadius);
-            joystick.dx = (clampedDist / joystick.maxRadius) * Math.cos(angle);
-            joystick.dy = (clampedDist / joystick.maxRadius) * Math.sin(angle);
-            const stickX = joystick.dx * joystick.maxRadius;
-            const stickY = joystick.dy * joystick.maxRadius;
-            joyStick.style.transform = `translate(calc(-50% + ${stickX}px), calc(-50% + ${stickY}px))`;
-        }
-        function handleEnd() {
-            joystick.active = false;
-            joystick.dx = 0;
-            joystick.dy = 0;
-            joyStick.style.transform = `translate(-50%, -50%)`;
-        }
-        joyBase.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
-        joyBase.addEventListener('touchstart', handleStart, { passive: false });
-        window.addEventListener('touchmove', handleMove, { passive: false });
-        window.addEventListener('touchend', handleEnd);
-
-        // --- TUNNEL INPUT ---
-        function handleTunnelInputStart(e) {
-            if (currentState !== MODE.TUNNEL || currentState === MODE.PAUSED) return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const halfWidth = window.innerWidth / 2;
-            tunnelDirection = clientX < halfWidth ? 1 : -1;
-        }
-        function handleTunnelInputEnd() {
-            if (currentState !== MODE.TUNNEL) return;
-            tunnelDirection = 0;
-        }
-        window.addEventListener('touchstart', (e) => {
-            if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED) {
-                e.preventDefault();
-                handleTunnelInputStart(e);
+            // Joystick
+            function handleStart(e) {
+                if (currentState !== MODE.MAP && currentState !== MODE.SHOP && currentState !== MODE.SHIP_INTERIOR && currentState !== MODE.SPACE) return;
+                joystick.active = true;
+                const rect = joyBase.getBoundingClientRect();
+                joystick.originX = rect.left + rect.width/2;
+                joystick.originY = rect.top + rect.height/2;
+                handleMove(e);
             }
-        }, { passive: false });
-        window.addEventListener('touchend', (e) => {
-            if (currentState === MODE.TUNNEL) {
-                e.preventDefault();
-                handleTunnelInputEnd();
+            function handleMove(e) {
+                if (!joystick.active) return; e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const dx = clientX - joystick.originX, dy = clientY - joystick.originY;
+                const dist = Math.sqrt(dx*dx+dy*dy);
+                const angle = Math.atan2(dy, dx);
+                const clamped = Math.min(dist, joystick.maxRadius);
+                joystick.dx = (clamped/joystick.maxRadius) * Math.cos(angle);
+                joystick.dy = (clamped/joystick.maxRadius) * Math.sin(angle);
+                const stickX = joystick.dx * joystick.maxRadius, stickY = joystick.dy * joystick.maxRadius;
+                joyStick.style.transform = `translate(calc(-50% + ${stickX}px), calc(-50% + ${stickY}px))`;
             }
-        }, { passive: false });
-        window.addEventListener('mousedown', (e) => {
-            if (currentState === MODE.TUNNEL && currentState !== MODE.PAUSED &&
-                e.target !== pauseBtn && e.target !== resumeBtn && e.target !== exitBtn &&
-                e.target !== colorPickerMenu && !colorPickerMenu.contains(e.target)) {
-                handleTunnelInputStart(e);
+            function handleEnd() {
+                joystick.active = false; joystick.dx = 0; joystick.dy = 0;
+                joyStick.style.transform = `translate(-50%, -50%)`;
             }
-        });
-        window.addEventListener('mouseup', () => {
-            handleTunnelInputEnd();
-        });
+            joyBase.addEventListener('mousedown', handleStart);
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', handleEnd);
+            joyBase.addEventListener('touchstart', handleStart, {passive: false});
+            window.addEventListener('touchmove', handleMove, {passive: false});
+            window.addEventListener('touchend', handleEnd);
 
-        function exitTunnel() {
-            currentState = MODE.MAP;
-            tunnelScore = 0;
-            tunnelPoints = [];
-            tunnelTrail = [];
-            mapTrail.length = 0;
-            tunnelScoreEl.style.display = 'none';
-            tunnelHint.style.display = 'none';
-            tunnelTimerEl.style.display = 'none';
-            joyZone.classList.remove('hidden');
-            hint.style.display = 'block';
-            shopHint.style.display = 'none';
-            pauseBtn.style.display = 'flex';
-            player.x = portal.x + 100;
-            player.y = portal.y + 100;
-            player.vx = 0;
-            player.vy = 0;
-            updatePauseButtonVisibility();
-            updateDriveZonesVisibility();
-        }
+            // Tunnel input
+            function handleTunnelInputStart(e) { if(currentState===MODE.TUNNEL && currentState!==MODE.PAUSED) tunnelDirection = 1; }
+            function handleTunnelInputEnd() { if(currentState===MODE.TUNNEL) tunnelDirection = -1; }
+            window.addEventListener('touchstart', e => { if(currentState===MODE.TUNNEL) { e.preventDefault(); handleTunnelInputStart(e); } }, {passive: false});
+            window.addEventListener('touchend', e => { if(currentState===MODE.TUNNEL) { e.preventDefault(); handleTunnelInputEnd(); } }, {passive: false});
+            window.addEventListener('mousedown', e => { if(currentState===MODE.TUNNEL && e.target!==pauseBtn) handleTunnelInputStart(e); });
+            window.addEventListener('mouseup', handleTunnelInputEnd);
 
-        function exitShop() {
-            currentState = MODE.MAP;
-            currentShop = null;
-            shopCamera.zoom = 1;
-            shopCamera.targetZoom = 1;
-            closeColorPicker();
-            joyZone.classList.remove('hidden');
-            hint.style.display = 'block';
-            shopHint.style.display = 'none';
-            pauseBtn.style.display = 'flex';
-            player.x = shopPortal.x + 150;
-            player.y = shopPortal.y;
-            player.vx = 0;
-            player.vy = 0;
-            updatePauseButtonVisibility();
-            updateDriveZonesVisibility();
-        }
-
-        // === SHOP FUNCTIONS ===
-        function enterShop() {
-            currentState = MODE.SHOP;
-            shopPlayer.x = 0;
-            shopPlayer.y = 0;
-            shopPlayer.vx = 0;
-            shopPlayer.vy = 0;
-            shopPlayer.angle = 0;
-            shopCamera.x = 0;
-            shopCamera.y = 0;
-            shopCamera.zoom = 1;
-            shopCamera.targetZoom = 1;
-            currentShop = null;
-            tunnelScoreEl.style.display = 'none';
-            tunnelHint.style.display = 'none';
-            tunnelTimerEl.style.display = 'none';
-            joyZone.classList.remove('hidden');
-            hint.style.display = 'none';
-            shopHint.style.display = 'block';
-            pauseBtn.style.display = 'flex';
-            updatePauseButtonVisibility();
-            updateDriveZonesVisibility();
-        }
-
-        // === COLLISION DETECTION ===
-        function checkWallCollision(newX, newY) {
-            const playerRadius = shopPlayer.size;
-            for (const wall of shopWalls) {
-                const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
-                const closestY = Math.max(wall.y, Math.min(newY, wall.y + wall.h));
-                const dx = newX - closestX;
-                const dy = newY - closestY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < playerRadius) return true;
+            function exitTunnel() {
+                currentState = MODE.MAP; tunnelScore = 0; tunnelPoints = []; tunnelTrail = []; mapTrail.length = 0;
+                tunnelScoreEl.style.display = 'none'; tunnelTimerEl.style.display = 'none';
+                joyZone.classList.remove('hidden'); hint.style.display = 'block'; shopHint.style.display = 'none';
+                pauseBtn.style.display = 'flex'; player.x = portal.x+100; player.y = portal.y+100; player.vx=player.vy=0;
+                updatePauseButtonVisibility(); updateDriveZonesVisibility();
             }
-            return false;
-        }
-
-        function checkShipInteriorCollision(newX, newY, radius) {
-            for (const wall of shipInteriorWalls) {
-                const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
-                const closestY = Math.max(wall.y, Math.min(newY, wall.y + wall.h));
-                const dx = newX - closestX;
-                const dy = newY - closestY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < radius) return true;
+            function exitShop() {
+                currentState = MODE.MAP; currentShop = null; shopCamera.zoom=1; shopCamera.targetZoom=1;
+                closeColorPicker(); joyZone.classList.remove('hidden'); hint.style.display='block'; shopHint.style.display='none';
+                pauseBtn.style.display='flex'; player.x=shopPortal.x+150; player.y=shopPortal.y; player.vx=player.vy=0;
+                updatePauseButtonVisibility(); updateDriveZonesVisibility();
             }
-            return false;
-        }
-
-        function checkHangarCollision(newX, newY, radius) {
-            for (const wall of hangarWalls) {
-                const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
-                const closestY = Math.max(wall.y, Math.min(newY, wall.y + wall.h));
-                const dx = newX - closestX;
-                const dy = newY - closestY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < radius) return true;
+            function enterShop() {
+                currentState = MODE.SHOP; shopPlayer.x=0; shopPlayer.y=0; shopPlayer.vx=0; shopPlayer.vy=0; shopPlayer.angle=0;
+                shopCamera.x=0; shopCamera.y=0; shopCamera.zoom=1; shopCamera.targetZoom=1; currentShop=null;
+                tunnelScoreEl.style.display='none'; tunnelTimerEl.style.display='none'; joyZone.classList.remove('hidden');
+                hint.style.display='none'; shopHint.style.display='block'; pauseBtn.style.display='flex';
+                updatePauseButtonVisibility(); updateDriveZonesVisibility();
             }
-            if (!inShip && !inShipInterior) {
-                for (const wall of assemblerWalls) {
-                    const closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.w));
-                    const closestY = Math.max(wall.y, Math.min(newY, wall.y + wall.h));
-                    const dx = newX - closestX;
-                    const dy = newY - closestY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < radius) return true;
+
+            // Collision helpers
+            function checkWallCollision(x, y, r) {
+                for (const w of shopWalls) {
+                    const cx = Math.max(w.x, Math.min(x, w.x+w.w)), cy = Math.max(w.y, Math.min(y, w.y+w.h));
+                    if (Math.hypot(x-cx, y-cy) < r) return true;
+                } return false;
+            }
+            function checkShipInteriorCollision(x,y,r) {
+                for (const w of shipInteriorWalls) {
+                    const cx = Math.max(w.x, Math.min(x, w.x+w.w)), cy = Math.max(w.y, Math.min(y, w.y+w.h));
+                    if (Math.hypot(x-cx, y-cy) < r) return true;
+                } return false;
+            }
+            function checkHangarCollision(x,y,r) {
+                for (const w of hangarWalls) {
+                    const cx = Math.max(w.x, Math.min(x, w.x+w.w)), cy = Math.max(w.y, Math.min(y, w.y+w.h));
+                    if (Math.hypot(x-cx, y-cy) < r) return true;
                 }
-            }
-            return false;
-        }
-
-        function checkShopEntry() {
-            for (const [key, shop] of Object.entries(shopZones)) {
-                if (shopPlayer.x > shop.x && shopPlayer.x < shop.x + shop.w &&
-                    shopPlayer.y > shop.y && shopPlayer.y < shop.y + shop.h) {
-                    if (currentShop !== key) {
-                        currentShop = key;
-                        shopCamera.targetZoom = 1.5;
+                if (!inShip && !inShipInterior) {
+                    for (const w of assemblerWalls) {
+                        const cx = Math.max(w.x, Math.min(x, w.x+w.w)), cy = Math.max(w.y, Math.min(y, w.y+w.h));
+                        if (Math.hypot(x-cx, y-cy) < r) return true;
                     }
-                    return;
-                }
+                } return false;
             }
-            if (currentShop !== null) {
-                currentShop = null;
-                shopCamera.targetZoom = 1;
-            }
-            for (const zone of exitZones) {
-                if (shopPlayer.x > zone.x && shopPlayer.x < zone.x + zone.w &&
-                    shopPlayer.y > zone.y && shopPlayer.y < zone.y + zone.h) {
-                    exitShop();
-                    return;
-                }
-            }
-        }
 
-        function checkCashRegister() {
-            if (!currentShop) return;
-            const shop = shopZones[currentShop];
-            const cr = shop.cashRegister;
-            if (shopPlayer.x > cr.x && shopPlayer.x < cr.x + cr.w &&
-                shopPlayer.y > cr.y && shopPlayer.y < cr.y + cr.h) {
-                openColorPicker(currentShop);
-            }
-        }
-
-        function updateShop(deltaTime) {
-            if (joystick.active) {
-                shopPlayer.vx += joystick.dx * player.speed;
-                shopPlayer.vy += joystick.dy * player.speed;
-            }
-            shopPlayer.vx *= player.friction;
-            shopPlayer.vy *= player.friction;
-            const newX = shopPlayer.x + shopPlayer.vx;
-            const newY = shopPlayer.y + shopPlayer.vy;
-            if (!checkWallCollision(newX, shopPlayer.y)) shopPlayer.x = newX;
-            if (!checkWallCollision(shopPlayer.x, newY)) shopPlayer.y = newY;
-            if (Math.abs(shopPlayer.vx) > 0.1 || Math.abs(shopPlayer.vy) > 0.1) {
-                shopPlayer.angle = Math.atan2(shopPlayer.vy, shopPlayer.vx);
-            }
-            shopCamera.zoom += (shopCamera.targetZoom - shopCamera.zoom) * 5 * deltaTime;
-            checkShopEntry();
-            checkCashRegister();
-            if (activeColorPicker && currentShop) {
-                const shop = shopZones[currentShop];
-                const cr = shop.cashRegister;
-                const inZone = shopPlayer.x > cr.x && shopPlayer.x < cr.x + cr.w &&
-                    shopPlayer.y > cr.y && shopPlayer.y < cr.y + cr.h;
-                if (!inZone) closeColorPicker();
-            } else if (activeColorPicker && !currentShop) {
-                closeColorPicker();
-            }
-        }
-
-        // === COLOR PICKER ===
-        function openColorPicker(shopKey) {
-            if (activeColorPicker === shopKey && colorPickerMenu.classList.contains('active')) return;
-            activeColorPicker = shopKey;
-            const shop = shopZones[shopKey];
-            
-            if (shopKey === 'map') {
-                pickerTitle.innerText = 'Select Map Gradient';
-                colorOptions.style.display = 'none';
-                gradientOptions.style.display = 'flex';
-                const currentGrad = customization.mapGradient;
-                gradientBtns.forEach(btn => {
-                    btn.classList.remove('selected');
-                    if (btn.dataset.gradient === currentGrad) btn.classList.add('selected');
-                });
-            } else {
-                pickerTitle.innerText = `Select ${shop.name} Color`;
-                colorOptions.style.display = 'flex';
-                gradientOptions.style.display = 'none';
-                const currentColor = customization[shop.colorKey];
-                colorBtns.forEach(btn => {
-                    btn.classList.remove('selected');
-                    if (btn.dataset.color === currentColor) btn.classList.add('selected');
-                });
-            }
-            colorPickerMenu.classList.add('active');
-        }
-
-        function closeColorPicker() {
-            colorPickerMenu.classList.remove('active');
-            activeColorPicker = null;
-        }
-
-        function selectColor(color) {
-            if (activeColorPicker && shopZones[activeColorPicker]) {
-                const shop = shopZones[activeColorPicker];
-                customization[shop.colorKey] = color;
-                localStorage.setItem(shop.colorKey, color);
-                colorBtns.forEach(btn => {
-                    btn.classList.remove('selected');
-                    if (btn.dataset.color === color) btn.classList.add('selected');
-                });
-            }
-        }
-
-        function selectGradient(gradient) {
-            if (activeColorPicker === 'map') {
-                customization.mapGradient = gradient;
-                localStorage.setItem('mapGradient', gradient);
-                gradientBtns.forEach(btn => {
-                    btn.classList.remove('selected');
-                    if (btn.dataset.gradient === gradient) btn.classList.add('selected');
-                });
-            }
-        }
-
-        colorBtns.forEach(btn => {
-            btn.addEventListener('click', () => selectColor(btn.dataset.color));
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                selectColor(btn.dataset.color);
-            }, { passive: false });
-        });
-
-        gradientBtns.forEach(btn => {
-            btn.addEventListener('click', () => selectGradient(btn.dataset.gradient));
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                selectGradient(btn.dataset.gradient);
-            }, { passive: false });
-        });
-
-        // === ASSEMBLER LOGIC ===
-        let assemblerActive = false;
-        function checkAssembler() {
-            // Assembler menu logic (only when not in ship/interior)
-            if (!inShip && !inShipInterior) {
-                const inTerminal = player.x > terminalZone.x && player.x < terminalZone.x + terminalZone.w &&
-                    player.y > terminalZone.y && player.y < terminalZone.y + terminalZone.h;
-                if (inTerminal) {
-                    if (!assemblerMenu.classList.contains('active')) {
-                        assemblerMenu.classList.add('active');
-                        assemblerActive = true;
-                    }
-                } else {
-                    if (assemblerMenu.classList.contains('active') && !spaceship.building) {
-                        assemblerMenu.classList.remove('active');
-                        assemblerActive = false;
+            function checkShopEntry() {
+                for (const [k, s] of Object.entries(shopZones)) {
+                    if (shopPlayer.x>s.x && shopPlayer.x<s.x+s.w && shopPlayer.y>s.y && shopPlayer.y<s.y+s.h) {
+                        if(currentShop!==k) { currentShop=k; shopCamera.targetZoom=1.5; } return;
                     }
                 }
+                if(currentShop) { currentShop=null; shopCamera.targetZoom=1; }
+                for(const z of exitZones) if(shopPlayer.x>z.x && shopPlayer.x<z.x+z.w && shopPlayer.y>z.y && shopPlayer.y<z.y+z.h) exitShop();
+            }
+            function checkCashRegister() {
+                if(!currentShop) return; const s=shopZones[currentShop]; const cr=s.cashRegister;
+                if(shopPlayer.x>cr.x && shopPlayer.x<cr.x+cr.w && shopPlayer.y>cr.y && shopPlayer.y<cr.y+cr.h) openColorPicker(currentShop);
+            }
+            function updateShop(dt) {
+                if(joystick.active) { shopPlayer.vx += joystick.dx*player.speed; shopPlayer.vy += joystick.dy*player.speed; }
+                shopPlayer.vx*=player.friction; shopPlayer.vy*=player.friction;
+                const nx=shopPlayer.x+shopPlayer.vx, ny=shopPlayer.y+shopPlayer.vy;
+                if(!checkWallCollision(nx, shopPlayer.y, shopPlayer.size)) shopPlayer.x=nx;
+                if(!checkWallCollision(shopPlayer.x, ny, shopPlayer.size)) shopPlayer.y=ny;
+                if(Math.abs(shopPlayer.vx)>0.1||Math.abs(shopPlayer.vy)>0.1) shopPlayer.angle=Math.atan2(shopPlayer.vy,shopPlayer.vx);
+                shopCamera.zoom += (shopCamera.targetZoom-shopCamera.zoom)*5*dt;
+                checkShopEntry(); checkCashRegister();
+                if(activeColorPicker && currentShop) {
+                    const cr=shopZones[currentShop].cashRegister;
+                    if(!(shopPlayer.x>cr.x&&shopPlayer.x<cr.x+cr.w&&shopPlayer.y>cr.y&&shopPlayer.y<cr.y+cr.h)) closeColorPicker();
+                } else if(activeColorPicker && !currentShop) closeColorPicker();
             }
 
-            // Interact button logic
-            if (inShip) {
-                interactBtn.innerText = "EXIT";
-                interactBtn.classList.add('visible');
-            } else if (inShipInterior) {
-                // handled by updateShipInterior
-            } else if (spaceship.built && currentState === MODE.MAP) {
-                const dx = player.x - spaceship.x;
-                const dy = player.y - spaceship.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 250) {
-                    interactBtn.innerText = "ENTER";
-                    interactBtn.classList.add('visible');
+            function openColorPicker(key) {
+                if(activeColorPicker===key && colorPickerMenu.classList.contains('active')) return;
+                activeColorPicker=key; const s=shopZones[key];
+                if(key==='map') {
+                    pickerTitle.innerText='Select Map Gradient'; colorOptions.style.display='none'; gradientOptions.style.display='flex';
+                    gradientBtns.forEach(b=>{ b.classList.toggle('selected', b.dataset.gradient===customization.mapGradient); });
                 } else {
-                    interactBtn.classList.remove('visible');
+                    pickerTitle.innerText=`Select ${s.name} Color`; colorOptions.style.display='flex'; gradientOptions.style.display='none';
+                    colorBtns.forEach(b=>{ b.classList.toggle('selected', b.dataset.color===customization[s.colorKey]); });
                 }
-            } else {
-                interactBtn.classList.remove('visible');
+                colorPickerMenu.classList.add('active');
             }
-        }
-
-        buildBtn.addEventListener('click', () => {
-            if (spaceship.built) return;
-            assemblerMenu.classList.remove('active');
-            assemblerActive = false;
-            spaceship.building = true;
-            spaceship.buildProgress = 0;
-            assemblerStatus.innerText = "Building...";
-            buildBtn.style.display = 'none';
-            buildProgressContainer.style.display = 'block';
-        });
-
-        // === УНИВЕРСАЛЬНАЯ КНОПКА ВЗАИМОДЕЙСТВИЯ ===
-        interactBtn.addEventListener('click', () => {
-            if (inShipInterior && inCockpitZone) {
-                // Выход из интерьера в кабину (всегда возможно)
-                inShipInterior = false;
-                inShip = true;
-                currentState = shipPreviousMode; // сохраняем режим
-                player.x = spaceship.x;
-                player.y = spaceship.y;
-                interactBtn.classList.remove('visible');
-                hint.style.display = 'block';
-                hint.innerText = "Piloting Ship (Press EXIT button to leave seat)";
-                shipControlPanel.classList.add('visible');
-                shipInteriorHint.style.display = 'none';
-                thrustPower = 0;
-                thrustIncreasing = false;
-                thrustDecreasing = false;
-                spaceship.angularVelocity = 0;
-                thrustPanelFill.style.width = '0%';
-                updatePauseButtonVisibility();
-                updateDriveZonesVisibility();
-            } else if (inShipInterior) {
-                // Если в интерьере вне кабины - ничего не делаем
-            } else if (inShip) {
-                // Вход в интерьер из кабины
-                shipPreviousMode = currentState;
-                inShip = false;
-                inShipInterior = true;
-                currentState = MODE.SHIP_INTERIOR;
-                shipInteriorPlayer.x = 0;
-                shipInteriorPlayer.y = -50;
-                shipInteriorPlayer.vx = 0;
-                shipInteriorPlayer.vy = 0;
-                shipInteriorPlayer.angle = 0;
-                shipControlPanel.classList.remove('visible');
-                shipInteriorHint.style.display = 'block';
-                hint.style.display = 'none';
-                spaceship.vx = 0;
-                spaceship.vy = 0;
-                spaceship.angularVelocity = 0;
-                thrustPower = 0;
-                thrustIncreasing = false;
-                thrustDecreasing = false;
-                thrustPanelFill.style.width = '0%';
-                setLeftPressed(false);
-                setRightPressed(false);
-                updatePauseButtonVisibility();
-                updateDriveZonesVisibility();
-            } else if (spaceship.built && currentState === MODE.MAP) {
-                // Вход в корабль снаружи (только на карте)
-                inShip = true;
-                player.x = spaceship.x;
-                player.y = spaceship.y;
-                interactBtn.classList.remove('visible');
-                hint.style.display = 'block';
-                hint.innerText = "Piloting Ship (Press EXIT button to leave seat)";
-                shipControlPanel.classList.add('visible');
-                thrustPower = 0;
-                thrustIncreasing = false;
-                thrustDecreasing = false;
-                spaceship.angularVelocity = 0;
-                thrustPanelFill.style.width = '0%';
-                updatePauseButtonVisibility();
-                updateDriveZonesVisibility();
-            }
-        });
-
-        // --- TUNNEL FUNCTIONS ---
-        function startTunnel() {
-            currentState = MODE.TUNNEL;
-            resetTunnel();
-            tunnelScoreEl.style.display = 'block';
-            tunnelHint.style.display = 'block';
-            tunnelTimerEl.style.display = 'block';
-            joyZone.classList.add('hidden');
-            hint.style.display = 'none';
-            shopHint.style.display = 'none';
-            pauseBtn.style.display = 'flex';
-            updatePauseButtonVisibility();
-            updateDriveZonesVisibility();
-        }
-
-        function resetTunnel() {
-            tunnelScore = 0;
-            tunnelPoints = [];
-            tunnelTrail = [];
-            tunnelPlayerY = canvas.height / 2;
-            tunnelDirection = 0;
-            tunnelTimer = TUNNEL_START_DELAY;
-            tunnelGap = Math.max(150, Math.floor(canvas.height * 0.25));
-            tunnelSpeed = 3.5;
-            initTunnel();
-            const startTunnel = getTunnelAt(playerX);
-            tunnelPlayerY = startTunnel.y + tunnelGap / 2;
-            tunnelScoreEl.innerText = '0';
-        }
-
-        function initTunnel() {
-            tunnelPoints = [];
-            let startY = (canvas.height - tunnelGap) / 2;
-            startY = Math.max(30, Math.min(canvas.height - tunnelGap - 30, startY));
-            for (let i = 0; i < 40; i++) {
-                tunnelPoints.push({ x: i * 40, y: startY });
-            }
-            for (let i = 40; i < 80; i++) {
-                addPoint();
-            }
-        }
-
-        function addPoint() {
-            const lastPoint = tunnelPoints[tunnelPoints.length - 1];
-            const stepX = 40;
-            const x = lastPoint.x + stepX;
-            let dy = (Math.random() > 0.5) ? stepX : -stepX;
-            let candidateY = lastPoint.y + dy;
-            const minY = 30;
-            const maxY = canvas.height - tunnelGap - 30;
-            if (candidateY < minY || candidateY > maxY) {
-                dy = -dy;
-                candidateY = lastPoint.y + dy;
-            }
-            const newY = Math.max(minY, Math.min(maxY, candidateY));
-            tunnelPoints.push({ x, y: newY });
-        }
-
-        function getTunnelAt(x) {
-            for (let i = 0; i < tunnelPoints.length - 1; i++) {
-                if (x >= tunnelPoints[i].x && x <= tunnelPoints[i + 1].x) {
-                    const t = (x - tunnelPoints[i].x) / (tunnelPoints[i + 1].x - tunnelPoints[i].x);
-                    return { y: tunnelPoints[i].y + t * (tunnelPoints[i + 1].y - tunnelPoints[i].y) };
+            function closeColorPicker() { colorPickerMenu.classList.remove('active'); activeColorPicker=null; }
+            function selectColor(c) {
+                if(activeColorPicker && shopZones[activeColorPicker]) {
+                    const key=shopZones[activeColorPicker].colorKey; customization[key]=c; localStorage.setItem(key,c);
+                    colorBtns.forEach(b=>b.classList.toggle('selected', b.dataset.color===c));
                 }
             }
-            return { y: canvas.height / 2 };
-        }
+            function selectGradient(g) {
+                if(activeColorPicker==='map') { customization.mapGradient=g; localStorage.setItem('mapGradient',g);
+                    gradientBtns.forEach(b=>b.classList.toggle('selected', b.dataset.gradient===g)); }
+            }
+            colorBtns.forEach(b=>{ b.addEventListener('click', ()=>selectColor(b.dataset.color)); b.addEventListener('touchstart', e=>{ e.preventDefault(); selectColor(b.dataset.color); }, {passive:false}); });
+            gradientBtns.forEach(b=>{ b.addEventListener('click', ()=>selectGradient(b.dataset.gradient)); b.addEventListener('touchstart', e=>{ e.preventDefault(); selectGradient(b.dataset.gradient); }, {passive:false}); });
 
-        function updateTunnel(deltaTime) {
-            if (tunnelTimer > 0) {
-                tunnelTimer -= deltaTime;
-                if (tunnelTimer <= 0) {
-                    tunnelTimer = 0;
-                    tunnelTimerEl.style.display = 'none';
-                } else {
-                    tunnelTimerEl.innerText = Math.ceil(tunnelTimer);
+            // Assembler & Interact
+            function checkAssembler() {
+                if(!inShip && !inShipInterior) {
+                    const inTerm = player.x>terminalZone.x && player.x<terminalZone.x+terminalZone.w && player.y>terminalZone.y && player.y<terminalZone.y+terminalZone.h;
+                    if(inTerm) { if(!assemblerMenu.classList.contains('active')) assemblerMenu.classList.add('active'); }
+                    else { if(assemblerMenu.classList.contains('active') && !spaceship.building) assemblerMenu.classList.remove('active'); }
                 }
-            } else {
-                if (tunnelDirection !== 0) {
-                    tunnelPlayerY -= tunnelDirection * tunnelMoveSpeed;
+                if(inShip) { interactBtn.innerText="EXIT"; interactBtn.classList.add('visible'); }
+                else if(!inShipInterior && spaceship.built && currentState===MODE.MAP) {
+                    const d=Math.hypot(player.x-spaceship.x, player.y-spaceship.y);
+                    if(d<250) { interactBtn.innerText="ENTER"; interactBtn.classList.add('visible'); }
+                    else interactBtn.classList.remove('visible');
+                } else interactBtn.classList.remove('visible');
+            }
+
+            buildBtn.addEventListener('click', ()=>{
+                if(spaceship.built) return; assemblerMenu.classList.remove('active'); spaceship.building=true; spaceship.buildProgress=0;
+                assemblerStatus.innerText="Building..."; buildBtn.style.display='none'; buildProgressContainer.style.display='block';
+            });
+
+            interactBtn.addEventListener('click', ()=>{
+                if(inShipInterior && inCockpitZone) {
+                    inShipInterior=false; inShip=true; currentState=shipPreviousMode; player.x=spaceship.x; player.y=spaceship.y;
+                    interactBtn.classList.remove('visible'); hint.style.display='block'; hint.innerText="Piloting Ship (Press EXIT button to leave seat)";
+                    shipControlPanel.classList.add('visible'); shipInteriorHint.style.display='none'; thrustPower=0; thrustIncreasing=thrustDecreasing=false;
+                    spaceship.angularVelocity=0; thrustPanelFill.style.width='0%'; updatePauseButtonVisibility(); updateDriveZonesVisibility();
+                } else if(inShipInterior) { /* nothing */ }
+                else if(inShip) {
+                    shipPreviousMode=currentState; inShip=false; inShipInterior=true; currentState=MODE.SHIP_INTERIOR;
+                    shipInteriorPlayer.x=0; shipInteriorPlayer.y=-50; shipInteriorPlayer.vx=0; shipInteriorPlayer.vy=0; shipInteriorPlayer.angle=0;
+                    shipControlPanel.classList.remove('visible'); shipInteriorHint.style.display='block'; hint.style.display='none';
+                    spaceship.vx=spaceship.vy=0; spaceship.angularVelocity=0; thrustPower=0; thrustIncreasing=thrustDecreasing=false;
+                    thrustPanelFill.style.width='0%'; setLeftPressed(false); setRightPressed(false); updatePauseButtonVisibility(); updateDriveZonesVisibility();
+                } else if(spaceship.built && currentState===MODE.MAP) {
+                    inShip=true; player.x=spaceship.x; player.y=spaceship.y; interactBtn.classList.remove('visible');
+                    hint.style.display='block'; hint.innerText="Piloting Ship (Press EXIT button to leave seat)"; shipControlPanel.classList.add('visible');
+                    thrustPower=0; thrustIncreasing=thrustDecreasing=false; spaceship.angularVelocity=0; thrustPanelFill.style.width='0%';
+                    updatePauseButtonVisibility(); updateDriveZonesVisibility();
                 }
-            }
-            tunnelScore += deltaTime * 15;
-            tunnelScoreEl.innerText = Math.floor(tunnelScore);
-            if (tunnelScore > highScore) {
-                highScore = Math.floor(tunnelScore);
-                localStorage.setItem('tunnelHighScore', highScore);
-                document.getElementById('score-display').innerText = `Best: ${highScore}`;
-            }
-            for (let p of tunnelPoints) {
-                p.x -= tunnelSpeed;
-            }
-            if (tunnelPoints.length > 0 && tunnelPoints[0].x < -100) {
-                tunnelPoints.shift();
-                addPoint();
-            }
-            tunnelTrail.push({ x: playerX, y: tunnelPlayerY });
-            for (let t of tunnelTrail) {
-                t.x -= tunnelSpeed;
-            }
-            if (tunnelTrail.length > tunnelTrailMaxLength) tunnelTrail.shift();
-            const tunnel = getTunnelAt(playerX);
-            if (tunnelPlayerY < tunnel.y || tunnelPlayerY > tunnel.y + tunnelGap) {
-                onTunnelCrash();
-            }
-        }
+            });
 
-        function onTunnelCrash() {
-            canvas.style.filter = 'brightness(1.5)';
-            setTimeout(() => { canvas.style.filter = ''; }, 100);
-            resetTunnel();
-        }
-
-        // === ЦВЕТА ===
-        function getCustomColor(colorKey) {
-            const colorName = customization[colorKey];
-            if (colorName === 'default' || !colorValues[colorName]) return '#ffffff';
-            return colorValues[colorName];
-        }
-
-        // === ФОН ===
-        function applyBackground() {
-            const gradType = customization.mapGradient;
-            if (gradType === 'black') {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else {
-                let gradient;
-                if (gradType === 'yellow-blue') {
-                    gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                    gradient.addColorStop(0, '#ffff00');
-                    gradient.addColorStop(1, '#00ffff');
-                } else if (gradType === 'red-blue') {
-                    gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                    gradient.addColorStop(0, '#ff4444');
-                    gradient.addColorStop(0.5, '#aa44ff');
-                    gradient.addColorStop(1, '#4444ff');
-                } else {
-                    gradient = '#000000';
-                }
-                ctx.fillStyle = gradient;
-                ctx.globalAlpha = 0.3;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.globalAlpha = 1;
+            // Tunnel
+            function startTunnel() { currentState=MODE.TUNNEL; resetTunnel(); tunnelScoreEl.style.display='block'; tunnelTimerEl.style.display='block'; joyZone.classList.add('hidden'); hint.style.display='none'; shopHint.style.display='none'; updatePauseButtonVisibility(); updateDriveZonesVisibility(); }
+            function resetTunnel() {
+                tunnelScore=0; tunnelPoints=[]; tunnelTrail=[]; tunnelPlayerY=canvas.height/2; tunnelDirection=-1; tunnelTimer=TUNNEL_START_DELAY;
+                tunnelGap=Math.max(150, Math.floor(canvas.height*0.25)); tunnelSpeed=3.5; initTunnel(); const t=getTunnelAt(playerX); tunnelPlayerY=t.y+tunnelGap/2; tunnelScoreEl.innerText='0';
             }
-        }
+            function initTunnel() {
+                tunnelPoints=[]; let startY=(canvas.height-tunnelGap)/2; startY=Math.max(30,Math.min(canvas.height-tunnelGap-30,startY));
+                for(let i=0;i<40;i++) tunnelPoints.push({x:i*40, y:startY});
+                for(let i=40;i<80;i++) addPoint();
+            }
+            function addPoint() {
+                const last=tunnelPoints[tunnelPoints.length-1]; const stepX=40; let dy=(Math.random()>0.5)?stepX:-stepX;
+                let cand=last.y+dy; const minY=30, maxY=canvas.height-tunnelGap-30;
+                if(cand<minY||cand>maxY) dy=-dy; cand=last.y+dy;
+                tunnelPoints.push({x:last.x+stepX, y:Math.max(minY,Math.min(maxY,cand))});
+            }
+            function getTunnelAt(x) {
+                for(let i=0;i<tunnelPoints.length-1;i++) if(x>=tunnelPoints[i].x && x<=tunnelPoints[i+1].x) {
+                    const t=(x-tunnelPoints[i].x)/(tunnelPoints[i+1].x-tunnelPoints[i].x);
+                    return {y: tunnelPoints[i].y + t*(tunnelPoints[i+1].y-tunnelPoints[i].y)};
+                } return {y:canvas.height/2};
+            }
+            function updateTunnel(dt) {
+                if(tunnelTimer>0) { tunnelTimer-=dt; if(tunnelTimer<=0) { tunnelTimer=0; tunnelTimerEl.style.display='none'; } else tunnelTimerEl.innerText=Math.ceil(tunnelTimer); }
+                else { tunnelPlayerY -= tunnelDirection * tunnelMoveSpeed; }
+                tunnelScore+=dt*15; tunnelScoreEl.innerText=Math.floor(tunnelScore);
+                if(tunnelScore>highScore) { highScore=Math.floor(tunnelScore); localStorage.setItem('tunnelHighScore',highScore); scoreDisplayEl.innerText=`Best: ${highScore}`; }
+                for(let p of tunnelPoints) p.x-=tunnelSpeed;
+                if(tunnelPoints.length && tunnelPoints[0].x<-100) { tunnelPoints.shift(); addPoint(); }
+                tunnelTrail.push({x:playerX, y:tunnelPlayerY});
+                for(let t of tunnelTrail) t.x-=tunnelSpeed;
+                if(tunnelTrail.length>tunnelTrailMaxLength) tunnelTrail.shift();
+                const tun=getTunnelAt(playerX); if(tunnelPlayerY<tun.y || tunnelPlayerY>tun.y+tunnelGap) onTunnelCrash();
+            }
+            function onTunnelCrash() { canvas.style.filter='brightness(1.5)'; setTimeout(()=>canvas.style.filter='',100); resetTunnel(); }
 
-        // === НОВАЯ ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ РЕАЛЬНОГО ВРЕМЕНИ ===
-        function updateRealTimeClock() {
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            clockEl.innerText = `${hours}:${minutes}`;
-        }
-        setInterval(updateRealTimeClock, 1000);
-        updateRealTimeClock(); // установить сразу
-
-        // === MAP LOGIC ===
-        function updateMap(deltaTime) {
-            if (spaceship.building) {
-                spaceship.buildProgress += deltaTime * 20;
-                if (spaceship.buildProgress >= 100) {
-                    spaceship.buildProgress = 100;
-                    spaceship.building = false;
-                    spaceship.built = true;
-                    spaceship.alpha = 1;
-                    assemblerStatus.innerText = "Ship Ready!";
-                    buildProgressContainer.style.display = 'none';
-                } else {
-                    buildProgressBar.style.width = `${spaceship.buildProgress}%`;
-                    spaceship.alpha = spaceship.buildProgress / 100;
+            // Цвета
+            function getCustomColor(key) { const n=customization[key]; return (n==='default'||!colorValues[n])?'#ffffff':colorValues[n]; }
+            function applyBackground() {
+                const g=customization.mapGradient;
+                if(g==='black') { ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+                else {
+                    let grad; if(g==='yellow-blue') { grad=ctx.createLinearGradient(0,0,canvas.width,canvas.height); grad.addColorStop(0,'#ff0'); grad.addColorStop(1,'#0ff'); }
+                    else if(g==='red-blue') { grad=ctx.createLinearGradient(0,0,canvas.width,canvas.height); grad.addColorStop(0,'#f44'); grad.addColorStop(0.5,'#a4f'); grad.addColorStop(1,'#44f'); }
+                    ctx.fillStyle=grad; ctx.globalAlpha=0.3; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.globalAlpha=1;
                 }
             }
 
-            // Control Logic
-            if (inShip && !navMenuOpen) {
-                const turnAcceleration = 30;
-                const maxTurnSpeed = 60;
-                const angularFriction = 0.98;
+            function updateRealTimeClock() { const d=new Date(); clockEl.innerText=`${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
+            setInterval(updateRealTimeClock,1000); updateRealTimeClock();
 
-                if (leftPressed && !rightPressed) {
-                    spaceship.angularVelocity -= turnAcceleration * deltaTime;
-                } else if (rightPressed && !leftPressed) {
-                    spaceship.angularVelocity += turnAcceleration * deltaTime;
+            // === MAP UPDATE (оптимизировано) ===
+            function updateMap(dt) {
+                if(spaceship.building) {
+                    spaceship.buildProgress+=dt*20;
+                    if(spaceship.buildProgress>=100) { spaceship.buildProgress=100; spaceship.building=false; spaceship.built=true; spaceship.alpha=1;
+                        assemblerStatus.innerText="Ship Ready!"; buildProgressContainer.style.display='none'; }
+                    else { buildProgressBar.style.width=`${spaceship.buildProgress}%`; spaceship.alpha=spaceship.buildProgress/100; }
                 }
-                spaceship.angularVelocity = Math.max(-maxTurnSpeed, Math.min(maxTurnSpeed, spaceship.angularVelocity));
-                spaceship.angularVelocity *= angularFriction;
-                spaceship.angle += spaceship.angularVelocity * deltaTime;
-
-                if (thrustIncreasing) {
-                    thrustPower = Math.min(maxThrustPower, thrustPower + thrustRiseRate * deltaTime);
-                } else if (thrustDecreasing) {
-                    thrustPower = Math.max(0, thrustPower - thrustFallRate * deltaTime);
+                if(inShip && !navMenuOpen) {
+                    const turnAccel=30, maxTurn=60, friction=0.98;
+                    if(leftPressed && !rightPressed) spaceship.angularVelocity -= turnAccel*dt;
+                    else if(rightPressed && !leftPressed) spaceship.angularVelocity += turnAccel*dt;
+                    spaceship.angularVelocity = Math.max(-maxTurn, Math.min(maxTurn, spaceship.angularVelocity)) * friction;
+                    spaceship.angle += spaceship.angularVelocity * dt;
+                    if(thrustIncreasing) thrustPower = Math.min(maxThrustPower, thrustPower+thrustRiseRate*dt);
+                    else if(thrustDecreasing) thrustPower = Math.max(0, thrustPower-thrustFallRate*dt);
+                    const thrust=0.30; spaceship.vx += Math.cos(spaceship.angle)*thrust*thrustPower;
+                    spaceship.vy += Math.sin(spaceship.angle)*thrust*thrustPower;
+                    spaceship.vx*=0.985; spaceship.vy*=0.985; spaceship.x+=spaceship.vx; spaceship.y+=spaceship.vy;
+                    player.x=spaceship.x; player.y=spaceship.y; player.angle=spaceship.angle;
+                    thrustPanelFill.style.width=`${thrustPower*100}%`;
+                } else if(!inShipInterior && !navMenuOpen && currentState===MODE.MAP) {
+                    if(joystick.active) { player.vx+=joystick.dx*player.speed; player.vy+=joystick.dy*player.speed; }
+                    player.vx*=player.friction; player.vy*=player.friction;
+                    const nx=player.x+player.vx, ny=player.y+player.vy;
+                    if(!checkHangarCollision(nx, player.y, player.size)) player.x=nx;
+                    if(!checkHangarCollision(player.x, ny, player.size)) player.y=ny;
+                    if(Math.abs(player.vx)>0.1||Math.abs(player.vy)>0.1) player.angle=Math.atan2(player.vy,player.vx);
                 }
-                const shipThrust = 0.30;
-                spaceship.vx += Math.cos(spaceship.angle) * shipThrust * thrustPower;
-                spaceship.vy += Math.sin(spaceship.angle) * shipThrust * thrustPower;
 
-                spaceship.vx *= 0.985;
-                spaceship.vy *= 0.985;
-                spaceship.x += spaceship.vx;
-                spaceship.y += spaceship.vy;
-
-                player.x = spaceship.x;
-                player.y = spaceship.y;
-                player.angle = spaceship.angle;
-
-                thrustPanelFill.style.width = `${thrustPower * 100}%`;
-            } else if (!inShipInterior && !navMenuOpen && currentState === MODE.MAP) { // только на карте можно ходить пешком
-                if (joystick.active) {
-                    player.vx += joystick.dx * player.speed;
-                    player.vy += joystick.dy * player.speed;
+                // === ОПТИМИЗИРОВАННЫЙ ТРЕЙЛ: запись не каждый кадр ===
+                if(currentState===MODE.MAP && !inShip && !inShipInterior) {
+                    const speed = Math.hypot(player.vx, player.vy);
+                    trailAccumulator++;
+                    if(speed>0.1 && trailAccumulator>=TRAIL_RECORD_INTERVAL) {
+                        mapTrail.push({x:player.x, y:player.y});
+                        if(mapTrail.length>mapTrailMaxLength) mapTrail.shift();
+                        trailAccumulator=0;
+                    }
                 }
-                player.vx *= player.friction;
-                player.vy *= player.friction;
-                const nextX = player.x + player.vx;
-                const nextY = player.y + player.vy;
-                if (!checkHangarCollision(nextX, player.y, player.size)) player.x = nextX;
-                if (!checkHangarCollision(player.x, nextY, player.size)) player.y = nextY;
-                if (Math.abs(player.vx) > 0.1 || Math.abs(player.vy) > 0.1) {
-                    player.angle = Math.atan2(player.vy, player.vx);
-                }
-            }
 
-            // === UPDATE PLAYER TRAIL ===
-            if (currentState === MODE.MAP && !inShip && !inShipInterior) {
-                const speed = Math.sqrt(player.vx * player.vx + player.vy * player.vy);
-                if (speed > 0.1) {
-                    mapTrail.push({ x: player.x, y: player.y, alpha: 1, isShip: false });
+                if(currentState===MODE.MAP && !inShip && !inShipInterior) {
+                    const d1=Math.hypot(player.x-portal.x, player.y-portal.y); if(d1<portal.radius+player.size) startTunnel();
+                    const d2=Math.hypot(player.x-shopPortal.x, player.y-shopPortal.y); if(d2<shopPortal.radius+player.size) enterShop();
+                }
+
+                // Затухание существующих точек
+                for (let i = mapTrail.length - 1; i >= 0; i--) {
+                    mapTrail[i].life -= dt * TRAIL_FADE_SPEED;
+                    if (mapTrail[i].life <= 0) {
+                        mapTrail.splice(i, 1);
+                    }
+                }
+
+                // Добавление новой точки (с таймером)
+                trailAddTimer += dt;
+                const speed = Math.hypot(player.vx, player.vy);
+                const shouldAdd = (speed > 0.1 || !inShip) && trailAddTimer >= TRAIL_ADD_INTERVAL;
+                if (shouldAdd) {
+                    mapTrail.push({ x: player.x, y: player.y, life: 1.0 });
+                    trailAddTimer = 0;
                     if (mapTrail.length > mapTrailMaxLength) mapTrail.shift();
                 }
-                for (let i = 0; i < mapTrail.length; i++) {
-                    mapTrail[i].alpha -= 0.01;
-                    if (mapTrail[i].alpha <= 0) {
-                        mapTrail.splice(i, 1);
-                        i--;
+                checkAssembler();
+            }
+
+            function updateShipInterior(dt) {
+                if(joystick.active) { shipInteriorPlayer.vx+=joystick.dx*player.speed*0.8; shipInteriorPlayer.vy+=joystick.dy*player.speed*0.8; }
+                shipInteriorPlayer.vx*=player.friction; shipInteriorPlayer.vy*=player.friction;
+                const nx=shipInteriorPlayer.x+shipInteriorPlayer.vx, ny=shipInteriorPlayer.y+shipInteriorPlayer.vy;
+                if(!checkShipInteriorCollision(nx, shipInteriorPlayer.y, shipInteriorPlayer.size)) shipInteriorPlayer.x=nx;
+                if(!checkShipInteriorCollision(shipInteriorPlayer.x, ny, shipInteriorPlayer.size)) shipInteriorPlayer.y=ny;
+                if(Math.abs(shipInteriorPlayer.vx)>0.1||Math.abs(shipInteriorPlayer.vy)>0.1) shipInteriorPlayer.angle=Math.atan2(shipInteriorPlayer.vy,shipInteriorPlayer.vx);
+                inCockpitZone = shipInteriorPlayer.x>shipInteriorCockpitZone.x && shipInteriorPlayer.x<shipInteriorCockpitZone.x+shipInteriorCockpitZone.w &&
+                                shipInteriorPlayer.y>shipInteriorCockpitZone.y && shipInteriorPlayer.y<shipInteriorCockpitZone.y+shipInteriorCockpitZone.h;
+                if(inCockpitZone) { interactBtn.innerText="ENTER"; interactBtn.classList.add('visible'); }
+                else interactBtn.classList.remove('visible');
+                if(shipInteriorPlayer.x>shipInteriorExitZone.x && shipInteriorPlayer.x<shipInteriorExitZone.x+shipInteriorExitZone.w &&
+                   shipInteriorPlayer.y>shipInteriorExitZone.y && shipInteriorPlayer.y<shipInteriorExitZone.y+shipInteriorExitZone.h) {
+                    if(shipPreviousMode===MODE.MAP) {
+                        inShipInterior=false; currentState=MODE.MAP; player.x=spaceship.x; player.y=spaceship.y+shipConfig.h/2+50; player.vx=player.vy=0;
+                        shipInteriorHint.style.display='none'; hint.style.display='block'; hint.innerText="Fly to the Portal";
+                        updatePauseButtonVisibility(); updateDriveZonesVisibility();
                     }
                 }
             }
 
-            // === PORTAL COLLISION (только на карте) ===
-            if (currentState === MODE.MAP && !inShip && !inShipInterior) {
-                const dx = player.x - portal.x;
-                const dy = player.y - portal.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < portal.radius + player.size) startTunnel();
-
-                const shopDx = player.x - shopPortal.x;
-                const shopDy = player.y - shopPortal.y;
-                const shopDist = Math.sqrt(shopDx * shopDx + shopDy * shopDy);
-                if (shopDist < shopPortal.radius + player.size) enterShop();
-            }
-
-            checkAssembler();
-        }
-
-        // === SHIP INTERIOR UPDATE ===
-        function updateShipInterior(deltaTime) {
-            if (joystick.active) {
-                shipInteriorPlayer.vx += joystick.dx * player.speed * 0.8;
-                shipInteriorPlayer.vy += joystick.dy * player.speed * 0.8;
-            }
-            shipInteriorPlayer.vx *= player.friction;
-            shipInteriorPlayer.vy *= player.friction;
-            const newX = shipInteriorPlayer.x + shipInteriorPlayer.vx;
-            const newY = shipInteriorPlayer.y + shipInteriorPlayer.vy;
-            if (!checkShipInteriorCollision(newX, shipInteriorPlayer.y, shipInteriorPlayer.size)) shipInteriorPlayer.x = newX;
-            if (!checkShipInteriorCollision(shipInteriorPlayer.x, newY, shipInteriorPlayer.size)) shipInteriorPlayer.y = newY;
-            if (Math.abs(shipInteriorPlayer.vx) > 0.1 || Math.abs(shipInteriorPlayer.vy) > 0.1) {
-                shipInteriorPlayer.angle = Math.atan2(shipInteriorPlayer.vy, shipInteriorPlayer.vx);
-            }
-
-            // Кабина
-            if (shipInteriorPlayer.x > shipInteriorCockpitZone.x &&
-                shipInteriorPlayer.x < shipInteriorCockpitZone.x + shipInteriorCockpitZone.w &&
-                shipInteriorPlayer.y > shipInteriorCockpitZone.y &&
-                shipInteriorPlayer.y < shipInteriorCockpitZone.y + shipInteriorCockpitZone.h) {
-                inCockpitZone = true;
-                interactBtn.innerText = "ENTER";
-                interactBtn.classList.add('visible');
-            } else {
-                inCockpitZone = false;
-                interactBtn.classList.remove('visible');
-            }
-
-            // Выход наружу (зелёная зона) - в космосе неактивна
-            if (shipInteriorPlayer.x > shipInteriorExitZone.x &&
-                shipInteriorPlayer.x < shipInteriorExitZone.x + shipInteriorExitZone.w &&
-                shipInteriorPlayer.y > shipInteriorExitZone.y &&
-                shipInteriorPlayer.y < shipInteriorExitZone.y + shipInteriorExitZone.h) {
-                
-                // Разрешаем выход наружу только если корабль на карте
-                if (shipPreviousMode === MODE.MAP) {
-                    // Выход на карту
-                    inShipInterior = false;
-                    currentState = MODE.MAP;
-                    player.x = spaceship.x;
-                    player.y = spaceship.y + shipConfig.h / 2 + 50;
-                    player.vx = 0;
-                    player.vy = 0;
-                    shipInteriorHint.style.display = 'none';
-                    hint.style.display = 'block';
-                    hint.innerText = "Fly to the Portal";
-                    updatePauseButtonVisibility();
-                    updateDriveZonesVisibility();
-                } else {
-                    // В космосе выйти наружу нельзя (можно добавить звук или сообщение)
-                    console.log("Cannot exit in space");
-                }
-            }
-        }
-
-        // === РАДАР ===
-        function drawRadar() {
-            if (!inShip || !radarCanvas) return;
-            const w = radarCanvas.width;
-            const h = radarCanvas.height;
-            radarCtx.clearRect(0, 0, w, h);
-
-            // Внешняя окружность
-            radarCtx.beginPath();
-            radarCtx.arc(w/2, h/2, w/2 - 2, 0, Math.PI*2);
-            radarCtx.strokeStyle = 'rgba(255,255,255,0.3)';
-            radarCtx.lineWidth = 3;
-            radarCtx.stroke();
-
-            const cx = w/2;
-            const cy = h/2;
-            const radius = w/2 - 6;
-
-            if (currentState === MODE.MAP) {
-                // Маркеры направлений только на карте
-                function drawMarker(angle, color) {
-                    const x = cx + Math.cos(angle) * radius;
-                    const y = cy + Math.sin(angle) * radius;
-                    radarCtx.beginPath();
-                    radarCtx.arc(x, y, 10, 0, Math.PI*2);
-                    radarCtx.fillStyle = color;
-                    radarCtx.shadowBlur = 8;
-                    radarCtx.shadowColor = color;
-                    radarCtx.fill();
-                    radarCtx.shadowBlur = 0;
-                }
-
-                const angleToPortal = Math.atan2(portal.y - spaceship.y, portal.x - spaceship.x);
-                const angleToShop = Math.atan2(shopPortal.y - spaceship.y, shopPortal.x - spaceship.x);
-                const angleToBase = Math.atan2((hangar.y + hangar.h/2) - spaceship.y, (hangar.x + hangar.w/2) - spaceship.x);
-
-                drawMarker(angleToPortal, portal.color);
-                drawMarker(angleToShop, shopPortal.color);
-                drawMarker(angleToBase, '#00FF00');
-            } // в космосе пока нет маркеров
-
-            // Кораблик в центре (направление)
-            radarCtx.save();
-            radarCtx.translate(cx, cy);
-            radarCtx.rotate(spaceship.angle);
-            radarCtx.beginPath();
-            radarCtx.moveTo(25, 0);
-            radarCtx.lineTo(-20, -15);
-            radarCtx.lineTo(-20, 15);
-            radarCtx.closePath();
-            radarCtx.fillStyle = getCustomColor('playerColor');
-            radarCtx.shadowBlur = 10;
-            radarCtx.shadowColor = getCustomColor('playerColor');
-            radarCtx.fill();
-            radarCtx.shadowBlur = 0;
-            radarCtx.restore();
-        }
-
-        // === НАВИГАЦИОННОЕ МЕНЮ ===
-        function toggleNavMenu() {
-            if (!inShip || (currentState !== MODE.MAP && currentState !== MODE.SPACE)) return; // только в корабле на карте или в космосе
-            navMenuOpen = !navMenuOpen;
-            if (navMenuOpen) {
-                navMenu.classList.add('active');
-                // Устанавливаем текущую позицию
-                if (currentState === MODE.MAP) {
-                    navPosition.innerText = 'Planet';
-                    navLiftLand.innerText = 'LIFT';
-                } else {
-                    navPosition.innerText = 'KOCMOC';
-                    navLiftLand.innerText = 'LAND';
-                }
-                // Сбрасываем выбранную планету при открытии (для LAND)
-                if (currentState === MODE.SPACE) {
-                    selectedPlanet = null;
-                    planetHome.classList.remove('selected');
-                    navLiftLand.classList.add('disabled');
-                } else {
-                    // На карте LIFT не зависит от выбора
-                    navLiftLand.classList.remove('disabled');
-                }
-            } else {
-                navMenu.classList.remove('active');
-            }
-        }
-
-        navBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleNavMenu();
-        });
-        navBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleNavMenu();
-        }, { passive: false });
-
-        // Закрытие меню при клике на фон
-        navMenu.addEventListener('click', (e) => {
-            if (e.target === navMenu) {
-                toggleNavMenu();
-            }
-        });
-
-        // Выбор планеты Home
-        planetHome.addEventListener('click', () => {
-            if (currentState !== MODE.SPACE) return; // только в космосе можно выбирать
-            selectedPlanet = 'home';
-            planetHome.classList.add('selected');
-            navLiftLand.classList.remove('disabled');
-        });
-
-        // Кнопка LIFT/LAND
-        navLiftLand.addEventListener('click', () => {
-            if (currentState === MODE.MAP) {
-                // LIFT: переходим в космос
-                if (inShip) {
-                    currentState = MODE.SPACE;
-                    shipPreviousMode = MODE.SPACE;
-                    spaceship.x = 0;
-                    spaceship.y = 0;
-                    spaceship.vx = 0;
-                    spaceship.vy = 0;
-                    player.x = spaceship.x;
-                    player.y = spaceship.y;
-                    hint.innerText = "You are in space";
-                    toggleNavMenu(); // закрыть меню
-                } else {
-                    alert("You must be in the ship to lift off");
-                }
-            } else if (currentState === MODE.SPACE) {
-                // LAND: если выбрана планета
-                if (selectedPlanet === 'home') {
-                    currentState = MODE.MAP;
-                    shipPreviousMode = MODE.MAP;
-                    spaceship.x = 0;
-                    spaceship.y = 0;
-                    spaceship.vx = 0;
-                    spaceship.vy = 0;
-                    player.x = spaceship.x;
-                    player.y = spaceship.y;
-                    hint.innerText = "Fly to the Portal";
-                    toggleNavMenu(); // закрыть меню
-                }
-            }
-        });
-
-        // --- DRAWING ---
-        function drawMap() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            applyBackground();
-
-            // Затемнение для космоса
-            if (currentState === MODE.SPACE) {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-            }
-
-            const gridSize = 100;
-            const offsetX = -player.x % gridSize;
-            const offsetY = -player.y % gridSize;
-
-            // Рисуем сетку
-            ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-            ctx.lineWidth = 1;
-
-            if (currentState === MODE.SPACE) {
-                // Треугольная сетка для космоса
-                const halfGrid = gridSize / 2;
-                // Горизонтальные линии с шагом halfGrid
-                for (let y = offsetY; y < canvas.height; y += halfGrid) {
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(canvas.width, y);
-                }
-
-                // Линии под 45° (y = x + b)
-                let b0 = offsetY - offsetX;
-                let minB = -canvas.width;
-                let maxB = canvas.height + canvas.width;
-                for (let b = b0 - Math.floor((b0 - minB) / gridSize) * gridSize; b < maxB; b += gridSize) {
-                    let x1 = 0, y1 = b;
-                    let x2 = canvas.width, y2 = b + canvas.width;
-                    if (y1 < 0) { x1 = -b; y1 = 0; }
-                    if (y2 > canvas.height) { x2 = canvas.height - b; y2 = canvas.height; }
-                    if (x1 >= 0 && x1 <= canvas.width && y1 >= 0 && y1 <= canvas.height &&
-                        x2 >= 0 && x2 <= canvas.width && y2 >= 0 && y2 <= canvas.height) {
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                    }
-                }
-
-                // Линии под -45° (y = -x + b)
-                b0 = offsetY + offsetX;
-                for (let b = b0 - Math.floor((b0 - minB) / gridSize) * gridSize; b < maxB; b += gridSize) {
-                    let x1 = 0, y1 = b;
-                    let x2 = canvas.width, y2 = b - canvas.width;
-                    if (y1 > canvas.height) { x1 = b - canvas.height; y1 = canvas.height; }
-                    if (y2 < 0) { x2 = b; y2 = 0; }
-                    if (x1 >= 0 && x1 <= canvas.width && y1 >= 0 && y1 <= canvas.height &&
-                        x2 >= 0 && x2 <= canvas.width && y2 >= 0 && y2 <= canvas.height) {
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                    }
-                }
-            } else {
-                // Обычная квадратная сетка для карты
-                for (let x = offsetX; x < canvas.width; x += gridSize) {
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, canvas.height);
-                }
-                for (let y = offsetY; y < canvas.height; y += gridSize) {
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(canvas.width, y);
-                }
-            }
-            ctx.stroke();
-
-            ctx.save();
-            ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
-
-            // === АНГАР (только на карте) ===
-            if (currentState === MODE.MAP) {
-                ctx.fillStyle = 'rgba(128,128,128,0.2)';
-                ctx.fillRect(hangar.x, hangar.y, hangar.w, hangar.h);
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#ffffff';
-                ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                for (const wall of hangarWalls) {
-                    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-                }
-                ctx.shadowBlur = 0;
-                ctx.shadowColor = 'transparent';
-                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                for (let x = hangar.x; x <= hangar.x + hangar.w; x += BLOCK_SIZE) {
-                    ctx.moveTo(x, hangar.y);
-                    ctx.lineTo(x, hangar.y + hangar.h);
-                }
-                for (let y = hangar.y; y <= hangar.y + hangar.h; y += BLOCK_SIZE) {
-                    ctx.moveTo(hangar.x, y);
-                    ctx.lineTo(hangar.x + hangar.w, y);
-                }
-                ctx.stroke();
-
-                ctx.fillStyle = '#333333';
-                ctx.fillRect(assembler.x, assembler.y, assembler.w, assembler.h);
-                ctx.fillStyle = '#555555';
-                for (const wall of assemblerWalls) {
-                    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-                }
-                ctx.fillStyle = 'rgba(0, 242, 255, 0.3)';
-                ctx.fillRect(terminalZone.x, terminalZone.y, terminalZone.w, terminalZone.h);
-            }
-
-            // Реактивная струя
-            if (inShip && thrustPower > 0.01) {
+            // === ОПТИМИЗИРОВАННАЯ ОТРИСОВКА ТРЕЙЛА ===
+            function drawPlayerTrail() {
+                if (mapTrail.length < 2) return;
                 const trailColor = getCustomColor('trailColor');
-                const nozzleOffset = 65;
-
-                const backX = -Math.cos(spaceship.angle);
-                const backY = -Math.sin(spaceship.angle);
-                const sideX = -Math.sin(spaceship.angle);
-                const sideY = Math.cos(spaceship.angle);
-
-                const nozzleX = spaceship.x + backX * nozzleOffset;
-                const nozzleY = spaceship.y + backY * nozzleOffset;
-
-                const flicker = Math.random() * 0.1 + 0.95;
-                const totalLength = 280 * thrustPower * flicker;
-                const widePointDist = totalLength * 0.20;
-                const maxWidth = 50 * thrustPower;
-
-                // Точки внешней струи
-                const pStart = { x: nozzleX, y: nozzleY };
-                const pLeft = {
-                    x: nozzleX + backX * widePointDist + sideX * maxWidth,
-                    y: nozzleY + backY * widePointDist + sideY * maxWidth
-                };
-                const pRight = {
-                    x: nozzleX + backX * widePointDist - sideX * maxWidth,
-                    y: nozzleY + backY * widePointDist - sideY * maxWidth
-                };
-                const pEnd = {
-                    x: nozzleX + backX * totalLength,
-                    y: nozzleY + backY * totalLength
-                };
-
                 ctx.save();
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = 0.7 * thrustPower;
-                ctx.shadowBlur = 100 * thrustPower;
-
-                // Внешняя струя
-                ctx.strokeStyle = trailColor;
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.shadowBlur = 8;
                 ctx.shadowColor = trailColor;
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(pStart.x, pStart.y);
-                ctx.lineTo(pLeft.x, pLeft.y);
-                ctx.lineTo(pEnd.x, pEnd.y);
-                ctx.lineTo(pRight.x, pRight.y);
-                ctx.closePath();
-                ctx.stroke();
-
-                // Внутренняя струя
-                const innerScale = 0.5;
-                const innerTotalLength = totalLength * innerScale;
-                const innerMaxWidth = maxWidth * innerScale;
-                const innerWidePointDist = innerTotalLength * 0.20;
-
-                // Сдвиг старта
-                const startOffset = (totalLength - innerTotalLength) / 4;
-
-                const innerStartX = nozzleX + backX * startOffset;
-                const innerStartY = nozzleY + backY * startOffset;
-
-                const innerWideX = innerStartX + backX * innerWidePointDist;
-                const innerWideY = innerStartY + backY * innerWidePointDist;
-
-                const innerLeftX = innerWideX + sideX * innerMaxWidth;
-                const innerLeftY = innerWideY + sideY * innerMaxWidth;
-                const innerRightX = innerWideX - sideX * innerMaxWidth;
-                const innerRightY = innerWideY - sideY * innerMaxWidth;
-
-                const innerEndX = innerStartX + backX * innerTotalLength;
-                const innerEndY = innerStartY + backY * innerTotalLength;
-
-                ctx.strokeStyle = '#ff0000';
-                ctx.shadowColor = '#ff0000';
-                ctx.lineWidth = 5 * innerScale; // ≈ 2.5
-                ctx.beginPath();
-                ctx.moveTo(innerStartX, innerStartY);
-                ctx.lineTo(innerLeftX, innerLeftY);
-                ctx.lineTo(innerEndX, innerEndY);
-                ctx.lineTo(innerRightX, innerRightY);
-                ctx.closePath();
-                ctx.stroke();
-
-                ctx.restore();
-            }
-
-            // === КОРАБЛЬ ===
-            if (spaceship.built || spaceship.building) {
-                ctx.save();
-                ctx.translate(spaceship.x, spaceship.y);
-                const scale = spaceship.building ? (0.5 + 0.5 * spaceship.alpha) : 1;
-                ctx.scale(scale, scale);
-                ctx.globalAlpha = spaceship.alpha;
-                ctx.rotate(spaceship.angle + Math.PI / 2);
-                ctx.fillStyle = getCustomColor('playerColor');
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = getCustomColor('playerColor');
-                ctx.beginPath();
-                ctx.moveTo(0, -90); 
-                ctx.lineTo(55, 80);
-                ctx.lineTo(0, 60);
-                ctx.lineTo(-55, 80);
-                ctx.closePath();
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.restore();
-            }
-
-            ctx.restore();
-
-            if (!inShip && currentState === MODE.MAP) drawPlayerTrail();
-
-            // Портал и магазин только на карте
-            if (currentState === MODE.MAP) {
-                ctx.save();
-                ctx.translate(canvas.width / 2 + portal.x - player.x, canvas.height / 2 + portal.y - player.y);
-                ctx.beginPath();
-                ctx.arc(0, 0, portal.radius, 0, Math.PI * 2);
-                ctx.strokeStyle = portal.color;
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = portal.color;
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
-                ctx.fill();
-                ctx.restore();
-
-                ctx.save();
-                ctx.translate(canvas.width / 2 + shopPortal.x - player.x, canvas.height / 2 + shopPortal.y - player.y);
-                ctx.beginPath();
-                ctx.arc(0, 0, shopPortal.radius, 0, Math.PI * 2);
-                ctx.strokeStyle = shopPortal.color;
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = shopPortal.color;
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
-                ctx.fill();
-                ctx.restore();
-            }
-
-            // Игрок (пешком) только на карте
-            if (!inShip && !inShipInterior && currentState === MODE.MAP) {
-                ctx.save();
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-                ctx.rotate(player.angle);
-                ctx.beginPath();
-                ctx.moveTo(player.size, 0);
-                ctx.lineTo(-player.size, -player.size / 1.5);
-                ctx.lineTo(-player.size, player.size / 1.5);
-                ctx.closePath();
-                ctx.fillStyle = getCustomColor('playerColor');
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = getCustomColor('playerColor');
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.restore();
-            }
-
-            // Компас рисуется только на карте и при ходьбе
-            if (!inShip && currentState === MODE.MAP) {
-                drawCompass();
-            }
-        }
-
-        function drawPlayerTrail() {
-            if (mapTrail.length < 2) return;
-            const trailColor = getCustomColor('trailColor');
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            for (let i = 1; i < mapTrail.length; i++) {
-                const point = mapTrail[i];
-                const prevPoint = mapTrail[i - 1];
-                const alpha = point.alpha * 0.6;
-                ctx.beginPath();
-                ctx.moveTo(prevPoint.x - player.x, prevPoint.y - player.y);
-                ctx.lineTo(point.x - player.x, point.y - player.y);
-                ctx.strokeStyle = trailColor;
-                ctx.globalAlpha = alpha;
-                ctx.lineWidth = 3 + (i / mapTrail.length) * 4;
-                ctx.shadowBlur = 10 * alpha;
-                ctx.shadowColor = trailColor;
-                ctx.stroke();
-            }
-            ctx.globalAlpha = 1;
-            ctx.restore();
-        }
-
-        function drawCompass() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const compassRadius = 60;
-            const markerWidth = 3;
-            const markerArc = Math.PI / 6;
-            const dx1 = portal.x - player.x;
-            const dy1 = portal.y - player.y;
-            const angleToPortal = Math.atan2(dy1, dx1);
-            const dx2 = shopPortal.x - player.x;
-            const dy2 = shopPortal.y - player.y;
-            const angleToShop = Math.atan2(dy2, dx2);
-            const dx3 = (hangar.x + hangar.w / 2) - player.x;
-            const dy3 = (hangar.y + hangar.h / 2) - player.y;
-            const angleToBase = Math.atan2(dy3, dx3);
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.beginPath();
-            ctx.arc(0, 0, compassRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(0, 0, compassRadius, angleToPortal - markerArc / 2, angleToPortal + markerArc / 2);
-            ctx.strokeStyle = portal.color;
-            ctx.lineWidth = markerWidth;
-            ctx.lineCap = 'round';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = portal.color;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(0, 0, compassRadius, angleToShop - markerArc / 2, angleToShop + markerArc / 2);
-            ctx.strokeStyle = shopPortal.color;
-            ctx.lineWidth = markerWidth;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = shopPortal.color;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(0, 0, compassRadius, angleToBase - markerArc / 2, angleToBase + markerArc / 2);
-            ctx.strokeStyle = '#00FF00';
-            ctx.lineWidth = markerWidth;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#00FF00';
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        function drawShop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            applyBackground();
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.scale(shopCamera.zoom, shopCamera.zoom);
-            ctx.translate(-shopPlayer.x, -shopPlayer.y);
-            const halfGrid = (shopConfig.gridCount * shopConfig.gridSize) / 2;
-            ctx.fillStyle = 'rgba(128,128,128,0.2)';
-            ctx.fillRect(-halfGrid, -halfGrid, shopConfig.gridCount * shopConfig.gridSize, shopConfig.gridCount * shopConfig.gridSize);
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth = 1;
-            for (let x = -halfGrid; x <= halfGrid; x += shopConfig.gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, -halfGrid);
-                ctx.lineTo(x, halfGrid);
-                ctx.stroke();
-            }
-            for (let y = -halfGrid; y <= halfGrid; y += shopConfig.gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(-halfGrid, y);
-                ctx.lineTo(halfGrid, y);
-                ctx.stroke();
-            }
-            for (const [key, shop] of Object.entries(shopZones)) {
-                const isActive = (currentShop === key);
-                const x = shop.x;
-                const y = shop.y;
-                const w = shop.w;
-                const h = shop.h;
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#ffffff';
-                ctx.strokeRect(x, y, w, h);
-                ctx.shadowBlur = 0;
-                if (isActive) {
-                    const cr = shop.cashRegister;
-                    ctx.fillStyle = 'rgba(76, 175, 80, 0.5)';
-                    ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
+                
+                // Рисуем сегменты с градиентом прозрачности
+                for (let i = 1; i < mapTrail.length; i++) {
+                    const prev = mapTrail[i-1];
+                    const curr = mapTrail[i];
+                    const alpha = (prev.life + curr.life) / 2; // средняя яркость сегмента
+                    ctx.beginPath();
+                    ctx.moveTo(prev.x - player.x, prev.y - player.y);
+                    ctx.lineTo(curr.x - player.x, curr.y - player.y);
+                    ctx.strokeStyle = trailColor;
+                    ctx.globalAlpha = alpha * 0.6;
+                    ctx.lineWidth = 5;
+                    ctx.stroke();
                 }
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 24px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(shop.name, x + w / 2, y + h / 2);
+                ctx.restore();
             }
-            ctx.save();
-            ctx.translate(shopPlayer.x, shopPlayer.y);
-            ctx.rotate(shopPlayer.angle);
-            ctx.beginPath();
-            ctx.moveTo(shopPlayer.size, 0);
-            ctx.lineTo(-shopPlayer.size, -shopPlayer.size / 1.5);
-            ctx.lineTo(-shopPlayer.size, shopPlayer.size / 1.5);
-            ctx.closePath();
-            ctx.fillStyle = getCustomColor('playerColor');
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = getCustomColor('playerColor');
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.restore();
-            ctx.restore();
-        }
 
-        function drawShipInterior() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.fillStyle = '#111111';
-            for (const wall of shipInteriorWalls) {
-                ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-            }
-            ctx.fillStyle = 'rgba(76, 175, 80, 0.3)';
-            ctx.fillRect(shipInteriorCockpitZone.x, shipInteriorCockpitZone.y, shipInteriorCockpitZone.w, shipInteriorCockpitZone.h);
-            ctx.fillStyle = shipInteriorExitZone.color;
-            ctx.fillRect(shipInteriorExitZone.x, shipInteriorExitZone.y, shipInteriorExitZone.w, shipInteriorExitZone.h);
-            ctx.save();
-            ctx.translate(shipInteriorPlayer.x, shipInteriorPlayer.y);
-            ctx.rotate(shipInteriorPlayer.angle);
-            ctx.beginPath();
-            ctx.moveTo(shipInteriorPlayer.size, 0);
-            ctx.lineTo(-shipInteriorPlayer.size, -shipInteriorPlayer.size / 1.5);
-            ctx.lineTo(-shipInteriorPlayer.size, shipInteriorPlayer.size / 1.5);
-            ctx.closePath();
-            ctx.fillStyle = getCustomColor('playerColor');
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = getCustomColor('playerColor');
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.restore();
-            ctx.restore();
-        }
-
-        function drawTunnel() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            applyBackground();
-            ctx.save();
-            ctx.shadowBlur = 100;
-            ctx.shadowColor = getCustomColor('tunnelColor');
-            ctx.strokeStyle = getCustomColor('tunnelColor');
-            ctx.lineWidth = 5;
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            tunnelPoints.forEach((p, i) => {
-                if (i === 0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
-            });
-            ctx.stroke();
-            ctx.beginPath();
-            tunnelPoints.forEach((p, i) => {
-                if (i === 0) ctx.moveTo(p.x, p.y + tunnelGap);
-                else ctx.lineTo(p.x, p.y + tunnelGap);
-            });
-            ctx.stroke();
-            if (tunnelTrail.length > 1) {
-                ctx.shadowBlur = 30;
-                ctx.strokeStyle = getCustomColor('trailColor');
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(tunnelTrail[0].x, tunnelTrail[0].y);
-                tunnelTrail.forEach(t => ctx.lineTo(t.x, t.y));
+            // === ОТРИСОВКА (остальное идентично, но с мелкими улучшениями) ===
+            function drawMap() {
+                ctx.clearRect(0,0,canvas.width,canvas.height); applyBackground();
+                if(currentState===MODE.SPACE) { ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+                const grid=100; const offX=-player.x%grid, offY=-player.y%grid;
+                ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+                if(currentState===MODE.SPACE) {
+                    const half=grid/2; for(let y=offY; y<canvas.height; y+=half) { ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); }
+                    let b0=offY-offX, minB=-canvas.width, maxB=canvas.height+canvas.width;
+                    for(let b=b0-Math.floor((b0-minB)/grid)*grid; b<maxB; b+=grid) {
+                        let x1=0,y1=b, x2=canvas.width,y2=b+canvas.width; if(y1<0){x1=-b;y1=0;} if(y2>canvas.height){x2=canvas.height-b;y2=canvas.height;}
+                        ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+                    }
+                    b0=offY+offX; for(let b=b0-Math.floor((b0-minB)/grid)*grid; b<maxB; b+=grid) {
+                        let x1=0,y1=b, x2=canvas.width,y2=b-canvas.width; if(y1>canvas.height){x1=b-canvas.height;y1=canvas.height;} if(y2<0){x2=b;y2=0;}
+                        ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+                    }
+                } else {
+                    for(let x=offX; x<canvas.width; x+=grid) { ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); }
+                    for(let y=offY; y<canvas.height; y+=grid) { ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); }
+                }
                 ctx.stroke();
+                ctx.save(); ctx.translate(canvas.width/2-player.x, canvas.height/2-player.y);
+                if(currentState===MODE.MAP) {
+                    ctx.fillStyle='rgba(128,128,128,0.2)'; ctx.fillRect(hangar.x,hangar.y,hangar.w,hangar.h);
+                    ctx.shadowBlur=15; ctx.shadowColor='#fff'; ctx.fillStyle='rgba(255,255,255,0.8)';
+                    hangarWalls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h)); ctx.shadowBlur=0;
+                    ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=2; ctx.beginPath();
+                    for(let x=hangar.x; x<=hangar.x+hangar.w; x+=BLOCK_SIZE) { ctx.moveTo(x,hangar.y); ctx.lineTo(x,hangar.y+hangar.h); }
+                    for(let y=hangar.y; y<=hangar.y+hangar.h; y+=BLOCK_SIZE) { ctx.moveTo(hangar.x,y); ctx.lineTo(hangar.x+hangar.w,y); } ctx.stroke();
+                    ctx.fillStyle='#333'; ctx.fillRect(assembler.x,assembler.y,assembler.w,assembler.h); ctx.fillStyle='#555';
+                    assemblerWalls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
+                    ctx.fillStyle='rgba(0,242,255,0.3)'; ctx.fillRect(terminalZone.x,terminalZone.y,terminalZone.w,terminalZone.h);
+                }
+                if(inShip && thrustPower>0.01) {
+                    const c=getCustomColor('trailColor'); const backX=-Math.cos(spaceship.angle), backY=-Math.sin(spaceship.angle);
+                    const sideX=-Math.sin(spaceship.angle), sideY=Math.cos(spaceship.angle); const nozzleX=spaceship.x+backX*65, nozzleY=spaceship.y+backY*65;
+                    const flick=Math.random()*0.1+0.95, len=280*thrustPower*flick, wide=len*0.2, maxW=50*thrustPower;
+                    const pStart={x:nozzleX,y:nozzleY}, pLeft={x:nozzleX+backX*wide+sideX*maxW, y:nozzleY+backY*wide+sideY*maxW};
+                    const pRight={x:nozzleX+backX*wide-sideX*maxW, y:nozzleY+backY*wide-sideY*maxW}, pEnd={x:nozzleX+backX*len, y:nozzleY+backY*len};
+                    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.7*thrustPower; ctx.shadowBlur=100*thrustPower;
+                    ctx.strokeStyle=c; ctx.shadowColor=c; ctx.lineWidth=5; ctx.beginPath();
+                    ctx.moveTo(pStart.x,pStart.y); ctx.lineTo(pLeft.x,pLeft.y); ctx.lineTo(pEnd.x,pEnd.y); ctx.lineTo(pRight.x,pRight.y); ctx.closePath(); ctx.stroke();
+                    ctx.restore();
+                }
+                if(spaceship.built||spaceship.building) {
+                    ctx.save(); ctx.translate(spaceship.x,spaceship.y); const sc=spaceship.building?(0.5+0.5*spaceship.alpha):1;
+                    ctx.scale(sc,sc); ctx.globalAlpha=spaceship.alpha; ctx.rotate(spaceship.angle+Math.PI/2);
+                    ctx.fillStyle=getCustomColor('playerColor'); ctx.shadowBlur=15; ctx.shadowColor=getCustomColor('playerColor');
+                    ctx.beginPath(); ctx.moveTo(0,-90); ctx.lineTo(55,80); ctx.lineTo(0,60); ctx.lineTo(-55,80); ctx.closePath(); ctx.fill();
+                    ctx.restore();
+                }
+                ctx.restore();
+                if(!inShip && currentState===MODE.MAP) drawPlayerTrail();
+                if(currentState===MODE.MAP) {
+                    ctx.save(); ctx.translate(canvas.width/2+portal.x-player.x, canvas.height/2+portal.y-player.y);
+                    ctx.beginPath(); ctx.arc(0,0,portal.radius,0,Math.PI*2); ctx.strokeStyle=portal.color; ctx.lineWidth=3; ctx.shadowBlur=15; ctx.shadowColor=portal.color;
+                    ctx.stroke(); ctx.fillStyle='rgba(0,242,255,0.2)'; ctx.fill(); ctx.restore();
+                    ctx.save(); ctx.translate(canvas.width/2+shopPortal.x-player.x, canvas.height/2+shopPortal.y-player.y);
+                    ctx.beginPath(); ctx.arc(0,0,shopPortal.radius,0,Math.PI*2); ctx.strokeStyle=shopPortal.color; ctx.lineWidth=3; ctx.shadowBlur=15; ctx.shadowColor=shopPortal.color;
+                    ctx.stroke(); ctx.fillStyle='rgba(255,68,68,0.2)'; ctx.fill(); ctx.restore();
+                }
+                if(!inShip && !inShipInterior && currentState===MODE.MAP) {
+                    ctx.save(); ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(player.angle);
+                    ctx.beginPath(); ctx.moveTo(player.size,0); ctx.lineTo(-player.size,-player.size/1.5); ctx.lineTo(-player.size,player.size/1.5); ctx.closePath();
+                    ctx.fillStyle=getCustomColor('playerColor'); ctx.shadowBlur=15; ctx.shadowColor=getCustomColor('playerColor'); ctx.fill();
+                    ctx.restore();
+                }
+                if(!inShip && currentState===MODE.MAP) drawCompass();
             }
-            ctx.save();
-            ctx.translate(playerX, tunnelPlayerY);
-            let angle = 0;
-            if (tunnelDirection === 1) angle = -Math.PI / 4;
-            else if (tunnelDirection === -1) angle = Math.PI / 4;
-            ctx.rotate(angle);
-            ctx.shadowBlur = 50;
-            ctx.shadowColor = getCustomColor('playerColor');
-            ctx.fillStyle = getCustomColor('playerColor');
-            ctx.beginPath();
-            ctx.moveTo(22, 0);
-            ctx.lineTo(-12, -13);
-            ctx.lineTo(-12, 13);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-            ctx.restore();
-        }
 
-        // --- MAIN LOOP ---
-        function loop(timestamp) {
-            if (!lastTime) lastTime = timestamp;
-            const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.1);
-            lastTime = timestamp;
-
-            if (currentState === MODE.MAP || currentState === MODE.SPACE) {
-                updateMap(deltaTime);
-                drawMap();
-                if (inShip) drawRadar();
-            } else if (currentState === MODE.TUNNEL) {
-                updateTunnel(deltaTime);
-                drawTunnel();
-            } else if (currentState === MODE.SHOP) {
-                updateShop(deltaTime);
-                drawShop();
-            } else if (currentState === MODE.SHIP_INTERIOR) {
-                updateShipInterior(deltaTime);
-                drawShipInterior();
+            function drawCompass() {
+                const cx=canvas.width/2, cy=canvas.height/2, r=60, arc=Math.PI/6;
+                const a1=Math.atan2(portal.y-player.y, portal.x-player.x), a2=Math.atan2(shopPortal.y-player.y, shopPortal.x-player.x);
+                const a3=Math.atan2((hangar.y+hangar.h/2)-player.y, (hangar.x+hangar.w/2)-player.x);
+                ctx.save(); ctx.translate(cx,cy); ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=2; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0,0,r,a1-arc/2,a1+arc/2); ctx.strokeStyle=portal.color; ctx.lineWidth=3; ctx.shadowBlur=10; ctx.shadowColor=portal.color; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0,0,r,a2-arc/2,a2+arc/2); ctx.strokeStyle=shopPortal.color; ctx.shadowColor=shopPortal.color; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0,0,r,a3-arc/2,a3+arc/2); ctx.strokeStyle='#0f0'; ctx.shadowColor='#0f0'; ctx.stroke(); ctx.restore();
             }
-            if (currentState !== MODE.PAUSED) {
-                requestAnimationFrame(loop);
-            }
-        }
 
-        // Старт
-        updatePauseButtonVisibility();
-        updateDriveZonesVisibility();
-        requestAnimationFrame(loop);
+            function drawShop() {
+                ctx.clearRect(0,0,canvas.width,canvas.height); applyBackground(); ctx.save(); ctx.translate(canvas.width/2,canvas.height/2); ctx.scale(shopCamera.zoom,shopCamera.zoom); ctx.translate(-shopPlayer.x,-shopPlayer.y);
+                const half=shopConfig.gridCount*shopConfig.gridSize/2; ctx.fillStyle='rgba(128,128,128,0.2)'; ctx.fillRect(-half,-half,shopConfig.gridCount*shopConfig.gridSize,shopConfig.gridCount*shopConfig.gridSize);
+                ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
+                for(let x=-half;x<=half;x+=shopConfig.gridSize){ctx.beginPath();ctx.moveTo(x,-half);ctx.lineTo(x,half);ctx.stroke();}
+                for(let y=-half;y<=half;y+=shopConfig.gridSize){ctx.beginPath();ctx.moveTo(-half,y);ctx.lineTo(half,y);ctx.stroke();}
+                for(const [k,s] of Object.entries(shopZones)) {
+                    ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.shadowBlur=15; ctx.shadowColor='#fff'; ctx.strokeRect(s.x,s.y,s.w,s.h); ctx.shadowBlur=0;
+                    if(currentShop===k) { ctx.fillStyle='rgba(76,175,80,0.5)'; ctx.fillRect(s.cashRegister.x,s.cashRegister.y,s.cashRegister.w,s.cashRegister.h); }
+                    ctx.fillStyle='#fff'; ctx.font='bold 24px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(s.name, s.x+s.w/2, s.y+s.h/2);
+                }
+                ctx.save(); ctx.translate(shopPlayer.x,shopPlayer.y); ctx.rotate(shopPlayer.angle);
+                ctx.beginPath(); ctx.moveTo(shopPlayer.size,0); ctx.lineTo(-shopPlayer.size,-shopPlayer.size/1.5); ctx.lineTo(-shopPlayer.size,shopPlayer.size/1.5); ctx.closePath();
+                ctx.fillStyle=getCustomColor('playerColor'); ctx.shadowBlur=15; ctx.shadowColor=getCustomColor('playerColor'); ctx.fill(); ctx.restore(); ctx.restore();
+            }
+
+            function drawShipInterior() {
+                ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.save(); ctx.translate(canvas.width/2,canvas.height/2);
+                ctx.fillStyle='#111'; shipInteriorWalls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
+                ctx.fillStyle='rgba(76,175,80,0.3)'; ctx.fillRect(shipInteriorCockpitZone.x,shipInteriorCockpitZone.y,shipInteriorCockpitZone.w,shipInteriorCockpitZone.h);
+                ctx.fillStyle=shipInteriorExitZone.color; ctx.fillRect(shipInteriorExitZone.x,shipInteriorExitZone.y,shipInteriorExitZone.w,shipInteriorExitZone.h);
+                ctx.save(); ctx.translate(shipInteriorPlayer.x,shipInteriorPlayer.y); ctx.rotate(shipInteriorPlayer.angle);
+                ctx.beginPath(); ctx.moveTo(shipInteriorPlayer.size,0); ctx.lineTo(-shipInteriorPlayer.size,-shipInteriorPlayer.size/1.5); ctx.lineTo(-shipInteriorPlayer.size,shipInteriorPlayer.size/1.5); ctx.closePath();
+                ctx.fillStyle=getCustomColor('playerColor'); ctx.shadowBlur=15; ctx.shadowColor=getCustomColor('playerColor'); ctx.fill(); ctx.restore(); ctx.restore();
+            }
+
+            function drawTunnel() {
+                ctx.clearRect(0,0,canvas.width,canvas.height); applyBackground(); ctx.save();
+                ctx.shadowBlur=100; ctx.shadowColor=getCustomColor('tunnelColor'); ctx.strokeStyle=getCustomColor('tunnelColor'); ctx.lineWidth=5; ctx.lineJoin='round';
+                ctx.beginPath(); tunnelPoints.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+                ctx.beginPath(); tunnelPoints.forEach((p,i)=> i===0?ctx.moveTo(p.x,p.y+tunnelGap):ctx.lineTo(p.x,p.y+tunnelGap)); ctx.stroke();
+                if(tunnelTrail.length>1) {
+                    ctx.shadowBlur=30; ctx.strokeStyle=getCustomColor('trailColor'); ctx.lineWidth=5; ctx.beginPath();
+                    ctx.moveTo(tunnelTrail[0].x,tunnelTrail[0].y); tunnelTrail.forEach(t=>ctx.lineTo(t.x,t.y)); ctx.stroke();
+                }
+                ctx.save(); ctx.translate(playerX,tunnelPlayerY); let ang=0; if(tunnelDirection===1) ang=-Math.PI/4; else if(tunnelDirection===-1) ang=Math.PI/4;
+                ctx.rotate(ang); ctx.shadowBlur=50; ctx.shadowColor=getCustomColor('playerColor'); ctx.fillStyle=getCustomColor('playerColor');
+                ctx.beginPath(); ctx.moveTo(22,0); ctx.lineTo(-12,-13); ctx.lineTo(-12,13); ctx.closePath(); ctx.fill(); ctx.restore(); ctx.restore();
+            }
+
+            function drawRadar() {
+                if(!inShip) return; const w=radarCanvas.width, h=radarCanvas.height; radarCtx.clearRect(0,0,w,h);
+                radarCtx.beginPath(); radarCtx.arc(w/2,h/2,w/2-2,0,Math.PI*2); radarCtx.strokeStyle='rgba(255,255,255,0.3)'; radarCtx.lineWidth=3; radarCtx.stroke();
+                const cx=w/2, cy=h/2, r=w/2-6;
+                if(currentState===MODE.MAP) {
+                    const drawM=(ang,col)=>{ const x=cx+Math.cos(ang)*r, y=cy+Math.sin(ang)*r; radarCtx.beginPath(); radarCtx.arc(x,y,10,0,Math.PI*2); radarCtx.fillStyle=col; radarCtx.shadowBlur=8; radarCtx.shadowColor=col; radarCtx.fill(); };
+                    drawM(Math.atan2(portal.y-spaceship.y, portal.x-spaceship.x), portal.color);
+                    drawM(Math.atan2(shopPortal.y-spaceship.y, shopPortal.x-spaceship.x), shopPortal.color);
+                    drawM(Math.atan2((hangar.y+hangar.h/2)-spaceship.y, (hangar.x+hangar.w/2)-spaceship.x), '#0f0');
+                }
+                radarCtx.save(); radarCtx.translate(cx,cy); radarCtx.rotate(spaceship.angle);
+                radarCtx.beginPath(); radarCtx.moveTo(25,0); radarCtx.lineTo(-20,-15); radarCtx.lineTo(-20,15); radarCtx.closePath();
+                radarCtx.fillStyle=getCustomColor('playerColor'); radarCtx.shadowBlur=10; radarCtx.shadowColor=getCustomColor('playerColor'); radarCtx.fill(); radarCtx.restore();
+            }
+
+            // Nav
+            function toggleNavMenu() {
+                if(!inShip||(currentState!==MODE.MAP&&currentState!==MODE.SPACE)) return;
+                navMenuOpen=!navMenuOpen; if(navMenuOpen) {
+                    navMenu.classList.add('active');
+                    if(currentState===MODE.MAP) { navPosition.innerText='Planet'; navLiftLand.innerText='LIFT'; }
+                    else { navPosition.innerText='KOCMOC'; navLiftLand.innerText='LAND'; }
+                    if(currentState===MODE.SPACE) { selectedPlanet=null; planetHome.classList.remove('selected'); navLiftLand.classList.add('disabled'); }
+                    else navLiftLand.classList.remove('disabled');
+                } else navMenu.classList.remove('active');
+            }
+            navBtn.addEventListener('click', e=>{ e.preventDefault(); toggleNavMenu(); });
+            navMenu.addEventListener('click', e=>{ if(e.target===navMenu) toggleNavMenu(); });
+            planetHome.addEventListener('click', ()=>{ if(currentState!==MODE.SPACE) return; selectedPlanet='home'; planetHome.classList.add('selected'); navLiftLand.classList.remove('disabled'); });
+            navLiftLand.addEventListener('click', ()=>{
+                if(currentState===MODE.MAP && inShip) { currentState=MODE.SPACE; shipPreviousMode=MODE.SPACE; spaceship.x=0;spaceship.y=0;spaceship.vx=0;spaceship.vy=0; player.x=0;player.y=0; hint.innerText="You are in space"; toggleNavMenu(); }
+                else if(currentState===MODE.SPACE && selectedPlanet==='home') { currentState=MODE.MAP; shipPreviousMode=MODE.MAP; spaceship.x=0;spaceship.y=0;spaceship.vx=0;spaceship.vy=0; player.x=0;player.y=0; hint.innerText="Fly to the Portal"; toggleNavMenu(); }
+            });
+
+            // Loop
+            function loop(ts) {
+                if(!lastTime) lastTime=ts; const dt=Math.min((ts-lastTime)/1000,0.1); lastTime=ts;
+                if(currentState===MODE.MAP||currentState===MODE.SPACE) { updateMap(dt); drawMap(); if(inShip) drawRadar(); }
+                else if(currentState===MODE.TUNNEL) { updateTunnel(dt); drawTunnel(); }
+                else if(currentState===MODE.SHOP) { updateShop(dt); drawShop(); }
+                else if(currentState===MODE.SHIP_INTERIOR) { updateShipInterior(dt); drawShipInterior(); }
+                if(currentState!==MODE.PAUSED) requestAnimationFrame(loop);
+            }
+
+            updatePauseButtonVisibility(); updateDriveZonesVisibility(); requestAnimationFrame(loop);
+        })();
     </script>
 </body>
 </html>
